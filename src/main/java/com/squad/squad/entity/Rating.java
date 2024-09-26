@@ -9,21 +9,21 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
-public class Goal {
+public class Rating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false)
-    private String teamColor;
+    private Integer rate;
 
     @ManyToOne
-    @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
-    private Game game;
+    @JoinColumn(name = "roster_id", referencedColumnName = "id")
+    private Roster roster;
 
     @ManyToOne
-    @JoinColumn(name = "player_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "player_id", referencedColumnName = "id")
     private Player player;
 
     public Integer getId() {
@@ -34,20 +34,20 @@ public class Goal {
         this.id = id;
     }
 
-    public String getTeamColor() {
-        return teamColor;
+    public Integer getRate() {
+        return rate;
     }
 
-    public void setTeamColor(String teamColor) {
-        this.teamColor = teamColor;
+    public void setRate(Integer rate) {
+        this.rate = rate;
     }
 
-    public Game getGame() {
-        return game;
+    public Roster getRoster() {
+        return roster;
     }
 
-    public void setGame(Game game) {
-        this.game = game;
+    public void setRoster(Roster roster) {
+        this.roster = roster;
     }
 
     public Player getPlayer() {
@@ -57,5 +57,4 @@ public class Goal {
     public void setPlayer(Player player) {
         this.player = player;
     }
-
 }

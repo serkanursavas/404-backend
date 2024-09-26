@@ -100,4 +100,28 @@ public class Player {
         this.position = position;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public List<Roster> getRoster() {
+        return roster;
+    }
+
+    public void setRoster(List<Roster> roster) {
+        this.roster = roster;
+    }
+
+    public List<Goal> getGoal() {
+        return goal;
+    }
+
+    public void setGoal(List<Goal> goal) {
+        this.goal = goal;
+    }
+
 }
