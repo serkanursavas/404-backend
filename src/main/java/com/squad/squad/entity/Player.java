@@ -4,8 +4,7 @@ import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -14,25 +13,24 @@ import jakarta.persistence.OneToOne;
 public class Player {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String surname;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String foot;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String photo;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private double rating;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String position;
 
     @OneToOne(mappedBy = "player")
