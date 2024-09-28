@@ -1,7 +1,10 @@
 package com.squad.squad.entity;
 
-import java.security.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +16,11 @@ import jakarta.persistence.OneToMany;
 @Entity
 public class Game {
 
+    public Game() {
+        this.homeTeamScore = 0;
+        this.awayTeamScore = 0;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -23,8 +31,9 @@ public class Game {
     @Column(nullable = false)
     private String weather;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(nullable = false)
-    private Timestamp dateTime;
+    private LocalDateTime dateTime;
 
     @Column(nullable = false)
     private Integer homeTeamScore = 0;
@@ -33,9 +42,11 @@ public class Game {
     private Integer awayTeamScore = 0;
 
     @OneToMany(mappedBy = "game")
+    @JsonIgnore
     private List<Roster> roster;
 
     @OneToMany(mappedBy = "game")
+    @JsonIgnore
     private List<Goal> goal;
 
     public Integer getId() {
@@ -62,11 +73,11 @@ public class Game {
         this.weather = weather;
     }
 
-    public Timestamp getDateTime() {
+    public LocalDateTime getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(Timestamp dateTime) {
+    public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
     }
 
