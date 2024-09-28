@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.GamesDTO;
 import com.squad.squad.entity.Game;
+import com.squad.squad.entity.Roster;
 import com.squad.squad.repository.GameRepository;
 
 import jakarta.transaction.Transactional;
@@ -15,9 +16,11 @@ import jakarta.transaction.Transactional;
 public class GameService {
 
     private final GameRepository gameRepository;
+    private final RosterService rosterService;
 
-    public GameService(GameRepository gameRepository) {
+    public GameService(GameRepository gameRepository, RosterService rosterService) {
         this.gameRepository = gameRepository;
+        this.rosterService = rosterService;
     }
 
     public List<GamesDTO> getAllGames() {
@@ -28,7 +31,6 @@ public class GameService {
     }
 
     public Game getGameById(Integer id) {
-
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Game not found"));
 
@@ -36,9 +38,15 @@ public class GameService {
     }
 
     @Transactional
-    public Game saveGame(Game game) {
+    public Game createGameWithRoster(Game game, List<Roster> rosters) {
 
-        return gameRepository.save(game);
+        Game savedGame = gameRepository.save(game);
+        for (Roster roster : rosters) {
+            roster.setGame(savedGame);
+            rosterService.saveRoster(roster);
+        }
+
+        return savedGame;
     }
 
     public Game updateGame(Integer id, Game updatedGame) {

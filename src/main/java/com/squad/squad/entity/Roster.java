@@ -2,6 +2,11 @@ package com.squad.squad.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Roster {
 
     @Id
@@ -21,15 +27,17 @@ public class Roster {
     @Column(nullable = false)
     private String teamColor;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private double rating;
 
     @ManyToOne
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
+    @JsonManagedReference
     private Game game;
 
     @ManyToOne
     @JoinColumn(name = "player_id", referencedColumnName = "id", nullable = false)
+    @JsonManagedReference
     private Player player;
 
     @OneToMany(mappedBy = "roster")
