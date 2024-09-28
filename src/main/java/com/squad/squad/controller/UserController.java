@@ -10,6 +10,7 @@ import com.squad.squad.service.UserService;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,13 +48,13 @@ public class UserController {
     @DeleteMapping("/{username}")
     public ResponseEntity<String> deleteUser(@PathVariable String username) {
 
-        if (!userService.existsByUsername(username)) {
-            return ResponseEntity.badRequest().body("user not found");
+        try {
+            userService.deleteByUsername(username);
+            return ResponseEntity.ok("User deleted");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        userService.deleteByUsername(username);
-
-        return ResponseEntity.ok("User deleted");
     }
 
     @PutMapping("/{username}")
@@ -62,7 +63,7 @@ public class UserController {
             userService.updateUser(username, updatedUser);
             return ResponseEntity.ok("User updated successfully");
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
