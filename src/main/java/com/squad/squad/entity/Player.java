@@ -2,6 +2,9 @@ package com.squad.squad.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 
@@ -33,13 +36,19 @@ public class Player {
     @Column(nullable = true)
     private String position;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     @OneToOne(mappedBy = "player")
+    @JsonBackReference
     private User user;
 
     @OneToMany(mappedBy = "player")
+    @JsonIgnore
     private List<Roster> roster;
 
     @OneToMany(mappedBy = "player")
+    @JsonIgnore
     private List<Goal> goal;
 
     public Integer getId() {
@@ -120,6 +129,14 @@ public class Player {
 
     public void setGoal(List<Goal> goal) {
         this.goal = goal;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
 }
