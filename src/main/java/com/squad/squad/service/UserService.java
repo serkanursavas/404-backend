@@ -33,6 +33,7 @@ public class UserService {
         return userRepository.existsByUsername(username);
     }
 
+    @Transactional
     public User registerUser(User user) {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
@@ -48,6 +49,16 @@ public class UserService {
 
     @Transactional
     public void deleteByUsername(String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Player player = playerRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("Player not found"));
+
+        player.setActive(false);
+
+        playerRepository.save(player);
         userRepository.deleteByUsername(username);
     }
 
