@@ -3,6 +3,7 @@ package com.squad.squad.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -35,14 +36,12 @@ public class Game {
     @Column(nullable = false)
     private LocalDateTime dateTime;
 
-    @Column(nullable = false)
     private Integer homeTeamScore = 0;
 
-    @Column(nullable = false)
     private Integer awayTeamScore = 0;
 
     @OneToMany(mappedBy = "game")
-    @JsonIgnore
+    @JsonBackReference
     private List<Roster> roster;
 
     @OneToMany(mappedBy = "game")

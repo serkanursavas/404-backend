@@ -1,5 +1,7 @@
 package com.squad.squad.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,10 +22,12 @@ public class Rating {
 
     @ManyToOne
     @JoinColumn(name = "roster_id", referencedColumnName = "id")
+    @JsonManagedReference
     private Roster roster;
 
     @ManyToOne
     @JoinColumn(name = "player_id", referencedColumnName = "id")
+    @JsonManagedReference
     private Player player;
 
     public Integer getId() {
