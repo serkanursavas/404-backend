@@ -2,9 +2,10 @@ package com.squad.squad.dto;
 
 public class RosterDTO {
 
+    private Integer id;
     private String teamColor;
     private double rating;
-    private Integer playerId; // Player entity'den sadece ID taşınıyor
+    private Integer playerId;
     private String playerName;
 
     // Default constructor
@@ -12,6 +13,14 @@ public class RosterDTO {
     }
 
     // Getters and Setters
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getTeamColor() {
         return teamColor;
