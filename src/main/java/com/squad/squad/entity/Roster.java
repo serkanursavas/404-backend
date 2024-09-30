@@ -37,7 +37,6 @@ public class Roster {
 
     @ManyToOne
     @JoinColumn(name = "player_id", referencedColumnName = "id", nullable = false)
-    @JsonManagedReference
     private Player player;
 
     @OneToMany(mappedBy = "roster")

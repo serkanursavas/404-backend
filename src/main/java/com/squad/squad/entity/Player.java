@@ -2,7 +2,8 @@ package com.squad.squad.entity;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +13,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Player {
 
     @Id
@@ -38,15 +40,12 @@ public class Player {
     private boolean active = true;
 
     @OneToOne(mappedBy = "player")
-    @JsonBackReference
     private User user;
 
     @OneToMany(mappedBy = "player")
-    @JsonBackReference
     private List<Roster> roster;
 
     @OneToMany(mappedBy = "player")
-    @JsonBackReference
     private List<Goal> goal;
 
     public Integer getId() {
