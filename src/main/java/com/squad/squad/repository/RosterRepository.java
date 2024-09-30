@@ -9,4 +9,6 @@ import com.squad.squad.entity.Roster;
 public interface RosterRepository extends JpaRepository<Roster, Integer> {
 
     List<Roster> findRosterByGameId(Integer gameId);
+
+    void deleteByGameId(Integer game_id);
 }
