@@ -25,4 +25,8 @@ public class RatingService {
         return ratings.stream().mapToDouble(Rating::getRate).average().orElse(0.0);
     }
 
+    public void clearAllRatings() {
+        ratingRepository.deleteAll();
+    }
+
 }
