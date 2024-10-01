@@ -4,12 +4,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.dto.GamesDTO;
+import com.squad.squad.dto.GoalDTO;
 import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.repository.PlayerRepository;
 import com.squad.squad.service.GameService;
+import com.squad.squad.service.GoalService;
 import com.squad.squad.service.RosterService;
 
 import java.util.ArrayList;
@@ -31,11 +33,14 @@ public class GameController {
     private final GameService gameService;
     private final PlayerRepository playerRepository;
     private final RosterService rosterService;
+    private final GoalService goalService;
 
-    public GameController(GameService gameService, PlayerRepository playerRepository, RosterService rosterService) {
+    public GameController(GameService gameService, PlayerRepository playerRepository, RosterService rosterService,
+            GoalService goalService) {
         this.gameService = gameService;
         this.playerRepository = playerRepository;
         this.rosterService = rosterService;
+        this.goalService = goalService;
     }
 
     @GetMapping("")
@@ -58,6 +63,14 @@ public class GameController {
             rosterDTO.setPlayerName(player.getName() + " " + player.getSurname());
         }
 
+        List<GoalDTO> goals = goalService.getGoalsByGameId(id);
+
+        for (GoalDTO goalDTO : goals) {
+            Player player = playerRepository.findById(goalDTO.getPlayer_id())
+                    .orElseThrow(() -> new RuntimeException("Player not found with id: " + goalDTO.getGame_id()));
+            goalDTO.setPlayer_name(player.getName());
+        }
+
         // 3. GameDTO oluşturuyoruz ve alanları dolduruyoruz
         GameDTO gameDTO = new GameDTO();
         gameDTO.setId(game.getId());
@@ -69,6 +82,7 @@ public class GameController {
 
         // 4. Roster listesi DTO'ya ekleniyor
         gameDTO.setRosters(rosters);
+        gameDTO.setGoals(goals);
 
         return gameDTO; // Doldurulmuş GameDTO döndürülüyor
 
