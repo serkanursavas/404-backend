@@ -52,6 +52,12 @@ public class GameController {
         // 2. Game ID'ye göre ilgili Roster entity'lerini alıyoruz
         List<RosterDTO> rosters = rosterService.findRosterByGameId(id);
 
+        for (RosterDTO rosterDTO : rosters) {
+            Player player = playerRepository.findById(rosterDTO.getPlayerId())
+                    .orElseThrow(() -> new RuntimeException("Player not found with id: " + rosterDTO.getPlayerId()));
+            rosterDTO.setPlayerName(player.getName() + " " + player.getSurname());
+        }
+
         // 3. GameDTO oluşturuyoruz ve alanları dolduruyoruz
         GameDTO gameDTO = new GameDTO();
         gameDTO.setId(game.getId());
