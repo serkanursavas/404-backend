@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.dto.RosterDTO;
-import com.squad.squad.entity.Roster;
 import com.squad.squad.service.RosterService;
 
 import java.util.List;
@@ -26,7 +25,7 @@ public class RosterController {
     }
 
     @GetMapping("")
-    public List<Roster> getAllRosters() {
+    public List<RosterDTO> getAllRosters() {
         return rosterService.getAllRosters();
     }
 
