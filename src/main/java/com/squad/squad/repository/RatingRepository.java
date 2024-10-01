@@ -13,6 +13,7 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
 
     List<Rating> findByRoster(Roster roster);
 
-    @Query("SELECT COUNT(r) FROM Rating r WHERE r.roster.game.id = :game_id")
-    Integer countByRosterGameId(@Param("game_id") Integer game_id);
+    @Query("SELECT COUNT(r) FROM Rating r WHERE r.roster.game.id = :game_id AND r.roster.teamColor = :team_color")
+    Integer countByRosterGameIdAndTeamColor(@Param("game_id") Integer game_id, @Param("team_color") String team_color);
+
 }
