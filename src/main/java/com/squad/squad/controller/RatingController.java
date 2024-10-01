@@ -39,13 +39,15 @@ public class RatingController {
     public ResponseEntity<String> submitRating(@RequestBody List<RatingDTO> ratings) {
 
         Integer game_id = null;
+        String team_color = null;
 
         for (RatingDTO ratingDto : ratings) {
             Player existingPlayer = playerService.getPlayerById(ratingDto.getPlayer_id());
             Roster existingRoster = rosterService.getRosterById(ratingDto.getRoster_id());
 
-            if (game_id == null) {
+            if (game_id == null && team_color == null) {
                 game_id = existingRoster.getGame().getId();
+                team_color = existingRoster.getTeamColor();
             }
 
             Rating rating = new Rating();
@@ -56,7 +58,7 @@ public class RatingController {
             ratingService.saveRating(rating);
         }
 
-        gameService.checkIfVotingIsComplete(game_id);
+        gameService.checkIfVotingIsComplete(game_id, team_color);
 
         return ResponseEntity.ok("success");
     }
