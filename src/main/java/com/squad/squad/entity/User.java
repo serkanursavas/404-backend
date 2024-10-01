@@ -1,6 +1,7 @@
 package com.squad.squad.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class User {
 
     @Id
@@ -29,11 +31,11 @@ public class User {
     private String role;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false)
     private java.util.Date createdAt = new java.util.Date();
 
     @OneToOne
     @JoinColumn(name = "player_id", referencedColumnName = "id")
-    @JsonManagedReference
     private Player player;
 
     public Integer getId() {

@@ -35,15 +35,21 @@ public class UserService {
 
     @Transactional
     public User registerUser(User user) {
+        // Şifreyi encode et ve user objesine set et
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
 
+        // User'ı kaydet ve ID'sini al
         User savedUser = userRepository.save(user);
 
+        // Player oluştur ve User ID'siyle ilişkilendir
         Player player = new Player();
-        player.setId(savedUser.getId());
+        player.setUser(savedUser); // Player ile user'ı bağla
+
+        // Hibernate otomatik olarak ID verecek
         playerRepository.save(player);
 
+        // Kaydedilen user'ı geri döndür
         return savedUser;
     }
 
@@ -120,4 +126,9 @@ public class UserService {
             return "User not found with username: " + username;
         }
     }
+
+    public void deleteById(Integer id) {
+        userRepository.deleteById(id);
+    }
+
 }

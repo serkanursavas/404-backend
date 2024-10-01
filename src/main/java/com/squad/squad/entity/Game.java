@@ -27,6 +27,9 @@ public class Game {
     private Integer id;
 
     @Column(nullable = false)
+    private boolean isPlayed = false;
+
+    @Column(nullable = false)
     private String location;
 
     @Column(nullable = false)
@@ -54,6 +57,14 @@ public class Game {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public boolean isPlayed() {
+        return isPlayed;
+    }
+
+    public void setPlayed(boolean isPlayed) {
+        this.isPlayed = isPlayed;
     }
 
     public String getLocation() {

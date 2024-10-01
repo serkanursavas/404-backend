@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.entity.Player;
 import com.squad.squad.service.PlayerService;
+import com.squad.squad.service.UserService;
 
 import java.util.List;
 
@@ -21,9 +22,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class PlayerController {
 
     private final PlayerService playerService;
+    private final UserService userService;
 
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(PlayerService playerService, UserService userService) {
         this.playerService = playerService;
+        this.userService = userService;
     }
 
     @GetMapping("")
@@ -38,7 +41,7 @@ public class PlayerController {
         return ResponseEntity.ok(player);
     }
 
-    @PutMapping("")
+    @PutMapping(value = "", consumes = { "*/*" })
     public ResponseEntity<String> updatePlayer(@RequestBody Player updatedPlayer) {
         try {
             playerService.updatePlayer(updatedPlayer);
@@ -51,8 +54,9 @@ public class PlayerController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletePlayerById(@PathVariable Integer id) {
         try {
+            userService.deleteById(id);
             playerService.deletePlayerById(id);
-            return ResponseEntity.ok("Player updated successfully");
+            return ResponseEntity.ok("Player deleted successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }

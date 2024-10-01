@@ -9,6 +9,7 @@ import com.squad.squad.dto.GamesDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.repository.GameRepository;
+import com.squad.squad.repository.RatingRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -17,10 +18,12 @@ public class GameService {
 
     private final GameRepository gameRepository;
     private final RosterService rosterService;
+    private final RatingRepository ratingRepository;
 
-    public GameService(GameRepository gameRepository, RosterService rosterService) {
+    public GameService(GameRepository gameRepository, RosterService rosterService, RatingRepository ratingRepository) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
+        this.ratingRepository = ratingRepository;
     }
 
     public List<GamesDTO> getAllGames() {
@@ -79,7 +82,22 @@ public class GameService {
 
     @Transactional
     public void deleteGame(Integer id) {
+
+        rosterService.deleteByGameId(id);
+
         gameRepository.deleteById(id);
+    }
+
+    public void checkIfVotingIsComplete(Integer game_id, String team_color) {
+
+        Integer totalVotesATeam = ratingRepository.countByRosterGameIdAndTeamColor(game_id, team_color);
+
+        Game game = getGameById(game_id);
+        Integer expectedVotesForATeam = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
+
+        if (totalVotesATeam == expectedVotesForATeam) {
+            rosterService.updateRatingsForGame(game_id, team_color);
+        }
     }
 
 }
