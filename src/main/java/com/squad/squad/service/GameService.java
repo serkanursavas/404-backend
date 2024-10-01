@@ -88,14 +88,15 @@ public class GameService {
         gameRepository.deleteById(id);
     }
 
-    public void checkIfVotingIsComplete(Integer gameId) {
+    public void checkIfVotingIsComplete(Integer game_id, String team_color) {
 
-        // Integer totalVotes = ratingRepository.countByRosterGameId(gameId);
-        // Integer expectedVotes = game.getRoster().size() * (game.getRoster().size() -
-        // 1);
+        Integer totalVotesATeam = ratingRepository.countByRosterGameIdAndTeamColor(game_id, team_color);
 
-        if (true) {
-            rosterService.updateRatingsForGame(gameId);
+        Game game = getGameById(game_id);
+        Integer expectedVotesForATeam = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
+
+        if (totalVotesATeam == expectedVotesForATeam) {
+            rosterService.updateRatingsForGame(game_id, team_color);
         }
     }
 
