@@ -3,7 +3,6 @@ package com.squad.squad.entity;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.Column;
@@ -49,7 +48,6 @@ public class Player {
     private List<Roster> roster;
 
     @OneToMany(mappedBy = "player")
-    @JsonIgnore
     private List<Goal> goal;
 
     public Integer getId() {
