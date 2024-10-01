@@ -13,7 +13,6 @@ public class GameDTO {
     private List<RosterDTO> rosters; // 12 kişilik roster listesi
 
     // Getters and Setters
-    //TODO: dummy commit barisayhan
 
     public Integer getId() {
         return id;
