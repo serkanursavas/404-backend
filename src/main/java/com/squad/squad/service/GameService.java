@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.GamesDTO;
 import com.squad.squad.entity.Game;
+import com.squad.squad.entity.Goal;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.repository.GameRepository;
 import com.squad.squad.repository.RatingRepository;
@@ -43,6 +44,8 @@ public class GameService {
     @Transactional
     public Game createGameWithRoster(Game game, List<Roster> rosters) {
 
+        game.setHomeTeamScore(0);
+        game.setAwayTeamScore(0);
         Game savedGame = gameRepository.save(game);
         for (Roster roster : rosters) {
             roster.setGame(savedGame);
@@ -69,14 +72,6 @@ public class GameService {
             game.setDateTime(updatedGame.getDateTime());
         }
 
-        if (updatedGame.getHomeTeamScore() != null) {
-            game.setHomeTeamScore(updatedGame.getHomeTeamScore());
-        }
-
-        if (updatedGame.getAwayTeamScore() != null) {
-            game.setAwayTeamScore(updatedGame.getAwayTeamScore());
-        }
-
         return gameRepository.save(game);
     }
 
@@ -100,4 +95,17 @@ public class GameService {
         }
     }
 
+    public void updateScoreWithGoal(Goal goal) {
+
+        Game existingGame = getGameById(goal.getGame().getId());
+
+        if (goal.getTeamColor().equalsIgnoreCase("white")) {
+            existingGame.setHomeTeamScore(existingGame.getHomeTeamScore() + 1);
+        } else {
+            existingGame.setAwayTeamScore(existingGame.getAwayTeamScore() + 1);
+        }
+
+        gameRepository.save(existingGame);
+
+    }
 }

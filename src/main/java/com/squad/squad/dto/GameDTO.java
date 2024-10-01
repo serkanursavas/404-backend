@@ -11,6 +11,7 @@ public class GameDTO {
     private Integer awayTeamScore;
     private LocalDateTime dateTime;
     private List<RosterDTO> rosters; // 12 kişilik roster listesi
+    private List<GoalDTO> goals;
 
     // Getters and Setters
 
@@ -68,5 +69,13 @@ public class GameDTO {
 
     public void setRosters(List<RosterDTO> rosters) {
         this.rosters = rosters;
+    }
+
+    public List<GoalDTO> getGoals() {
+        return goals;
+    }
+
+    public void setGoals(List<GoalDTO> goals) {
+        this.goals = goals;
     }
 }
