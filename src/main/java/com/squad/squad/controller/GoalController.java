@@ -23,13 +23,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class GoalController {
 
     private final GoalService goalService;
-    private final GameService gameService;
-    private final PlayerService playerService;
 
-    public GoalController(GoalService goalService, GameService gameService, PlayerService playerService) {
+    public GoalController(GoalService goalService) {
         this.goalService = goalService;
-        this.gameService = gameService;
-        this.playerService = playerService;
+
     }
 
     @GetMapping("")
@@ -40,17 +37,7 @@ public class GoalController {
     @PostMapping("")
     public ResponseEntity<String> addGoal(@RequestBody List<GoalDTO> goalDtos) {
 
-        for (GoalDTO goalDto : goalDtos) {
-            Game existingGame = gameService.getGameById(goalDto.getGame_id());
-            Player existingPlayer = playerService.getPlayerById(goalDto.getPlayer_id());
-
-            Goal goal = new Goal();
-            goal.setGame(existingGame);
-            goal.setPlayer(existingPlayer);
-            goal.setTeamColor(goalDto.getTeam_color());
-
-            goalService.addGoal(goal);
-        }
+        goalService.addGoals(goalDtos);
         return ResponseEntity.ok("goals creation success");
     }
 
