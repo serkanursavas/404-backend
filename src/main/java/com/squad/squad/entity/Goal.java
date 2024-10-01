@@ -1,6 +1,6 @@
 package com.squad.squad.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,11 +22,12 @@ public class Goal {
 
     @ManyToOne
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private Game game;
 
     @ManyToOne
     @JoinColumn(name = "player_id", referencedColumnName = "id", nullable = false)
-    @JsonManagedReference(value = "player-goal")
+    @JsonIgnore
     private Player player;
 
     public Integer getId() {

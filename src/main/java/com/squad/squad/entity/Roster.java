@@ -3,8 +3,7 @@ package com.squad.squad.entity;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.Column;
@@ -32,7 +31,7 @@ public class Roster {
 
     @ManyToOne
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
-    @JsonManagedReference
+    @JsonIgnore
     private Game game;
 
     @ManyToOne
@@ -40,6 +39,7 @@ public class Roster {
     private Player player;
 
     @OneToMany(mappedBy = "roster")
+    @JsonIgnore
     private List<Rating> rate;
 
     public Integer getId() {
