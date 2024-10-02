@@ -1,8 +1,12 @@
 package com.squad.squad.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public class RosterDTO {
 
+    @NotNull(message = "Player ID cannot be null")
     private Integer id;
+
     private String teamColor;
     private double rating;
     private Integer playerId;
