@@ -10,11 +10,11 @@ public class GameDTO {
     private Integer homeTeamScore;
     private Integer awayTeamScore;
     private LocalDateTime dateTime;
-    private List<RosterDTO> rosters; // 12 kişilik roster listesi
+    private Integer teamSize;
+    private List<RosterDTO> rosters;
     private List<GoalDTO> goals;
 
     // Getters and Setters
-
     public Integer getId() {
         return id;
     }
@@ -77,5 +77,13 @@ public class GameDTO {
 
     public void setGoals(List<GoalDTO> goals) {
         this.goals = goals;
+    }
+
+    public Integer getTeamSize() {
+        return teamSize;
+    }
+
+    public void setTeamSize(Integer teamSize) {
+        this.teamSize = teamSize;
     }
 }

@@ -12,16 +12,18 @@ public class GamesDTO {
 
     private Integer homeTeamScore = 0;
     private Integer awayTeamScore = 0;
+    private boolean isPlayed;
 
     public GamesDTO() {
     }
 
     public GamesDTO(Integer id, LocalDateTime dateTime, Integer homeTeamScore,
-            Integer awayTeamScore) {
+            Integer awayTeamScore, Boolean isPlayed) {
         this.id = id;
         this.dateTime = dateTime;
         this.homeTeamScore = homeTeamScore;
         this.awayTeamScore = awayTeamScore;
+        this.isPlayed = isPlayed;
     }
 
     public Integer getId() {
@@ -54,6 +56,14 @@ public class GamesDTO {
 
     public void setAwayTeamScore(Integer awayTeamScore) {
         this.awayTeamScore = awayTeamScore;
+    }
+
+    public boolean isPlayed() {
+        return isPlayed;
+    }
+
+    public void setPlayed(boolean isPlayed) {
+        this.isPlayed = isPlayed;
     }
 
 }
