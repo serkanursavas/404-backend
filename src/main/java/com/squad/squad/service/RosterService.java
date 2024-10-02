@@ -1,14 +1,13 @@
 package com.squad.squad.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-
 import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.repository.RosterRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RosterService {
