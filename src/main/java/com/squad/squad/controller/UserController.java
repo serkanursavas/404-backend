@@ -2,7 +2,7 @@ package com.squad.squad.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.squad.squad.dto.ResetPasswordRequest; // Add this import statement
+import com.squad.squad.dto.ResetPasswordRequest;
 
 import com.squad.squad.dto.UserDTO;
 import com.squad.squad.entity.User;
@@ -10,7 +10,6 @@ import com.squad.squad.service.UserService;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,38 +40,26 @@ public class UserController {
             return ResponseEntity.badRequest().body("Username is already taken");
         }
 
-        userService.registerUser(user);
+        userService.createUser(user);
         return ResponseEntity.ok("User registered successfully");
     }
 
-    @DeleteMapping("/{username}")
-    public ResponseEntity<String> deleteUser(@PathVariable String username) {
-
-        try {
-            userService.deleteByUsername(username);
-            return ResponseEntity.ok("User deleted");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-
-    }
-
-    @PutMapping("/{username}")
-    public ResponseEntity<String> updateUserByUsername(@PathVariable String username, @RequestBody User updatedUser) {
-        try {
-            userService.updateUser(username, updatedUser);
-            return ResponseEntity.ok("User updated successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
-    // ADMIN yetkisine sahip olanlar tarafından erişilebilecek şifre sıfırlama
-    // endpoint'i
     @PostMapping("/admin/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
         String result = userService.resetPassword(request.getUsername(), request.getNewPassword());
         return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/{username}")
+    public ResponseEntity<String> updateUserByUsername(@PathVariable String username, @RequestBody User updatedUser) {
+        userService.updateUser(username, updatedUser);
+        return ResponseEntity.ok("User updated successfully");
+    }
+
+    @DeleteMapping("/{username}")
+    public ResponseEntity<String> deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
+        return ResponseEntity.ok("User deleted");
     }
 
 }
