@@ -4,12 +4,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.dto.GoalDTO;
-import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
-import com.squad.squad.entity.Player;
-import com.squad.squad.service.GameService;
 import com.squad.squad.service.GoalService;
-import com.squad.squad.service.PlayerService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

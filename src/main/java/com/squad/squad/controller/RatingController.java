@@ -12,6 +12,8 @@ import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RatingService;
 import com.squad.squad.service.RosterService;
 
+import jakarta.transaction.Transactional;
+
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,7 @@ public class RatingController {
         this.gameService = gameService;
     }
 
+    @Transactional
     @PostMapping("")
     public ResponseEntity<String> submitRating(@RequestBody List<RatingDTO> ratings) {
 

@@ -35,8 +35,16 @@ public class GoalService {
 
     public void addGoals(List<GoalDTO> goalDtos) {
 
+        Game existingGame = null;
+
         for (GoalDTO goalDto : goalDtos) {
-            Game existingGame = gameService.getGameById(goalDto.getGame_id());
+
+            if (existingGame == null) {
+                existingGame = gameService.getGameById(goalDto.getGame_id());
+                existingGame.setPlayed(true);
+                gameService.updateGame(existingGame.getId(), existingGame);
+            }
+
             Player existingPlayer = playerService.getPlayerById(goalDto.getPlayer_id());
 
             Goal goal = new Goal();

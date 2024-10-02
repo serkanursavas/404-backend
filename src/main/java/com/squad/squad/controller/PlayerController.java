@@ -5,11 +5,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.entity.Player;
 import com.squad.squad.service.PlayerService;
-import com.squad.squad.service.UserService;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,11 +20,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class PlayerController {
 
     private final PlayerService playerService;
-    private final UserService userService;
 
-    public PlayerController(PlayerService playerService, UserService userService) {
+    public PlayerController(PlayerService playerService) {
         this.playerService = playerService;
-        this.userService = userService;
     }
 
     @GetMapping("")
@@ -35,31 +31,21 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Player> getPlayerById(@PathVariable Integer id) {
-
+    public ResponseEntity<Object> getPlayerById(@PathVariable Integer id) {
         Player player = playerService.getPlayerById(id);
         return ResponseEntity.ok(player);
     }
 
-    @PutMapping(value = "", consumes = { "*/*" })
+    @PutMapping("")
     public ResponseEntity<String> updatePlayer(@RequestBody Player updatedPlayer) {
-        try {
-            playerService.updatePlayer(updatedPlayer);
-            return ResponseEntity.ok("Player updated successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        playerService.updatePlayer(updatedPlayer);
+        return ResponseEntity.ok("Player updated successfully");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deletePlayerById(@PathVariable Integer id) {
-        try {
-            userService.deleteById(id);
-            playerService.deletePlayerById(id);
-            return ResponseEntity.ok("Player deleted successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    public ResponseEntity<Void> deletePlayerById(@PathVariable Integer id) {
+        playerService.deletePlayerById(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

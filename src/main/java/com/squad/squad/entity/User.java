@@ -1,5 +1,7 @@
 package com.squad.squad.entity;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -10,8 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -30,9 +30,8 @@ public class User {
     @Column(nullable = false)
     private String role;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
-    private java.util.Date createdAt = new java.util.Date();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToOne
     @JoinColumn(name = "player_id", referencedColumnName = "id")
@@ -70,11 +69,11 @@ public class User {
         this.role = role;
     }
 
-    public java.util.Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(java.util.Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.dto.RosterDTO;
+import com.squad.squad.entity.Roster;
 import com.squad.squad.service.RosterService;
 
 import java.util.List;
@@ -30,13 +31,8 @@ public class RosterController {
     }
 
     @PutMapping("")
-    public ResponseEntity<String> updateRosters(@RequestBody List<RosterDTO> rosters) {
-
-        for (RosterDTO roster : rosters) {
-            rosterService.updateRoster(roster);
-        }
-
-        return ResponseEntity.ok("success");
-
+    public ResponseEntity<String> updateRosters(@RequestBody List<Roster> rosters) {
+        rosterService.updateRosters(rosters);
+        return ResponseEntity.ok("Rosters updated successfully");
     }
 }
