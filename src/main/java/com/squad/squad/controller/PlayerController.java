@@ -29,7 +29,7 @@ public class PlayerController {
         this.userService = userService;
     }
 
-    @GetMapping("")
+    @GetMapping("/getAllPlayers")
     public List<Player> getAllPlayers() {
         return playerService.getAllActivePlayers();
     }

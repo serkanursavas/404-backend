@@ -3,6 +3,7 @@ package com.squad.squad.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.squad.squad.service.impl.PlayerServiceImpl;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.RosterDTO;
@@ -15,12 +16,12 @@ public class RosterService {
 
     private final RosterRepository rosterRepository;
     private final RatingService ratingService;
-    private final PlayerService playerService;
+    private final PlayerServiceImpl playerServiceImpl;
 
-    public RosterService(RosterRepository rosterRepository, RatingService ratingService, PlayerService playerService) {
+    public RosterService(RosterRepository rosterRepository, RatingService ratingService, PlayerServiceImpl playerServiceImpl) {
         this.rosterRepository = rosterRepository;
         this.ratingService = ratingService;
-        this.playerService = playerService;
+        this.playerServiceImpl = playerServiceImpl;
     }
 
     public List<RosterDTO> getAllRosters() {
@@ -79,7 +80,7 @@ public class RosterService {
             existingRoster.setTeamColor(updatedRoster.getTeamColor());
         }
         if (updatedRoster.getPlayerId() != null) {
-            Player existingPlayer = playerService.getPlayerById(updatedRoster.getPlayerId());
+            Player existingPlayer = playerServiceImpl.getPlayerById(updatedRoster.getPlayerId());
 
             existingRoster.setPlayer(existingPlayer);
         }
