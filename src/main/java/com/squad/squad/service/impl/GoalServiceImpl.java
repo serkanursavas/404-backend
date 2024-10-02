@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.GoalService;
+import com.squad.squad.service.PlayerService;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.GoalDTO;
@@ -18,12 +19,12 @@ public class GoalServiceImpl implements GoalService {
 
     private final GoalRepository goalRepository;
     private final GameService gameService;
-    private final PlayerServiceImpl playerServiceImpl;
+    private final PlayerService playerService;
 
-    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerServiceImpl playerServiceImpl) {
+    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService) {
         this.goalRepository = goalRepository;
         this.gameService = gameService;
-        this.playerServiceImpl = playerServiceImpl;
+        this.playerService = playerService;
     }
 
     @Override
@@ -43,7 +44,7 @@ public class GoalServiceImpl implements GoalService {
 
         for (GoalDTO goalDto : goalDtos) {
             Game existingGame = gameService.getGameById(goalDto.getGame_id());
-            Player existingPlayer = playerServiceImpl.getPlayerById(goalDto.getPlayer_id());
+            Player existingPlayer = playerService.getPlayerById(goalDto.getPlayer_id());
 
             Goal goal = new Goal();
             goal.setGame(existingGame);

@@ -1,27 +1,25 @@
 package com.squad.squad.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.squad.squad.service.impl.PlayerServiceImpl;
-import org.springframework.stereotype.Service;
-
 import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.repository.RosterRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RosterService {
 
     private final RosterRepository rosterRepository;
     private final RatingService ratingService;
-    private final PlayerServiceImpl playerServiceImpl;
+    private final PlayerService playerService;
 
-    public RosterService(RosterRepository rosterRepository, RatingService ratingService, PlayerServiceImpl playerServiceImpl) {
+    public RosterService(RosterRepository rosterRepository, RatingService ratingService, PlayerService playerService) {
         this.rosterRepository = rosterRepository;
         this.ratingService = ratingService;
-        this.playerServiceImpl = playerServiceImpl;
+        this.playerService = playerService;
     }
 
     public List<RosterDTO> getAllRosters() {
@@ -80,7 +78,7 @@ public class RosterService {
             existingRoster.setTeamColor(updatedRoster.getTeamColor());
         }
         if (updatedRoster.getPlayerId() != null) {
-            Player existingPlayer = playerServiceImpl.getPlayerById(updatedRoster.getPlayerId());
+            Player existingPlayer = playerService.getPlayerById(updatedRoster.getPlayerId());
 
             existingRoster.setPlayer(existingPlayer);
         }
