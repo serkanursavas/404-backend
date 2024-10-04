@@ -194,6 +194,12 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    @Override
+    public Game findById(Integer id) {
+        return gameRepository.findById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+    }
+
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {
         if (value != null) {
             setter.accept(value);

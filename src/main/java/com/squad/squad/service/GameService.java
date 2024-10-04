@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.dto.LatestGamesDTO;
+import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 
 public interface GameService {
@@ -22,4 +23,5 @@ public interface GameService {
 
     void checkIfVotingIsComplete(Integer game_id, String team_color);
 
+    Game findById(Integer id);
 }

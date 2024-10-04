@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.dto.GoalDTO;
-import com.squad.squad.entity.Goal;
 import com.squad.squad.service.GoalService;
 
 import org.springframework.http.ResponseEntity;
@@ -25,13 +24,13 @@ public class GoalController {
 
     }
 
-    @GetMapping("")
-    public List<Goal> getAllGoals() {
+    @GetMapping("/getAllGoals")
+    public List<GoalDTO> getAllGoals() {
         return goalService.getAllGoals();
     }
 
-    @PostMapping("")
-    public ResponseEntity<String> addGoal(@RequestBody List<GoalDTO> goalDtos) {
+    @PostMapping("/addGoals")
+    public ResponseEntity<String> addGoals(@RequestBody List<GoalDTO> goalDtos) {
 
         goalService.addGoals(goalDtos);
         return ResponseEntity.ok("goals creation success");

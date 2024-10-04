@@ -4,24 +4,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.dto.LatestGamesDTO;
-import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.dto.GoalDTO;
-import com.squad.squad.dto.RosterDTO;
-import com.squad.squad.entity.Game;
-import com.squad.squad.entity.Player;
-import com.squad.squad.entity.Roster;
 import com.squad.squad.service.GameService;
-import com.squad.squad.service.GoalService;
-import com.squad.squad.service.PlayerService;
-import com.squad.squad.service.RosterService;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.springframework.beans.BeanUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
