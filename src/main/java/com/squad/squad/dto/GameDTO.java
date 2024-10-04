@@ -13,6 +13,8 @@ public class GameDTO {
     private Integer teamSize;
     private List<RosterDTO> rosters;
     private List<GoalDTO> goals;
+    private boolean isPlayed;
+    private boolean voteMode;
 
     // Getters and Setters
     public Integer getId() {
@@ -85,5 +87,21 @@ public class GameDTO {
 
     public void setTeamSize(Integer teamSize) {
         this.teamSize = teamSize;
+    }
+
+    public boolean isPlayed() {
+        return isPlayed;
+    }
+
+    public void setPlayed(boolean isPlayed) {
+        this.isPlayed = isPlayed;
+    }
+
+    public boolean isVoteMode() {
+        return voteMode;
+    }
+
+    public void setVoteMode(boolean voteMode) {
+        this.voteMode = voteMode;
     }
 }

@@ -2,20 +2,19 @@ package com.squad.squad.service;
 
 import java.util.List;
 
-import com.squad.squad.dto.GamesDTO;
-import com.squad.squad.entity.Game;
+import com.squad.squad.dto.GameDTO;
+import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.entity.Goal;
-import com.squad.squad.entity.Roster;
 
 public interface GameService {
 
-    List<GamesDTO> getAllGames();
+    List<LatestGamesDTO> getAllGames();
 
-    Game getGameById(Integer id);
+    GameDTO getGameById(Integer id);
 
-    Game createGameWithRoster(Game game, List<Roster> rosters);
+    GameDTO createGame(GameDTO gameDto);
 
-    Game updateGame(Integer id, Game updatedGame);
+    GameDTO updateGame(Integer id, GameDTO updatedGame);
 
     void updateScoreWithGoal(Goal goal);
 
