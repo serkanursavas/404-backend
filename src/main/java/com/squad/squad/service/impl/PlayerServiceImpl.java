@@ -33,6 +33,12 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
+    public Player createPlayer(Player player) {
+        return playerRepository.save(player);
+    }
+
+    @Override
+    @Transactional
     public Player updatePlayer(Player updatedPlayer) {
         Player existingPlayer = playerRepository.findById(updatedPlayer.getId())
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + updatedPlayer.getId()));
