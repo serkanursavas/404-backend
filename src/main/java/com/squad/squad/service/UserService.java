@@ -1,113 +1,26 @@
 package com.squad.squad.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.UserDTO;
-import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
-import com.squad.squad.exception.UserNotFoundException;
-import com.squad.squad.repository.PlayerRepository;
-import com.squad.squad.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
+public interface UserService {
 
-@Service
-public class UserService {
+    boolean existsByUsername(String username);
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final PlayerRepository playerRepository;
+    User createUser(User user);
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PlayerRepository playerRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.playerRepository = playerRepository;
-    }
+    List<UserDTO> getAllUsers();
 
-    @Transactional
-    public User createUser(User user) {
-        String encodedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encodedPassword);
+    UserDTO updateUser(String username, User updatedUser);
 
-        User savedUser = userRepository.save(user);
+    void deleteUser(String username);
 
-        Player player = new Player();
-        player.setUser(savedUser);
+    String resetPassword(String username, String newPassword);
 
-        playerRepository.save(player);
+    User getUserByUsername(String username);
 
-        return savedUser;
-    }
-
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(user -> new UserDTO(user.getId(), user.getUsername(), user.getRole()))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public UserDTO updateUser(String username, User updatedUser) {
-
-        User existingUser = getUserByUsername(username);
-
-        if (!existingUser.getUsername().equals(updatedUser.getUsername())
-                && userRepository.existsByUsername(updatedUser.getUsername())) {
-            throw new RuntimeException("Username already taken: " + username);
-        }
-
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setRole(updatedUser.getRole());
-
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            String hashedPassword = passwordEncoder.encode(updatedUser.getPassword());
-            existingUser.setPassword(hashedPassword);
-        }
-
-        userRepository.save(existingUser);
-        return new UserDTO(existingUser.getId(), existingUser.getUsername(), existingUser.getRole());
-
-    }
-
-    @Transactional
-    public void deleteUser(String username) {
-        if (username != null) {
-            User user = getUserByUsername(username);
-            Player player = playerRepository.findById(user.getId())
-                    .orElseThrow(() -> new RuntimeException("Player not found"));
-            player.setActive(false);
-            playerRepository.save(player);
-            userRepository.deleteByUsername(username);
-        } else {
-            throw new IllegalArgumentException("Userame must be provided.");
-        }
-    }
-
-    public String resetPassword(String username, String newPassword) {
-        User user = getUserByUsername(username);
-
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(encodedPassword);
-        userRepository.save(user);
-
-        return "Password reset successfully for user: " + username;
-    }
-
-    public User getUserByUsername(String username) {
-        return userRepository.findUserByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
-    }
-
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
-
-    public void deleteById(Integer id) {
-        userRepository.deleteById(id);
-    }
+    void deleteById(Integer id);
 
 }
