@@ -99,7 +99,7 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public void deleteGame(Integer id) {
 
-        rosterService.deleteByGameId(id);
+        rosterService.deleteRosterByGameId(id);
         gameRepository.deleteById(id);
     }
 
