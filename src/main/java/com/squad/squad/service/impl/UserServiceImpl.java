@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.UserDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDTO createUser(UserDTO user) {
+
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User savedUser = new User();
@@ -85,7 +87,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(String username) {
         if (username != null) {
             User user = getUserByUsername(username);
-            Player player = playerService.getPlayerById(user.getId());
+            PlayerDTO player = playerService.getPlayerById(user.getId());
 
             player.setActive(false);
             playerService.updatePlayer(player);

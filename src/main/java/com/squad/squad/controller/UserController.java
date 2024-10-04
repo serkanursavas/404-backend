@@ -42,13 +42,13 @@ public class UserController {
         return userService.resetPassword(request.getUsername(), request.getNewPassword());
     }
 
-    @PutMapping("/updateUserByUsername{username}")
+    @PutMapping("/updateUserByUsername/{username}")
     public UserDTO updateUserByUsername(@PathVariable String username, @RequestBody User updatedUser) {
         return userService.updateUser(username, updatedUser);
 
     }
 
-    @DeleteMapping("/deleteUser{username}")
+    @DeleteMapping("/deleteUser/{username}")
     public void deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
     }
