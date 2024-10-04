@@ -60,7 +60,7 @@ public class GoalServiceImpl implements GoalService {
                 gameService.updateGame(existingGame.getId(), gameMapper.gameToGameDTO(existingGame));
             }
 
-            Player existingPlayer = playerMapper.playerDTOtoPlayer(playerService.getPlayerById(goalDto.getPlayer_id()));
+            Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayer_id()));
 
             Goal goal = new Goal();
             goal.setGame(existingGame);

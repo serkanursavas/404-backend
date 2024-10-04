@@ -21,12 +21,12 @@ import com.squad.squad.entity.Roster;
 import com.squad.squad.enums.TeamColor;
 import com.squad.squad.exception.GameNotFoundException;
 import com.squad.squad.exception.NotFoundException;
+
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GameRepository;
 import com.squad.squad.service.GameService;
-import com.squad.squad.service.GoalService;
+
 import com.squad.squad.service.PlayerService;
-import com.squad.squad.service.RatingService;
 import com.squad.squad.service.RosterService;
 
 import jakarta.transaction.Transactional;
@@ -37,17 +37,13 @@ public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
     private final RosterService rosterService;
     private final PlayerService playerService;
-    private final GoalService goalService;
-    private final RatingService ratingService;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-            PlayerService playerService, GoalService goalService, RatingService ratingService) {
+            PlayerService playerService) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
-        this.goalService = goalService;
-        this.ratingService = ratingService;
     }
 
     @Override
@@ -71,9 +67,18 @@ public class GameServiceImpl implements GameService {
             rosterDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         }
 
-        List<GoalDTO> goals = goalService.getGoalsByGameId(id);
+        List<Goal> goals = game.getGoal();
+        List<GoalDTO> goalDTOs = goals.stream()
+                .map(goal -> {
+                    GoalDTO goalDTO = new GoalDTO();
+                    BeanUtils.copyProperties(goal, goalDTO);
+                    PlayerDTO playerDto = playerService.getPlayerById(goal.getPlayer().getId());
+                    goalDTO.setPlayer_name(playerDto.getName());
+                    return goalDTO;
+                })
+                .collect(Collectors.toList());
 
-        for (GoalDTO goalDTO : goals) {
+        for (GoalDTO goalDTO : goalDTOs) {
             PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayer_id());
             goalDTO.setPlayer_name(playerDto.getName());
         }
@@ -81,7 +86,7 @@ public class GameServiceImpl implements GameService {
         GameDTO gameDTO = new GameDTO();
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);
-        gameDTO.setGoals(goals);
+        gameDTO.setGoals(goalDTOs);
 
         return gameDTO;
     }
@@ -112,7 +117,7 @@ public class GameServiceImpl implements GameService {
             roster.setGame(game);
             roster.setTeamColor(rosterDTO.getTeamColor());
 
-            Player player = playerMapper.playerDTOtoPlayer(playerService.getPlayerById(rosterDTO.getPlayerId()));
+            Player player = playerMapper.playerDTOToPlayer(playerService.getPlayerById(rosterDTO.getPlayerId()));
 
             if (player == null) {
                 throw new RuntimeException("Player not found with id: " + rosterDTO.getPlayerId());
@@ -177,20 +182,6 @@ public class GameServiceImpl implements GameService {
             gameRepository.deleteById(id);
         } catch (Exception e) {
             throw new NotFoundException("Game or roster not found with game id: " + id);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void checkIfVotingIsComplete(Integer gameId, String teamColor) {
-
-        Integer totalVotes = ratingService.countByRosterGameIdAndTeamColor(gameId, teamColor);
-        GameDTO gameDto = getGameById(gameId);
-        Integer expectedVotes = (gameDto.getRosters().size() / 2) * ((gameDto.getRosters().size() / 2) - 1);
-
-        if (totalVotes.equals(expectedVotes)) {
-            rosterService.updateRatingsForGame(gameId, teamColor);
-            rosterService.updatePlayerGeneralRating(gameId);
         }
     }
 

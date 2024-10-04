@@ -10,15 +10,13 @@ import com.squad.squad.entity.Player;
 
 @Mapper
 public interface PlayerMapper {
-
     PlayerMapper INSTANCE = Mappers.getMapper(PlayerMapper.class);
 
     PlayerDTO playerToPlayerDTO(Player player);
 
-    Player playerDTOtoPlayer(PlayerDTO playerDTO);
+    Player playerDTOToPlayer(PlayerDTO playerDTO);
 
     List<PlayerDTO> playersToPlayerDTOs(List<Player> players);
 
     List<Player> playerDTOsToPlayers(List<PlayerDTO> playerDTOs);
-
 }

@@ -13,6 +13,7 @@ public interface RatingService {
 
     void clearAllRatings();
 
-    Integer countByRosterGameIdAndTeamColor(Integer gameId, String teamColor);
+    void updateRatingsForGame(Integer gameId, String teamColor);
 
+    void checkIfVotingIsComplete(Integer gameId, String teamColor);
 }

@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
             PlayerDTO player = playerService.getPlayerById(user.getId());
 
             player.setActive(false);
-            playerService.updatePlayer(player);
+            playerService.softDelete(player);
             userRepository.deleteByUsername(username);
         } else {
             throw new IllegalArgumentException("Userame must be provided.");

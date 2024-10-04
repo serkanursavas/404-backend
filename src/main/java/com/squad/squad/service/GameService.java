@@ -21,7 +21,5 @@ public interface GameService {
 
     void deleteGame(Integer id);
 
-    void checkIfVotingIsComplete(Integer game_id, String team_color);
-
     Game findById(Integer id);
 }

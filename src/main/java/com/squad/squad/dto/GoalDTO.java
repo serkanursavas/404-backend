@@ -13,6 +13,9 @@ public class GoalDTO {
         this.team_color = team_color;
     }
 
+    public GoalDTO() {
+    }
+
     public Integer getGame_id() {
         return game_id;
     }

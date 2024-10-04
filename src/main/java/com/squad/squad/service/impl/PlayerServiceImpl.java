@@ -57,6 +57,17 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
+    public void softDelete(PlayerDTO deletedPlayer) {
+        Player existingPlayer = playerRepository.findById(deletedPlayer.getId())
+                .orElseThrow(() -> new RuntimeException("Player not foundasasdas with id: " + deletedPlayer.getId()));
+
+        BeanUtils.copyProperties(deletedPlayer, existingPlayer);
+        existingPlayer.setActive(true);
+
+        playerRepository.save(existingPlayer);
+    }
+
+    @Override
     @Transactional
     public void deletePlayerById(Integer id) {
         Player player = playerRepository.findById(id)

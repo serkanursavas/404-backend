@@ -21,10 +21,10 @@ public interface RosterService {
 
     void updateAllRosters(List<RosterDTO> rosters);
 
-    void updateRatingsForGame(Integer gameId, String teamColor);
-
     void deleteRosterByGameId(Integer id);
 
     void updatePlayerGeneralRating(Integer gameId);
+
+    List<Roster> findRosterByGameIdAndTeamColor(Integer gameId, String teamColor);
 
 }

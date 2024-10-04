@@ -16,4 +16,6 @@ public interface PlayerService {
     PlayerDTO updatePlayer(PlayerDTO player);
 
     void deletePlayerById(Integer id);
+
+    void softDelete(PlayerDTO deletedPlayer);
 }
