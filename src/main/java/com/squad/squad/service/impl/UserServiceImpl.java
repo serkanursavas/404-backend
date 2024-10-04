@@ -6,12 +6,13 @@ import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.UserDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
 import com.squad.squad.exception.UserNotFoundException;
-import com.squad.squad.repository.PlayerRepository;
 import com.squad.squad.repository.UserRepository;
+import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.UserService;
 
 import jakarta.transaction.Transactional;
@@ -21,29 +22,33 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PlayerRepository playerRepository;
+    private final PlayerService playerService;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PlayerRepository playerRepository) {
+            PlayerService playerService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.playerRepository = playerRepository;
+        this.playerService = playerService;
     }
 
     @Override
     @Transactional
-    public User createUser(User user) {
-        String encodedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encodedPassword);
+    public UserDTO createUser(UserDTO user) {
 
-        User savedUser = userRepository.save(user);
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+
+        User savedUser = new User();
+        savedUser.setPassword(encodedPassword);
+        savedUser.setRole(user.getRole());
+        savedUser.setUsername(user.getUsername());
+        userRepository.save(savedUser);
 
         Player player = new Player();
         player.setUser(savedUser);
 
-        playerRepository.save(player);
+        playerService.createPlayer(player);
 
-        return savedUser;
+        return user;
     }
 
     @Override
@@ -82,10 +87,10 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(String username) {
         if (username != null) {
             User user = getUserByUsername(username);
-            Player player = playerRepository.findById(user.getId())
-                    .orElseThrow(() -> new RuntimeException("Player not found"));
+            PlayerDTO player = playerService.getPlayerById(user.getId());
+
             player.setActive(false);
-            playerRepository.save(player);
+            playerService.softDelete(player);
             userRepository.deleteByUsername(username);
         } else {
             throw new IllegalArgumentException("Userame must be provided.");
@@ -116,7 +121,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteById(Integer id) {
-        userRepository.deleteById(id);
+        try {
+            userRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new UserNotFoundException("User not found with id: " + id);
+        }
     }
 
 }

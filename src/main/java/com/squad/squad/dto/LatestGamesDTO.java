@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class GamesDTO {
+public class LatestGamesDTO {
 
     private Integer id;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -14,10 +14,10 @@ public class GamesDTO {
     private Integer awayTeamScore = 0;
     private boolean isPlayed;
 
-    public GamesDTO() {
+    public LatestGamesDTO() {
     }
 
-    public GamesDTO(Integer id, LocalDateTime dateTime, Integer homeTeamScore,
+    public LatestGamesDTO(Integer id, LocalDateTime dateTime, Integer homeTeamScore,
             Integer awayTeamScore, Boolean isPlayed) {
         this.id = id;
         this.dateTime = dateTime;

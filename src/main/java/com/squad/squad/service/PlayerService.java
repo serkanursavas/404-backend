@@ -2,15 +2,20 @@ package com.squad.squad.service;
 
 import java.util.List;
 
+import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.entity.Player;
 
 public interface PlayerService {
 
-    List<Player> getAllActivePlayers();
+    List<PlayerDTO> getAllActivePlayers();
 
-    Player getPlayerById(Integer id);
+    PlayerDTO getPlayerById(Integer id);
 
-    Player updatePlayer(Player player);
+    Player createPlayer(Player player);
+
+    PlayerDTO updatePlayer(PlayerDTO player);
 
     void deletePlayerById(Integer id);
+
+    void softDelete(PlayerDTO deletedPlayer);
 }

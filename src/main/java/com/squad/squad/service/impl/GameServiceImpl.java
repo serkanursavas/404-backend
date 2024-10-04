@@ -1,21 +1,32 @@
 package com.squad.squad.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
+
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.dto.GamesDTO;
+import com.squad.squad.dto.GameDTO;
+import com.squad.squad.dto.GoalDTO;
+import com.squad.squad.dto.LatestGamesDTO;
+import com.squad.squad.dto.PlayerDTO;
+import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
+import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.enums.TeamColor;
 import com.squad.squad.exception.GameNotFoundException;
+import com.squad.squad.exception.NotFoundException;
+
+import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GameRepository;
-import com.squad.squad.repository.RatingRepository;
-import com.squad.squad.repository.RosterRepository;
 import com.squad.squad.service.GameService;
+
+import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
 
 import jakarta.transaction.Transactional;
@@ -25,51 +36,114 @@ public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;
     private final RosterService rosterService;
-    private final RatingRepository ratingRepository;
-    private final RosterRepository rosterRepository;
+    private final PlayerService playerService;
+    private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-            RatingRepository ratingRepository,
-            RosterRepository rosterRepository) {
+            PlayerService playerService) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
-        this.ratingRepository = ratingRepository;
-        this.rosterRepository = rosterRepository;
+        this.playerService = playerService;
     }
 
     @Override
-    public List<GamesDTO> getAllGames() {
+    public List<LatestGamesDTO> getAllGames() {
         return gameRepository.findAll().stream()
-                .map(game -> new GamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
+                .map(game -> new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
                         game.getAwayTeamScore(), game.isPlayed()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Game getGameById(Integer id) {
-        return gameRepository.findById(id)
+    public GameDTO getGameById(Integer id) {
+
+        Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+
+        List<RosterDTO> rosters = rosterService.findRosterByGameId(id);
+
+        for (RosterDTO rosterDTO : rosters) {
+            PlayerDTO playerDto = playerService.getPlayerById(rosterDTO.getPlayerId());
+            rosterDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
+        }
+
+        List<Goal> goals = game.getGoal();
+        List<GoalDTO> goalDTOs = goals.stream()
+                .map(goal -> {
+                    GoalDTO goalDTO = new GoalDTO();
+                    BeanUtils.copyProperties(goal, goalDTO);
+                    PlayerDTO playerDto = playerService.getPlayerById(goal.getPlayer().getId());
+                    goalDTO.setPlayer_name(playerDto.getName());
+                    return goalDTO;
+                })
+                .collect(Collectors.toList());
+
+        for (GoalDTO goalDTO : goalDTOs) {
+            PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayer_id());
+            goalDTO.setPlayer_name(playerDto.getName());
+        }
+
+        GameDTO gameDTO = new GameDTO();
+        BeanUtils.copyProperties(game, gameDTO);
+        gameDTO.setRosters(rosters);
+        gameDTO.setGoals(goalDTOs);
+
+        return gameDTO;
     }
 
     @Override
     @Transactional
-    public Game createGameWithRoster(Game game, List<Roster> rosters) {
+    public GameDTO createGame(GameDTO gameDto) {
+        // Set<Integer> playerIds = new HashSet<>();
+
+        // for (RosterDTO roster : gameDTO.getRosters()) {
+        // if (!playerIds.add(roster.getPlayerId())) {
+        // return ResponseEntity.badRequest().body("Duplicate playerId found: " +
+        // roster.getPlayerId());
+        // }
+        // }
+
+        Game game = new Game();
+        game.setDateTime(gameDto.getDateTime());
+        game.setWeather(gameDto.getWeather());
+        game.setLocation(gameDto.getLocation());
+        game.setHomeTeamScore(gameDto.getHomeTeamScore());
+        game.setAwayTeamScore(gameDto.getAwayTeamScore());
+
+        List<Roster> rosters = new ArrayList<>();
+
+        for (RosterDTO rosterDTO : gameDto.getRosters()) {
+            Roster roster = new Roster();
+            roster.setGame(game);
+            roster.setTeamColor(rosterDTO.getTeamColor());
+
+            Player player = playerMapper.playerDTOToPlayer(playerService.getPlayerById(rosterDTO.getPlayerId()));
+
+            if (player == null) {
+                throw new RuntimeException("Player not found with id: " + rosterDTO.getPlayerId());
+            }
+
+            roster.setPlayer(player);
+
+            rosters.add(roster);
+        }
 
         game.setHomeTeamScore(0);
         game.setAwayTeamScore(0);
         Game savedGame = gameRepository.save(game);
 
         rosters.forEach(roster -> roster.setGame(savedGame));
-        rosterRepository.saveAll(rosters);
+        rosterService.saveAllRosters(rosters);
 
-        return savedGame;
+        return gameDto;
     }
 
     @Override
     @Transactional
-    public Game updateGame(Integer id, Game updatedGame) {
+    public GameDTO updateGame(Integer id, GameDTO updatedGame) {
 
-        Game game = getGameById(id);
+        Game game = gameRepository.findById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
         updateFieldIfNotNull(updatedGame.getLocation(), game::setLocation);
         updateFieldIfNotNull(updatedGame.getWeather(), game::setWeather);
@@ -77,14 +151,16 @@ public class GameServiceImpl implements GameService {
 
         game.setPlayed(updatedGame.isPlayed());
 
-        return gameRepository.save(game);
+        gameRepository.save(game);
+        return null;
     }
 
     @Override
     @Transactional
     public void updateScoreWithGoal(Goal goal) {
 
-        Game existingGame = getGameById(goal.getGame().getId());
+        Game existingGame = gameRepository.findById(goal.getGame().getId())
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + goal.getGame().getId()));
 
         TeamColor teamColor = TeamColor.fromString(goal.getTeamColor());
 
@@ -101,23 +177,18 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public void deleteGame(Integer id) {
-
-        rosterService.deleteRosterByGameId(id);
-        gameRepository.deleteById(id);
+        try {
+            rosterService.deleteRosterByGameId(id);
+            gameRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new NotFoundException("Game or roster not found with game id: " + id);
+        }
     }
 
     @Override
-    @Transactional
-    public void checkIfVotingIsComplete(Integer game_id, String team_color) {
-
-        Integer totalVotes = ratingRepository.countByRosterGameIdAndTeamColor(game_id, team_color);
-        Game game = getGameById(game_id);
-        Integer expectedVotes = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
-
-        if (totalVotes.equals(expectedVotes)) {
-            rosterService.updateRatingsForGame(game_id, team_color);
-            rosterService.updatePlayerGeneralRating(game_id);
-        }
+    public Game findById(Integer id) {
+        return gameRepository.findById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {

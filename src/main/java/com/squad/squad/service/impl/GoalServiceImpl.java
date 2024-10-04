@@ -9,6 +9,8 @@ import com.squad.squad.dto.GoalDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 import com.squad.squad.entity.Player;
+import com.squad.squad.mapper.GameMapper;
+import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.GoalService;
@@ -19,6 +21,8 @@ public class GoalServiceImpl implements GoalService {
     private final GoalRepository goalRepository;
     private final GameService gameService;
     private final PlayerService playerService;
+    private final GameMapper gameMapper = GameMapper.INSTANCE;
+    private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
 
     public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService) {
         this.goalRepository = goalRepository;
@@ -27,8 +31,12 @@ public class GoalServiceImpl implements GoalService {
     }
 
     @Override
-    public List<Goal> getAllGoals() {
-        return goalRepository.findAll();
+    public List<GoalDTO> getAllGoals() {
+        return goalRepository.findAll().stream().map(
+                goal -> new GoalDTO(goal.getGame().getId(), goal.getPlayer().getId(), goal.getPlayer().getName(),
+                        goal.getTeamColor()))
+                .collect(Collectors.toList());
+
     }
 
     @Override
@@ -46,12 +54,13 @@ public class GoalServiceImpl implements GoalService {
         for (GoalDTO goalDto : goalDtos) {
 
             if (existingGame == null) {
-                existingGame = gameService.getGameById(goalDto.getGame_id());
+                existingGame = gameService.findById(goalDto.getGame_id());
                 existingGame.setPlayed(true);
-                gameService.updateGame(existingGame.getId(), existingGame);
+
+                gameService.updateGame(existingGame.getId(), gameMapper.gameToGameDTO(existingGame));
             }
 
-            Player existingPlayer = playerService.getPlayerById(goalDto.getPlayer_id());
+            Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayer_id()));
 
             Goal goal = new Goal();
             goal.setGame(existingGame);

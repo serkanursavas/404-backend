@@ -10,7 +10,6 @@ import com.squad.squad.service.UserService;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,38 +27,30 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("")
+    @GetMapping("/getAllUsers")
     public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    @PostMapping("")
-    public ResponseEntity<String> registerUser(@RequestBody User user) {
-
-        if (userService.existsByUsername(user.getUsername())) {
-            return ResponseEntity.badRequest().body("Username is already taken");
-        }
-
-        userService.createUser(user);
-        return ResponseEntity.ok("User registered successfully");
+    @PostMapping("/createUser")
+    public UserDTO createUser(@RequestBody UserDTO user) {
+        return userService.createUser(user);
     }
 
-    @PostMapping("/admin/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
-        String result = userService.resetPassword(request.getUsername(), request.getNewPassword());
-        return ResponseEntity.ok(result);
+    @PostMapping("/admin/resetPassword")
+    public String resetPassword(@RequestBody ResetPasswordRequest request) {
+        return userService.resetPassword(request.getUsername(), request.getNewPassword());
     }
 
-    @PutMapping("/{username}")
-    public ResponseEntity<String> updateUserByUsername(@PathVariable String username, @RequestBody User updatedUser) {
-        userService.updateUser(username, updatedUser);
-        return ResponseEntity.ok("User updated successfully");
+    @PutMapping("/updateUserByUsername/{username}")
+    public UserDTO updateUserByUsername(@PathVariable String username, @RequestBody User updatedUser) {
+        return userService.updateUser(username, updatedUser);
+
     }
 
-    @DeleteMapping("/{username}")
-    public ResponseEntity<String> deleteUser(@PathVariable String username) {
+    @DeleteMapping("/deleteUser/{username}")
+    public void deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
-        return ResponseEntity.ok("User deleted");
     }
 
 }
