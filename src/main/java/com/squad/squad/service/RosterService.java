@@ -2,8 +2,6 @@ package com.squad.squad.service;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
-
 import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Roster;
 
@@ -17,9 +15,11 @@ public interface RosterService {
 
     Roster saveRoster(Roster roster);
 
+    void saveAllRosters(List<Roster> rosters);
+
     Roster updateRoster(RosterDTO updaaRoster);
 
-    void updateRosters(List<Roster> rosters);
+    void updateAllRosters(List<RosterDTO> rosters);
 
     void updateRatingsForGame(Integer gameId, String teamColor);
 
