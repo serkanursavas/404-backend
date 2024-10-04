@@ -2,14 +2,11 @@ package com.squad.squad.service;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
-
 import com.squad.squad.dto.GamesDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 import com.squad.squad.entity.Roster;
 
-@Service
 public interface GameService {
 
     List<GamesDTO> getAllGames();

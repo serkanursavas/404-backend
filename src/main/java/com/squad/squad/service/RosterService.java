@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Roster;
 
-@Service
 public interface RosterService {
 
     List<RosterDTO> getAllRosters();

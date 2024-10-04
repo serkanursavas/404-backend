@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+
 import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Roster;
@@ -15,6 +17,7 @@ import com.squad.squad.service.RosterService;
 
 import jakarta.transaction.Transactional;
 
+@Service
 public class RosterServiceImpl implements RosterService {
 
     private final RosterRepository rosterRepository;

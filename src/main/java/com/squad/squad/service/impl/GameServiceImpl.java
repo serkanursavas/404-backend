@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+
 import com.squad.squad.dto.GamesDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
@@ -18,6 +20,7 @@ import com.squad.squad.service.RosterService;
 
 import jakarta.transaction.Transactional;
 
+@Service
 public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;

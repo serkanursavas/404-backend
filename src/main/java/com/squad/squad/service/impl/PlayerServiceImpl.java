@@ -3,6 +3,7 @@ package com.squad.squad.service.impl;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
 
 import com.squad.squad.entity.Player;
 import com.squad.squad.exception.PlayerNotFoundException;
@@ -11,6 +12,7 @@ import com.squad.squad.service.PlayerService;
 
 import jakarta.transaction.Transactional;
 
+@Service
 public class PlayerServiceImpl implements PlayerService {
     private final PlayerRepository playerRepository;
 
