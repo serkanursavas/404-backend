@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.squad.squad.dto.mapper.RosterDTOMapper;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.RosterDTO;
@@ -24,13 +25,15 @@ public class RosterServiceImpl implements RosterService {
     private final RosterRepository rosterRepository;
 
     private final PlayerService playerService;
+    private final RosterDTOMapper rosterDTOMapper;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
     private final RosterMapper rosterMapper = RosterMapper.INSTANCE;
 
     public RosterServiceImpl(RosterRepository rosterRepository,
-            PlayerService playerService) {
+                             PlayerService playerService, RosterDTOMapper rosterDTOMapper) {
         this.rosterRepository = rosterRepository;
         this.playerService = playerService;
+        this.rosterDTOMapper = rosterDTOMapper;
     }
 
     @Override
@@ -60,19 +63,10 @@ public class RosterServiceImpl implements RosterService {
     public List<RosterDTO> findRosterByGameId(Integer gameId) {
         List<Roster> rosters = rosterRepository.findRosterByGameId(gameId);
 
-        List<RosterDTO> rosterDTOs = rosters.stream()
-                .map(roster -> {
-                    RosterDTO dto = new RosterDTO();
-                    dto.setId(roster.getId());
-                    dto.setTeamColor(roster.getTeamColor());
-                    dto.setPlayerId(roster.getPlayer().getId());
-                    dto.setRating(roster.getRating());
-                    dto.setPlayerName(roster.getPlayer().getName());
-                    return dto;
-                })
+        return rosters.stream()
+                .map(rosterDTOMapper::mapper)
                 .collect(Collectors.toList());
 
-        return rosterDTOs;
     }
 
     @Override
