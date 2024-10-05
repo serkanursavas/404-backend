@@ -3,6 +3,7 @@ package com.squad.squad.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.squad.squad.service.UserEntityService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +24,14 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PlayerService playerService;
+    private final UserEntityService userEntityService;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PlayerService playerService) {
+                           PlayerService playerService, UserEntityService userEntityService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
+        this.userEntityService = userEntityService;
     }
 
     @Override
@@ -62,7 +65,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDTO updateUser(String username, User updatedUser) {
 
-        User existingUser = getUserByUsername(username);
+        User existingUser = userEntityService.getUserByUsername(username);
 
         if (!existingUser.getUsername().equals(updatedUser.getUsername())
                 && userRepository.existsByUsername(updatedUser.getUsername())) {
@@ -86,7 +89,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(String username) {
         if (username != null) {
-            User user = getUserByUsername(username);
+            User user = userEntityService.getUserByUsername(username);
             PlayerDTO player = playerService.getPlayerById(user.getId());
 
             player.setActive(false);
@@ -99,7 +102,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String resetPassword(String username, String newPassword) {
-        User user = getUserByUsername(username);
+        User user = userEntityService.getUserByUsername(username);
 
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(encodedPassword);
@@ -108,11 +111,6 @@ public class UserServiceImpl implements UserService {
         return "Password reset successfully for user: " + username;
     }
 
-    @Override
-    public User getUserByUsername(String username) {
-        return userRepository.findUserByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
-    }
 
     @Override
     public boolean existsByUsername(String username) {

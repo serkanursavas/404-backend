@@ -19,8 +19,6 @@ public interface UserService {
 
     String resetPassword(String username, String newPassword);
 
-    User getUserByUsername(String username);
-
     void deleteById(Integer id);
 
 }
