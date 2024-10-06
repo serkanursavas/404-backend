@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.UserDTO;
+import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
 import com.squad.squad.exception.UserNotFoundException;
@@ -23,12 +24,14 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PlayerService playerService;
+    private final UserDTOValidator userDTOValidator;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PlayerService playerService) {
+            PlayerService playerService, UserDTOValidator userDTOValidator) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
+        this.userDTOValidator = userDTOValidator;
     }
 
     @Override
@@ -60,7 +63,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDTO updateUser(String username, User updatedUser) {
+    public UserDTO updateUser(String username, UserDTO updatedUser) {
 
         User existingUser = getUserByUsername(username);
 
