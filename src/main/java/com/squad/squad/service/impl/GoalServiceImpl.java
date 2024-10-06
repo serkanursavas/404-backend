@@ -54,18 +54,18 @@ public class GoalServiceImpl implements GoalService {
         for (GoalDTO goalDto : goalDtos) {
 
             if (existingGame == null) {
-                existingGame = gameService.findById(goalDto.getGame_id());
+                existingGame = gameService.findById(goalDto.getGameId());
                 existingGame.setPlayed(true);
 
                 gameService.updateGame(existingGame.getId(), gameMapper.gameToGameDTO(existingGame));
             }
 
-            Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayer_id()));
+            Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayerId()));
 
             Goal goal = new Goal();
             goal.setGame(existingGame);
             goal.setPlayer(existingPlayer);
-            goal.setTeamColor(goalDto.getTeam_color());
+            goal.setTeamColor(goalDto.getTeamColor());
 
             goalRepository.save(goal);
 
