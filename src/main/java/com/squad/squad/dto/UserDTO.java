@@ -4,7 +4,9 @@ public class UserDTO {
     private Integer id;
     private String username;
     private String password;
+    private String passwordAgain;
     private String role;
+    private PlayerDTO playerDTO;
 
     public UserDTO() {
     }
@@ -39,12 +41,28 @@ public class UserDTO {
         this.password = password;
     }
 
+    public String getPasswordAgain() {
+        return passwordAgain;
+    }
+
+    public void setPasswordAgain(String passwordAgain) {
+        this.passwordAgain = passwordAgain;
+    }
+
     public String getRole() {
         return role;
     }
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public PlayerDTO getPlayerDTO() {
+        return playerDTO;
+    }
+
+    public void setPlayerDTO(PlayerDTO playerDTO) {
+        this.playerDTO = playerDTO;
     }
 
 }
