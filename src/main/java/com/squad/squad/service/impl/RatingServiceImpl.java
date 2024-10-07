@@ -52,8 +52,8 @@ public class RatingServiceImpl implements RatingService {
 
         for (RatingDTO ratingDto : ratings) {
             Player existingPlayer = playerMapper.playerDTOToPlayer(
-                    playerService.getPlayerById(ratingDto.getPlayer_id()));
-            Roster existingRoster = rosterService.getRosterById(ratingDto.getRoster_id());
+                    playerService.getPlayerById(ratingDto.getPlayerId()));
+            Roster existingRoster = rosterService.getRosterById(ratingDto.getPlayerId());
 
             if (gameId == null && teamColor == null) {
                 gameId = existingRoster.getGame().getId();

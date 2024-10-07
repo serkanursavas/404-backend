@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.squad.squad.dto.ResetPasswordRequest;
 
 import com.squad.squad.dto.UserDTO;
-import com.squad.squad.entity.User;
 import com.squad.squad.service.UserService;
 
 import java.util.List;
@@ -43,9 +42,8 @@ public class UserController {
     }
 
     @PutMapping("/updateUserByUsername/{username}")
-    public UserDTO updateUserByUsername(@PathVariable String username, @RequestBody User updatedUser) {
+    public UserDTO updateUserByUsername(@PathVariable String username, @RequestBody UserDTO updatedUser) {
         return userService.updateUser(username, updatedUser);
-
     }
 
     @DeleteMapping("/deleteUser/{username}")

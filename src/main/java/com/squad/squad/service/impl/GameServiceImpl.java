@@ -73,14 +73,14 @@ public class GameServiceImpl implements GameService {
                     GoalDTO goalDTO = new GoalDTO();
                     BeanUtils.copyProperties(goal, goalDTO);
                     PlayerDTO playerDto = playerService.getPlayerById(goal.getPlayer().getId());
-                    goalDTO.setPlayer_name(playerDto.getName());
+                    goalDTO.setPlayerName(playerDto.getName());
                     return goalDTO;
                 })
                 .collect(Collectors.toList());
 
         for (GoalDTO goalDTO : goalDTOs) {
-            PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayer_id());
-            goalDTO.setPlayer_name(playerDto.getName());
+            PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayerId());
+            goalDTO.setPlayerName(playerDto.getName());
         }
 
         GameDTO gameDTO = new GameDTO();
@@ -94,14 +94,6 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public GameDTO createGame(GameDTO gameDto) {
-        // Set<Integer> playerIds = new HashSet<>();
-
-        // for (RosterDTO roster : gameDTO.getRosters()) {
-        // if (!playerIds.add(roster.getPlayerId())) {
-        // return ResponseEntity.badRequest().body("Duplicate playerId found: " +
-        // roster.getPlayerId());
-        // }
-        // }
 
         Game game = new Game();
         game.setDateTime(gameDto.getDateTime());

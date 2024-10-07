@@ -2,26 +2,26 @@ package com.squad.squad.dto;
 
 public class RatingDTO {
 
-    private Integer player_id;
+    private Integer playerId;
     private Integer rate;
-    private Integer roster_id;
+    private Integer rosterId;
     private Integer id;
 
     // Constructor
-    public RatingDTO(Integer player_id, Integer rate, Integer roster_id, Integer id) {
-        this.player_id = player_id;
+    public RatingDTO(Integer playerId, Integer rate, Integer rosterId, Integer id) {
+        this.playerId = playerId;
         this.rate = rate;
-        this.roster_id = roster_id;
+        this.rosterId = rosterId;
         this.id = id;
     }
 
     // Getters and Setters
-    public Integer getPlayer_id() {
-        return player_id;
+    public Integer getPlayerId() {
+        return playerId;
     }
 
-    public void setPlayer_id(Integer player_id) {
-        this.player_id = player_id;
+    public void setPlayerId(Integer playerId) {
+        this.playerId = playerId;
     }
 
     public Integer getRate() {
@@ -32,12 +32,12 @@ public class RatingDTO {
         this.rate = rate;
     }
 
-    public Integer getRoster_id() {
-        return roster_id;
+    public Integer getRosterId() {
+        return rosterId;
     }
 
-    public void setRoster_id(Integer roster_id) {
-        this.roster_id = roster_id;
+    public void setRosterId(Integer rosterId) {
+        this.rosterId = rosterId;
     }
 
     public Integer getId() {

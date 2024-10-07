@@ -1,51 +1,51 @@
 package com.squad.squad.dto;
 
 public class GoalDTO {
-    private Integer game_id;
-    private Integer player_id;
-    private String player_name;
-    private String team_color;
+    private Integer gameId;
+    private Integer playerId;
+    private String playerName;
+    private String teamColor;
 
-    public GoalDTO(Integer game_id, Integer player_id, String player_name, String team_color) {
-        this.game_id = game_id;
-        this.player_id = player_id;
-        this.player_name = player_name;
-        this.team_color = team_color;
+    public GoalDTO(Integer gameId, Integer playerId, String playerName, String teamColor) {
+        this.gameId = gameId;
+        this.playerId = playerId;
+        this.playerName = playerName;
+        this.teamColor = teamColor;
     }
 
     public GoalDTO() {
     }
 
-    public Integer getGame_id() {
-        return game_id;
+    public Integer getGameId() {
+        return gameId;
     }
 
-    public void setGame_id(Integer game_id) {
-        this.game_id = game_id;
+    public void setGameId(Integer gameId) {
+        this.gameId = gameId;
     }
 
-    public Integer getPlayer_id() {
-        return player_id;
+    public Integer getPlayerId() {
+        return playerId;
     }
 
-    public void setPlayer_id(Integer player_id) {
-        this.player_id = player_id;
+    public void setPlayerId(Integer playerId) {
+        this.playerId = playerId;
     }
 
-    public String getPlayer_name() {
-        return player_name;
+    public String getPlayerName() {
+        return playerName;
     }
 
-    public void setPlayer_name(String player_name) {
-        this.player_name = player_name;
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
     }
 
-    public String getTeam_color() {
-        return team_color;
+    public String getTeamColor() {
+        return teamColor;
     }
 
-    public void setTeam_color(String team_color) {
-        this.team_color = team_color;
+    public void setTeamColor(String teamColor) {
+        this.teamColor = teamColor;
     }
 
 }

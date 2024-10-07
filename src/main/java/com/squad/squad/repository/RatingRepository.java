@@ -3,12 +3,14 @@ package com.squad.squad.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.squad.squad.entity.Rating;
 import com.squad.squad.entity.Roster;
 
 import java.util.List;
 
+@Repository
 public interface RatingRepository extends JpaRepository<Rating, Integer> {
 
     List<Rating> findByRoster(Roster roster);
