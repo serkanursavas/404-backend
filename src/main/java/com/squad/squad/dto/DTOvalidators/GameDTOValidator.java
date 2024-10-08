@@ -35,8 +35,8 @@ public class GameDTOValidator {
             errors.add("Game date cannot be in the past");
         }
 
-        if (game.getTeamSize() == null || game.getTeamSize() < 5 || game.getTeamSize() > 8) {
-            errors.add("Team size cannot be empty and must be between 5 and 8");
+        if (game.getTeamSize() == null || game.getTeamSize() < 6 || game.getTeamSize() > 11) {
+            errors.add("Team size cannot be empty and must be between 6 and 11");
         }
 
         if (game.getRosters() == null || game.getRosters().isEmpty()) {
@@ -58,5 +58,4 @@ public class GameDTOValidator {
     private boolean isNullOrEmpty(String value) {
         return value == null || value.isEmpty();
     }
-
 }
