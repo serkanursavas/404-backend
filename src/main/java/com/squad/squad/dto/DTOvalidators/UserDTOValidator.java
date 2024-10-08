@@ -10,9 +10,16 @@ import com.squad.squad.dto.UserDTO;
 @Component
 public class UserDTOValidator {
 
+    private final PlayerDTOValidator playerDTOValidator;
+
+    public UserDTOValidator(PlayerDTOValidator playerDTOValidator) {
+        this.playerDTOValidator = playerDTOValidator;
+    }
+
     public List<String> validate(UserDTO user) {
 
         List<String> errors = new ArrayList<>();
+
 
         // Username validation
         if (user.getUsername() == null || user.getUsername().isEmpty() || user.getUsername().trim().isEmpty()) {
@@ -35,28 +42,8 @@ public class UserDTOValidator {
             errors.add("Passwords must match");
         }
 
-        // Name validation
-        if (user.getPlayerDTO().getName() == null || user.getPlayerDTO().getName().isEmpty()
-                || user.getPlayerDTO().getName().trim().isEmpty()) {
-            errors.add("Name is required");
-        }
-
-        // Surname validation
-        if (user.getPlayerDTO().getSurname() == null || user.getPlayerDTO().getSurname().isEmpty()
-                || user.getPlayerDTO().getSurname().trim().isEmpty()) {
-            errors.add("Surname is required");
-        }
-
-        // Position validation
-        if (user.getPlayerDTO().getPosition() == null || user.getPlayerDTO().getPosition().isEmpty()
-                || user.getPlayerDTO().getPosition().trim().isEmpty()) {
-            errors.add("Position selection is required");
-        }
-
-        // Foot validation
-        if (user.getPlayerDTO().getFoot() == null || user.getPlayerDTO().getFoot().isEmpty()
-                || user.getPlayerDTO().getFoot().trim().isEmpty()) {
-            errors.add("Preferred foot selection is required");
+        if (!playerDTOValidator.validate(user.getPlayerDTO()).isEmpty()) {
+            errors.addAll(playerDTOValidator.validate(user.getPlayerDTO()));
         }
 
         return errors;
