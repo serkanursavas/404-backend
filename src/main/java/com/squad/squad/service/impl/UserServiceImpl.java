@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.UserDTO;
-import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
 import com.squad.squad.exception.UserNotFoundException;
@@ -24,32 +23,34 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PlayerService playerService;
-    private final UserDTOValidator userDTOValidator;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PlayerService playerService, UserDTOValidator userDTOValidator) {
+            PlayerService playerService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
-        this.userDTOValidator = userDTOValidator;
     }
 
     @Override
     @Transactional
     public UserDTO createUser(UserDTO user) {
-
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User savedUser = new User();
+        savedUser.setUsername(user.getUsername());
         savedUser.setPassword(encodedPassword);
         savedUser.setRole(user.getRole());
-        savedUser.setUsername(user.getUsername());
-        userRepository.save(savedUser);
 
         Player player = new Player();
-        player.setUser(savedUser);
+        player.setName(user.getPlayerDTO().getName());
+        player.setSurname(user.getPlayerDTO().getSurname());
+        player.setPosition(user.getPlayerDTO().getPosition());
+        player.setFoot(user.getPlayerDTO().getFoot());
 
-        playerService.createPlayer(player);
+        player.setUser(savedUser);
+        savedUser.setPlayer(player);
+
+        userRepository.save(savedUser);
 
         return user;
     }

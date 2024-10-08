@@ -26,10 +26,6 @@ public class PlayerDTOValidator {
             errors.add("Player foot info cannot bi empty");
         }
 
-        // if (player.getPhoto() == null || player.getPhoto().isEmpty()) {
-        // errors.add("Player name cannot bi empty");
-        // }
-
         if (player.getPosition() == null || player.getPosition().isEmpty()) {
             errors.add("Player position info cannot bi empty");
         }
