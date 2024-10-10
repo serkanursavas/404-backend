@@ -7,15 +7,20 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
 public class JwtUtils {
-    private static final long JWT_EXPIRATION_MS = 600000; // Token geçerlilik süresi (1 saat)
-    private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Gizli anahtar
+    private static final long JWT_EXPIRATION_MS = 86400000; // Token geçerlilik süresi (1 gün)
+
+    private static final String SECRET_KEY_STRING = System.getenv("JWT_SECRET_KEY");
+    private static final SecretKey SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(SECRET_KEY_STRING), "HmacSHA256");
 
     // JWT token oluşturma
     public String generateToken(String username, String role) {
+
         return Jwts.builder()
                 .setSubject(username)  // Kullanıcı adını subject olarak ayarlıyoruz
                 .claim("role", role)   // Rol bilgisini doğrudan claim olarak ekliyoruz
