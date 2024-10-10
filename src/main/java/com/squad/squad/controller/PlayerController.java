@@ -40,7 +40,7 @@ public class PlayerController {
 
     @PutMapping("/updatePlayer")
     public ResponseEntity<?> updatePlayer(@RequestBody PlayerDTO updatedPlayer) {
-        List<String> errors = playerDTOValidator.validate(updatedPlayer);
+        List<String> errors = playerDTOValidator.validateUpdate(updatedPlayer);
 
         if (!errors.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
