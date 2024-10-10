@@ -3,9 +3,10 @@ package com.squad.squad.dto.DTOvalidators;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.squad.squad.dto.user.UserUpdateRequestDTO;
 import org.springframework.stereotype.Component;
 
-import com.squad.squad.dto.UserDTO;
+import com.squad.squad.dto.user.UserCreateRequestDTO;
 
 @Component
 public class UserDTOValidator {
@@ -16,10 +17,9 @@ public class UserDTOValidator {
         this.playerDTOValidator = playerDTOValidator;
     }
 
-    public List<String> validate(UserDTO user) {
+    public List<String> validate(UserCreateRequestDTO user) {
 
         List<String> errors = new ArrayList<>();
-
 
         // Username validation
         if (user.getUsername() == null || user.getUsername().isEmpty() || user.getUsername().trim().isEmpty()) {
@@ -42,8 +42,35 @@ public class UserDTOValidator {
             errors.add("Passwords must match");
         }
 
-        if (!playerDTOValidator.validate(user.getPlayerDTO()).isEmpty()) {
-            errors.addAll(playerDTOValidator.validate(user.getPlayerDTO()));
+        if (!playerDTOValidator.validate(user.getPlayerCreateDTO()).isEmpty()) {
+            errors.addAll(playerDTOValidator.validate(user.getPlayerCreateDTO()));
+        }
+
+        return errors;
+    }
+
+    public List<String> validateUpdate(UserUpdateRequestDTO user) {
+        List<String> errors = new ArrayList<>();
+
+        // Username validation (Username provided but less than 3 characters)
+        if (user.getUsername() != null && user.getUsername().length() < 3) {
+            errors.add("Username must be at least 3 characters long if provided.");
+        }
+
+        // Password validation (Password provided but not meeting criteria)
+        if (user.getPassword() != null && !isValidPassword(user.getPassword())) {
+            errors.add("Password must be at least 6 characters long and include uppercase, lowercase, and a number.");
+        }
+
+        // Password confirmation validation (Check if passwords match only if both fields are provided)
+        if (user.getPassword() != null && user.getPasswordAgain() != null &&
+                !user.getPassword().equals(user.getPasswordAgain())) {
+            errors.add("Passwords must match.");
+        }
+
+        // Role validation (If role is provided, it should not be empty)
+        if (user.getRole() != null && user.getRole().isEmpty()) {
+            errors.add("Role cannot be empty if provided.");
         }
 
         return errors;
@@ -61,5 +88,4 @@ public class UserDTOValidator {
 
         return hasUppercase && hasLowercase && hasDigit;
     }
-
 }
