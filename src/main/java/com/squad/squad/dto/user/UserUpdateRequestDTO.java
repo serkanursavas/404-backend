@@ -1,29 +1,10 @@
-package com.squad.squad.dto;
+package com.squad.squad.dto.user;
 
-public class UserDTO {
-    private Integer id;
+public class UserUpdateRequestDTO {
     private String username;
     private String password;
     private String passwordAgain;
     private String role;
-    private PlayerDTO playerDTO;
-
-    public UserDTO() {
-    }
-
-    public UserDTO(Integer id, String username, String role) {
-        this.id = id;
-        this.username = username;
-        this.role = role;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;
@@ -56,13 +37,4 @@ public class UserDTO {
     public void setRole(String role) {
         this.role = role;
     }
-
-    public PlayerDTO getPlayerDTO() {
-        return playerDTO;
-    }
-
-    public void setPlayerDTO(PlayerDTO playerDTO) {
-        this.playerDTO = playerDTO;
-    }
-
 }
