@@ -1,5 +1,12 @@
 package com.squad.squad.controller;
 
+import com.squad.squad.security.JwtUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.squad.squad.dto.ResetPasswordRequest;
@@ -9,6 +16,7 @@ import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
 import com.squad.squad.service.UserService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +33,12 @@ public class UserController {
 
     private final UserService userService;
     private final UserDTOValidator userDTOValidator;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     public UserController(UserService userService, UserDTOValidator userDTOValidator) {
         this.userService = userService;
@@ -52,6 +66,19 @@ public class UserController {
 
         UserDTO createdUser = userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody UserDTO user) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+            
+            String token = jwtUtils.generateToken(user.getUsername(), authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")));
+            return token;
+        } catch (AuthenticationException e) {
+            throw new RuntimeException("Invalid username or password");
+        }
     }
 
     @PostMapping("/admin/resetPassword")
