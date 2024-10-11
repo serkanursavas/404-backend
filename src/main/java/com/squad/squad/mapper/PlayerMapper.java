@@ -2,7 +2,10 @@ package com.squad.squad.mapper;
 
 import java.util.List;
 
+import com.squad.squad.dto.player.GetAllActivePlayersDTO;
+import com.squad.squad.dto.player.GetAllPlayersDTO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.squad.squad.dto.PlayerDTO;
@@ -16,7 +19,11 @@ public interface PlayerMapper {
 
     Player playerDTOToPlayer(PlayerDTO playerDTO);
 
-    List<PlayerDTO> playersToPlayerDTOs(List<Player> players);
+    @Mapping(source = "active", target = "active")
+    List<GetAllPlayersDTO> playersToGetAllPlayersDTOs(List<Player> players);
+    
+    @Mapping(source = "name", target = "playerName")
+    GetAllActivePlayersDTO playerToGetAllActivePlayersDTO(Player player);
 
-    List<Player> playerDTOsToPlayers(List<PlayerDTO> playerDTOs);
+    List<GetAllActivePlayersDTO> playersToGetAllActivePlayersDTOs(List<Player> players);
 }

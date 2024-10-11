@@ -7,7 +7,6 @@ public class PlayerDTO {
     private String surname;
     private String foot;
     private String photo;
-    private double rating;
     private String position;
     private boolean active;
 
@@ -51,14 +50,6 @@ public class PlayerDTO {
         this.photo = photo;
     }
 
-    public double getRating() {
-        return rating;
-    }
-
-    public void setRating(double rating) {
-        this.rating = rating;
-    }
-
     public String getPosition() {
         return position;
     }
@@ -74,5 +65,4 @@ public class PlayerDTO {
     public void setActive(boolean active) {
         this.active = active;
     }
-
 }
