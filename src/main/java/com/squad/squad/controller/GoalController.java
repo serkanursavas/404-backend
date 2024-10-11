@@ -28,7 +28,7 @@ public class GoalController {
         this.goalDTOValidator = goalDTOValidator;
     }
 
-    @PostMapping("/addGoals")
+    @PostMapping("/admin/addGoals")
     public ResponseEntity<?> addGoals(@RequestBody List<GoalAddRequestDTO> goalDtos) {
         List<String> errors = goalDTOValidator.validate(goalDtos);
         if (!errors.isEmpty()) {

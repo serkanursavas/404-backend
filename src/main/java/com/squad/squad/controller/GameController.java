@@ -71,4 +71,9 @@ public class GameController {
         gameService.deleteGame(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/getNextGame")
+    public ResponseEntity<?> getNextGame() {
+        return ResponseEntity.ok(gameService.getLatestGame());
+    }
 }

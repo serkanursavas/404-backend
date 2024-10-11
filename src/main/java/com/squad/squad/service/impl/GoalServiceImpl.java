@@ -55,9 +55,9 @@ public class GoalServiceImpl implements GoalService {
 
             if (existingGame == null) {
                 existingGame = gameService.findGameById(goalDto.getGameId());
-                existingGame.setPlayed(true);
+//                existingGame.setPlayed(true);
 
-                gameService.updateGame(existingGame.getId(), gameMapper.gameToGameUpdateRequestDTO(existingGame));
+//                gameService.updateGame(existingGame.getId(), gameMapper.gameToGameUpdateRequestDTO(existingGame));
             }
 
             Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayerId()));

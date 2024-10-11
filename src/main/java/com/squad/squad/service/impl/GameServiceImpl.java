@@ -1,5 +1,6 @@
 package com.squad.squad.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,16 +14,14 @@ import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.dto.roster.RosterUpdateDTO;
+import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
 import org.springframework.beans.BeanUtils;
 
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.dto.GameDTO;
-import com.squad.squad.dto.GoalDTO;
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 import com.squad.squad.entity.Player;
@@ -48,12 +47,21 @@ public class GameServiceImpl implements GameService {
     private final PlayerService playerService;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
     private final GoalMapper goalMapper = GoalMapper.INSTANCE;
+    private final GameMapper gameMapper = GameMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
                            PlayerService playerService) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
+    }
+
+    @Override
+    public LatestGamesDTO getLatestGame() {
+
+        checkAndUpdateUnplayedGames();
+
+        return gameMapper.gameToLatestGameDTO(gameRepository.findTopByOrderByDateTimeDesc());
     }
 
     @Override
@@ -217,6 +225,20 @@ public class GameServiceImpl implements GameService {
     public Game findById(Integer id) {
         return gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+    }
+
+    @Override
+    public void checkAndUpdateUnplayedGames() {
+        List<Game> unplayedGames = gameRepository.findByIsPlayedFalse();
+        LocalDateTime currentTime = LocalDateTime.now();
+
+        for (Game game : unplayedGames) {
+            if (currentTime.isAfter(game.getDateTime())) {
+                game.setPlayed(true);
+                gameRepository.save(game); // Oyun durumunu güncelle
+                System.out.println("Game ID " + game.getId() + " is now marked as played.");
+            }
+        }
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {

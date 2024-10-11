@@ -27,4 +27,8 @@ public interface GameService {
     void deleteGame(Integer id);
 
     Game findById(Integer id);
+
+    LatestGamesDTO getLatestGame();
+
+    void checkAndUpdateUnplayedGames();
 }
