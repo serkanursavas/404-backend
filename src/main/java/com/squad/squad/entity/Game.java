@@ -17,11 +17,6 @@ import jakarta.persistence.OneToMany;
 @Entity
 public class Game {
 
-    public Game() {
-        this.homeTeamScore = 0;
-        this.awayTeamScore = 0;
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -66,16 +61,16 @@ public class Game {
         return isPlayed;
     }
 
+    public void setPlayed(boolean isPlayed) {
+        this.isPlayed = isPlayed;
+    }
+
     public boolean isVoteMode() {
         return voteMode;
     }
 
     public void setVoteMode(boolean voteMode) {
         this.voteMode = voteMode;
-    }
-
-    public void setPlayed(boolean isPlayed) {
-        this.isPlayed = isPlayed;
     }
 
     public String getLocation() {
@@ -133,5 +128,4 @@ public class Game {
     public void setGoal(List<Goal> goal) {
         this.goal = goal;
     }
-
 }
