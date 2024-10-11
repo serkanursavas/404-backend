@@ -3,9 +3,7 @@ package com.squad.squad.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.squad.squad.dto.user.GetAllUsersDTO;
-import com.squad.squad.dto.user.UserResponseDTO;
-import com.squad.squad.dto.user.UserUpdateRequestDTO;
+import com.squad.squad.dto.user.*;
 import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.mapper.UserMapper;
 import com.squad.squad.security.JwtUtils;
@@ -18,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.dto.user.UserCreateRequestDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
 import com.squad.squad.exception.UserNotFoundException;
@@ -145,5 +142,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    @Override
+    public void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO) {
+        User user = getUserByUsername(username);
+        user.setRole(roleDTO.getRole());
+        
+        userRepository.save(user);
     }
 }

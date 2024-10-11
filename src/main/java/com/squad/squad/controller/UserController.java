@@ -61,9 +61,9 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
-    @PutMapping("/admin/updateUserByUsername/{username}")
-    public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserUpdateRequestDTO updatedUser) {
-        List<String> errors = userDTOValidator.validateUpdate(updatedUser);
+    @PutMapping("/admin/updateUserRole/{username}")
+    public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserRoleUpdateRequestDTO updatedRole) {
+        List<String> errors = userDTOValidator.validateRoleUpdate(updatedRole);
         if (!errors.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
@@ -74,13 +74,7 @@ public class UserController {
                     .body("User not found.");
         }
 
-        if (!username.equals(updatedUser.getUsername())
-                && userService.existsByUsername(updatedUser.getUsername())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Username already taken: " + updatedUser.getUsername());
-        }
-
-        userService.updateUser(username, updatedUser);
+        userService.updateUserRole(username, updatedRole);
         return ResponseEntity.ok("User updated successfully.");
     }
 
