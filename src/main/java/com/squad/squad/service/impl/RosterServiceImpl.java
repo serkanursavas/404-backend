@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.squad.squad.dto.mapper.RosterDTOMapper;
+import com.squad.squad.dto.roster.RosterResponseDTO;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.RosterDTO;
@@ -28,26 +30,9 @@ public class RosterServiceImpl implements RosterService {
     private final RosterMapper rosterMapper = RosterMapper.INSTANCE;
 
     public RosterServiceImpl(RosterRepository rosterRepository,
-            PlayerService playerService) {
+                             PlayerService playerService) {
         this.rosterRepository = rosterRepository;
         this.playerService = playerService;
-    }
-
-    @Override
-    public List<RosterDTO> getAllRosters() {
-        List<Roster> rosters = rosterRepository.findAll();
-
-        return rosters.stream()
-                .map(roster -> {
-                    RosterDTO dto = new RosterDTO();
-                    dto.setId(roster.getId());
-                    dto.setTeamColor(roster.getTeamColor());
-                    dto.setPlayerId(roster.getPlayer().getId());
-                    dto.setRating(roster.getRating());
-                    dto.setPlayerName(roster.getPlayer().getName());
-                    return dto;
-                })
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -57,28 +42,10 @@ public class RosterServiceImpl implements RosterService {
     }
 
     @Override
-    public List<RosterDTO> findRosterByGameId(Integer gameId) {
+    public List<RosterResponseDTO> findRosterByGameId(Integer gameId) {
         List<Roster> rosters = rosterRepository.findRosterByGameId(gameId);
 
-        List<RosterDTO> rosterDTOs = rosters.stream()
-                .map(roster -> {
-                    RosterDTO dto = new RosterDTO();
-                    dto.setId(roster.getId());
-                    dto.setTeamColor(roster.getTeamColor());
-                    dto.setPlayerId(roster.getPlayer().getId());
-                    dto.setRating(roster.getRating());
-                    dto.setPlayerName(roster.getPlayer().getName());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-        return rosterDTOs;
-    }
-
-    @Override
-    @Transactional
-    public Roster saveRoster(Roster roster) {
-        return rosterRepository.save(roster);
+        return rosterMapper.rostersToRosterResponseDTOs(rosters);
     }
 
     @Override
@@ -88,24 +55,8 @@ public class RosterServiceImpl implements RosterService {
     }
 
     @Override
-    @Transactional
-    public Roster updateRoster(RosterDTO updatedRoster) {
-
-        Roster existingRoster = rosterRepository.findById(updatedRoster.getId())
-                .orElseThrow(() -> new RosterNotFoundException("Roster not found with id: " + updatedRoster.getId()));
-
-        updateFieldIfNotNull(updatedRoster.getTeamColor(), existingRoster::setTeamColor);
-        updateFieldIfNotNull(updatedRoster.getPlayerId(), playerId -> {
-            Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(playerId));
-            existingRoster.setPlayer(existingPlayer);
-        });
-
-        return rosterRepository.save(existingRoster);
-    }
-
-    @Override
-    public void updateAllRosters(List<RosterDTO> rosters) {
-        rosterRepository.saveAll(rosterMapper.rostersDTOToRosters(rosters));
+    public void updateAllRosters(List<Roster> rosters) {
+        rosterRepository.saveAll(rosters);
     }
 
     @Override
@@ -141,10 +92,14 @@ public class RosterServiceImpl implements RosterService {
         return rosterRepository.findRosterByGameIdAndTeamColor(gameId, teamColor);
     }
 
+    @Override
+    public List<Roster> findAllById(List<Integer> rosterIds) {
+        return rosterRepository.findAllById(rosterIds);
+    }
+
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {
         if (value != null) {
             setter.accept(value);
         }
     }
-
 }

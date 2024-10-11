@@ -1,54 +1,110 @@
 package com.squad.squad.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.squad.squad.dto.ResetPasswordRequest;
+import com.squad.squad.dto.user.*;
+import com.squad.squad.entity.User;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.*;
 
-import com.squad.squad.dto.UserDTO;
+import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
 import com.squad.squad.service.UserService;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final UserDTOValidator userDTOValidator;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserDTOValidator userDTOValidator) {
         this.userService = userService;
+        this.userDTOValidator = userDTOValidator;
     }
 
-    @GetMapping("/getAllUsers")
-    public List<UserDTO> getAllUsers() {
-        return userService.getAllUsers();
+    @GetMapping("/admin/getAllUsers")
+    public ResponseEntity<List<GetAllUsersDTO>> getAllUsers() {
+        List<GetAllUsersDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
     @PostMapping("/createUser")
-    public UserDTO createUser(@RequestBody UserDTO user) {
-        return userService.createUser(user);
+    public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDTO user) {
+        List<String> errors = userDTOValidator.validate(user);
+        if (!errors.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errors);
+        }
+
+        boolean userExists = userService.existsByUsername(user.getUsername());
+        if (userExists) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Username already exists. Please choose a different username.");
+        }
+
+        UserResponseDTO createdUser = userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    @PostMapping("/admin/resetPassword")
-    public String resetPassword(@RequestBody ResetPasswordRequest request) {
-        return userService.resetPassword(request.getUsername(), request.getNewPassword());
+    @PostMapping("/login")
+    public ResponseEntity<UserLoginResponseDTO> login(@RequestBody UserLoginRequestDTO userLoginRequestDTO) {
+        String token = userService.login(userLoginRequestDTO.getUsername(), userLoginRequestDTO.getPassword());
+        UserLoginResponseDTO response = new UserLoginResponseDTO();
+        response.setToken(token);
+        return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/updateUserByUsername/{username}")
-    public UserDTO updateUserByUsername(@PathVariable String username, @RequestBody UserDTO updatedUser) {
-        return userService.updateUser(username, updatedUser);
+    @PostMapping("/admin/resetPassword/{username}")
+    public ResponseEntity<?> resetPassword(@PathVariable String username) {
+        String result = userService.resetPassword(username);
+        return ResponseEntity.ok(result);
     }
 
-    @DeleteMapping("/deleteUser/{username}")
-    public void deleteUser(@PathVariable String username) {
+    @PutMapping("/updateProfile/{username}")
+    public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserUpdateRequestDTO updatedUser) {
+        List<String> errors = userDTOValidator.validateUpdate(updatedUser);
+        if (!errors.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
+        boolean userExists = userService.existsByUsername(username);
+        if (!userExists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found.");
+        }
+
+        if (!username.equals(updatedUser.getUsername())
+                && userService.existsByUsername(updatedUser.getUsername())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Username already taken: " + updatedUser.getUsername());
+        }
+
+        userService.updateUser(username, updatedUser);
+        return ResponseEntity.ok("User updated successfully.");
+    }
+
+    @PutMapping("/admin/updateUserRole/{username}")
+    public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserRoleUpdateRequestDTO updatedRole) {
+        List<String> errors = userDTOValidator.validateRoleUpdate(updatedRole);
+        if (!errors.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
+        boolean userExists = userService.existsByUsername(username);
+        if (!userExists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found.");
+        }
+
+        userService.updateUserRole(username, updatedRole);
+        return ResponseEntity.ok("User updated successfully.");
+    }
+
+    @DeleteMapping("/admin/deleteUser/{username}")
+    public ResponseEntity<String> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
+        return ResponseEntity.ok("User deleted successfully with username: " + username);
     }
-
 }

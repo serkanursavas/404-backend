@@ -2,6 +2,7 @@ package com.squad.squad.service.impl;
 
 import java.util.List;
 
+import com.squad.squad.entity.Game;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -25,13 +26,12 @@ public class RatingServiceImpl implements RatingService {
 
     private final RatingRepository ratingRepository;
     private final PlayerService playerService;
-    private RosterService rosterService;
     private final GameService gameService;
-
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
+    private RosterService rosterService;
 
     public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
-            RosterService rosterService, GameService gameService) {
+                             RosterService rosterService, GameService gameService) {
         this.ratingRepository = ratingRepository;
         this.playerService = playerService;
 
@@ -96,8 +96,8 @@ public class RatingServiceImpl implements RatingService {
     public void checkIfVotingIsComplete(Integer gameId, String teamColor) {
 
         Integer totalVotes = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
-        GameDTO gameDto = gameService.getGameById(gameId);
-        Integer expectedVotes = (gameDto.getRosters().size() / 2) * ((gameDto.getRosters().size() / 2) - 1);
+        Game game = gameService.findGameById(gameId);
+        Integer expectedVotes = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
 
         if (totalVotes.equals(expectedVotes)) {
             updateRatingsForGame(gameId, teamColor);
@@ -110,5 +110,4 @@ public class RatingServiceImpl implements RatingService {
     public void clearAllRatings() {
         ratingRepository.deleteAll();
     }
-
 }

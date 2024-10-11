@@ -28,5 +28,4 @@ public class RatingController {
     public void saveRatings(@RequestBody List<RatingDTO> ratings) {
         ratingService.saveRating(ratings);
     }
-
 }

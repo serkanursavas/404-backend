@@ -6,11 +6,11 @@ public class RosterDTO {
 
     @NotNull(message = "Player ID cannot be null")
     private Integer id;
-
     private String teamColor;
     private double rating;
     private Integer playerId;
     private String playerName;
+    private Integer gameId;
 
     // Default constructor
     public RosterDTO() {
@@ -58,4 +58,11 @@ public class RosterDTO {
         this.playerName = playerName;
     }
 
+    public Integer getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(Integer gameId) {
+        this.gameId = gameId;
+    }
 }

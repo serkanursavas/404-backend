@@ -39,7 +39,7 @@ public class Player {
     @Column(nullable = true)
     private String position;
 
-    private boolean active = false;
+    private boolean active = true;
 
     @OneToOne(mappedBy = "player")
     private User user;

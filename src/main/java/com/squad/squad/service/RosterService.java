@@ -3,23 +3,18 @@ package com.squad.squad.service;
 import java.util.List;
 
 import com.squad.squad.dto.RosterDTO;
+import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.entity.Roster;
 
 public interface RosterService {
 
-    List<RosterDTO> getAllRosters();
-
     Roster getRosterById(Integer id);
 
-    List<RosterDTO> findRosterByGameId(Integer gameId);
-
-    Roster saveRoster(Roster roster);
+    List<RosterResponseDTO> findRosterByGameId(Integer gameId);
 
     void saveAllRosters(List<Roster> rosters);
 
-    Roster updateRoster(RosterDTO updaaRoster);
-
-    void updateAllRosters(List<RosterDTO> rosters);
+    void updateAllRosters(List<Roster> rosters);
 
     void deleteRosterByGameId(Integer id);
 
@@ -27,4 +22,5 @@ public interface RosterService {
 
     List<Roster> findRosterByGameIdAndTeamColor(Integer gameId, String teamColor);
 
+    List<Roster> findAllById(List<Integer> rosterIds);
 }

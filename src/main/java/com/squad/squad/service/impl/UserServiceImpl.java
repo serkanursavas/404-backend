@@ -3,12 +3,20 @@ package com.squad.squad.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.squad.squad.dto.user.*;
+import com.squad.squad.exception.InvalidCredentialsException;
+import com.squad.squad.mapper.UserMapper;
+import com.squad.squad.security.JwtUtils;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.dto.UserDTO;
-import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
 import com.squad.squad.exception.UserNotFoundException;
@@ -24,65 +32,85 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PlayerService playerService;
-    private final UserDTOValidator userDTOValidator;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
+    private final UserMapper userMapper = UserMapper.INSTANCE;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PlayerService playerService, UserDTOValidator userDTOValidator) {
+                           PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
-        this.userDTOValidator = userDTOValidator;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtils = jwtUtils;
+    }
+
+    @Override
+    public String login(String username, String password) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password));
+
+            return jwtUtils.generateToken(username,
+                    authentication.getAuthorities().stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .collect(Collectors.joining(",")));
+        } catch (AuthenticationException e) {
+            throw new InvalidCredentialsException("Invalid username or password");
+        }
     }
 
     @Override
     @Transactional
-    public UserDTO createUser(UserDTO user) {
-
+    public UserResponseDTO createUser(UserCreateRequestDTO user) {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User savedUser = new User();
-        savedUser.setPassword(encodedPassword);
-        savedUser.setRole(user.getRole());
         savedUser.setUsername(user.getUsername());
-        userRepository.save(savedUser);
+        savedUser.setPassword(encodedPassword);
 
         Player player = new Player();
+        player.setName(user.getPlayerCreateDTO().getName());
+        player.setSurname(user.getPlayerCreateDTO().getSurname());
+        player.setPosition(user.getPlayerCreateDTO().getPosition());
+        player.setFoot(user.getPlayerCreateDTO().getFoot());
+
         player.setUser(savedUser);
+        savedUser.setPlayer(player);
 
-        playerService.createPlayer(player);
+        userRepository.save(savedUser);
 
-        return user;
+        return userMapper.userToUserResponseDTO(savedUser);
     }
 
     @Override
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(user -> new UserDTO(user.getId(), user.getUsername(), user.getRole()))
-                .collect(Collectors.toList());
+    public List<GetAllUsersDTO> getAllUsers() {
+        return userMapper.usersToGetAllUsersDTOs(userRepository.findAll());
     }
 
     @Override
-    @Transactional
-    public UserDTO updateUser(String username, UserDTO updatedUser) {
+    public void updateUser(String username, UserUpdateRequestDTO updatedUser) {
+
+        // SecurityContext'ten kullanıcı bilgilerini al
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName(); // Token içinden kullanıcı adını alır
+
+        if (!currentUsername.equals(username)) {
+            throw new InvalidCredentialsException("You can only update your own profile.");
+        }
 
         User existingUser = getUserByUsername(username);
 
-        if (!existingUser.getUsername().equals(updatedUser.getUsername())
-                && userRepository.existsByUsername(updatedUser.getUsername())) {
-            throw new RuntimeException("Username already taken: " + username);
+        if (updatedUser.getUsername() != null) {
+            existingUser.setUsername(updatedUser.getUsername());
         }
 
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setRole(updatedUser.getRole());
-
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            String hashedPassword = passwordEncoder.encode(updatedUser.getPassword());
-            existingUser.setPassword(hashedPassword);
+        if (updatedUser.getPassword() != null) {
+            String encodedPassword = passwordEncoder.encode(updatedUser.getPassword());
+            existingUser.setPassword(encodedPassword);
         }
 
         userRepository.save(existingUser);
-        return new UserDTO(existingUser.getId(), existingUser.getUsername(), existingUser.getRole());
-
     }
 
     @Override
@@ -92,7 +120,6 @@ public class UserServiceImpl implements UserService {
             User user = getUserByUsername(username);
             PlayerDTO player = playerService.getPlayerById(user.getId());
 
-            player.setActive(false);
             playerService.softDelete(player);
             userRepository.deleteByUsername(username);
         } else {
@@ -101,10 +128,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String resetPassword(String username, String newPassword) {
+    public String resetPassword(String username) {
         User user = getUserByUsername(username);
 
-        String encodedPassword = passwordEncoder.encode(newPassword);
+        String encodedPassword = passwordEncoder.encode(user.getUsername());
         user.setPassword(encodedPassword);
         userRepository.save(user);
 
@@ -123,12 +150,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteById(Integer id) {
-        try {
-            userRepository.deleteById(id);
-        } catch (Exception e) {
-            throw new UserNotFoundException("User not found with id: " + id);
-        }
-    }
+    public void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO) {
+        User user = getUserByUsername(username);
+        user.setRole(roleDTO.getRole());
 
+        userRepository.save(user);
+    }
 }
