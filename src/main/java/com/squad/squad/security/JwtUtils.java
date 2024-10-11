@@ -22,7 +22,7 @@ public class JwtUtils {
     public String generateToken(String username, String role) {
 
         return Jwts.builder()
-                .setSubject(username)  // Kullanıcı adını subject olarak ayarlıyoruz
+                .setSubject(username.toLowerCase())  // Kullanıcı adını subject olarak ayarlıyoruz
                 .claim("role", role)   // Rol bilgisini doğrudan claim olarak ekliyoruz
                 .setIssuedAt(new Date())  // Token oluşturulma tarihini ayarlıyoruz
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))  // Token geçerlilik süresini ayarlıyoruz
