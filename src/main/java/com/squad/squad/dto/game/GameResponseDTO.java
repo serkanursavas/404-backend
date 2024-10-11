@@ -1,6 +1,6 @@
 package com.squad.squad.dto.game;
 
-import com.squad.squad.dto.GoalDTO;
+import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 
 import java.time.LocalDateTime;
@@ -14,7 +14,7 @@ public class GameResponseDTO {
     private Integer awayTeamScore;
     private LocalDateTime dateTime;
     private List<RosterResponseDTO> rosters;
-    private List<GoalDTO> goals;
+    private List<GoalResponseDTO> goals;
     private boolean isPlayed;
     private boolean voteMode;
 
@@ -75,11 +75,11 @@ public class GameResponseDTO {
         this.rosters = rosters;
     }
 
-    public List<GoalDTO> getGoals() {
+    public List<GoalResponseDTO> getGoals() {
         return goals;
     }
 
-    public void setGoals(List<GoalDTO> goals) {
+    public void setGoals(List<GoalResponseDTO> goals) {
         this.goals = goals;
     }
 

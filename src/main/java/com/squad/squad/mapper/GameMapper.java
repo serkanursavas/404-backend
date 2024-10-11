@@ -1,5 +1,6 @@
 package com.squad.squad.mapper;
 
+import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -13,6 +14,7 @@ public interface GameMapper {
 
     GameDTO gameToGameDTO(Game game);
 
-    Game gameDTOToGame(GameDTO gameDto);
+    GameUpdateRequestDTO gameToGameUpdateRequestDTO(Game game);
 
+    Game gameDTOToGame(GameDTO gameDto);
 }
