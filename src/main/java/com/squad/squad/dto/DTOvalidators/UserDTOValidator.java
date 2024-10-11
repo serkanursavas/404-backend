@@ -71,11 +71,6 @@ public class UserDTOValidator {
             errors.add("Passwords must match.");
         }
 
-        // Role validation (If role is provided, it should not be empty)
-        if (user.getRole() != null && user.getRole().isEmpty()) {
-            errors.add("Role cannot be empty if provided.");
-        }
-
         return errors;
     }
 
