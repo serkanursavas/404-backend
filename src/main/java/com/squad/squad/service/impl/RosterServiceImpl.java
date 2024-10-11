@@ -26,32 +26,13 @@ public class RosterServiceImpl implements RosterService {
     private final RosterRepository rosterRepository;
 
     private final PlayerService playerService;
-    private final RosterDTOMapper rosterDTOMapper;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
     private final RosterMapper rosterMapper = RosterMapper.INSTANCE;
 
     public RosterServiceImpl(RosterRepository rosterRepository,
-                             PlayerService playerService, RosterDTOMapper rosterDTOMapper) {
+                             PlayerService playerService) {
         this.rosterRepository = rosterRepository;
         this.playerService = playerService;
-        this.rosterDTOMapper = rosterDTOMapper;
-    }
-
-    @Override
-    public List<RosterDTO> getAllRosters() {
-        List<Roster> rosters = rosterRepository.findAll();
-
-        return rosters.stream()
-                .map(roster -> {
-                    RosterDTO dto = new RosterDTO();
-                    dto.setId(roster.getId());
-                    dto.setTeamColor(roster.getTeamColor());
-                    dto.setPlayerId(roster.getPlayer().getId());
-                    dto.setRating(roster.getRating());
-                    dto.setPlayerName(roster.getPlayer().getName());
-                    return dto;
-                })
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -69,30 +50,8 @@ public class RosterServiceImpl implements RosterService {
 
     @Override
     @Transactional
-    public Roster saveRoster(Roster roster) {
-        return rosterRepository.save(roster);
-    }
-
-    @Override
-    @Transactional
     public void saveAllRosters(List<Roster> rosters) {
         rosterRepository.saveAll(rosters);
-    }
-
-    @Override
-    @Transactional
-    public Roster updateRoster(RosterDTO updateRoster) {
-
-        Roster existingRoster = rosterRepository.findById(updateRoster.getId())
-                .orElseThrow(() -> new RosterNotFoundException("Roster not found with id: " + updateRoster.getId()));
-
-        updateFieldIfNotNull(updateRoster.getTeamColor(), existingRoster::setTeamColor);
-        updateFieldIfNotNull(updateRoster.getPlayerId(), playerId -> {
-            Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(playerId));
-            existingRoster.setPlayer(existingPlayer);
-        });
-
-        return rosterRepository.save(existingRoster);
     }
 
     @Override
