@@ -4,6 +4,9 @@ import java.util.List;
 
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.dto.LatestGamesDTO;
+import com.squad.squad.dto.game.GameCreateRequestDTO;
+import com.squad.squad.dto.game.GameResponseDTO;
+import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 
@@ -11,11 +14,13 @@ public interface GameService {
 
     List<LatestGamesDTO> getAllGames();
 
-    GameDTO getGameById(Integer id);
+    GameResponseDTO getGameById(Integer id);
 
-    GameDTO createGame(GameDTO gameDto);
+    Game findGameById(Integer id);
 
-    GameDTO updateGame(Integer id, GameDTO updatedGame);
+    void createGame(GameCreateRequestDTO gameDto);
+
+    void updateGame(Integer id, GameUpdateRequestDTO updatedGame);
 
     void updateScoreWithGoal(Goal goal);
 
