@@ -3,7 +3,10 @@ package com.squad.squad.dto.DTOvalidators;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.squad.squad.dto.user.UserRoleUpdateRequestDTO;
 import com.squad.squad.dto.user.UserUpdateRequestDTO;
+import com.squad.squad.enums.Role;
+import com.squad.squad.enums.TeamColor;
 import org.springframework.stereotype.Component;
 
 import com.squad.squad.dto.user.UserCreateRequestDTO;
@@ -71,6 +74,22 @@ public class UserDTOValidator {
         // Role validation (If role is provided, it should not be empty)
         if (user.getRole() != null && user.getRole().isEmpty()) {
             errors.add("Role cannot be empty if provided.");
+        }
+
+        return errors;
+    }
+
+    public List<String> validateRoleUpdate(UserRoleUpdateRequestDTO user) {
+        List<String> errors = new ArrayList<>();
+
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            errors.add("Role cannot be empty.");
+        } else {
+            try {
+                Role.fromString(user.getRole());
+            } catch (RuntimeException e) {
+                errors.add("Invalid role: " + user.getRole());
+            }
         }
 
         return errors;
