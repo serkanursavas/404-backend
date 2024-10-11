@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.squad.squad.dto.user.*;
 import com.squad.squad.entity.User;
-import org.springframework.http.ResponseEntity;
 
 public interface UserService {
 

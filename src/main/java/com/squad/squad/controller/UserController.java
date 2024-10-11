@@ -2,6 +2,7 @@ package com.squad.squad.controller;
 
 import com.squad.squad.dto.user.*;
 import com.squad.squad.entity.User;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
@@ -59,6 +60,29 @@ public class UserController {
     public ResponseEntity<?> resetPassword(@PathVariable String username) {
         String result = userService.resetPassword(username);
         return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/updateProfile/{username}")
+    public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserUpdateRequestDTO updatedUser) {
+        List<String> errors = userDTOValidator.validateUpdate(updatedUser);
+        if (!errors.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
+        boolean userExists = userService.existsByUsername(username);
+        if (!userExists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found.");
+        }
+
+        if (!username.equals(updatedUser.getUsername())
+                && userService.existsByUsername(updatedUser.getUsername())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Username already taken: " + updatedUser.getUsername());
+        }
+
+        userService.updateUser(username, updatedUser);
+        return ResponseEntity.ok("User updated successfully.");
     }
 
     @PutMapping("/admin/updateUserRole/{username}")
