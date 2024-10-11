@@ -2,9 +2,16 @@ package com.squad.squad.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.squad.squad.dto.game.GameCreateRequestDTO;
+import com.squad.squad.dto.game.GameResponseDTO;
+import com.squad.squad.dto.game.GameUpdateRequestDTO;
+import com.squad.squad.dto.roster.RosterCreateDTO;
+import com.squad.squad.dto.roster.RosterResponseDTO;
+import com.squad.squad.dto.roster.RosterUpdateDTO;
 import org.springframework.beans.BeanUtils;
 
 import org.springframework.stereotype.Service;
@@ -40,7 +47,7 @@ public class GameServiceImpl implements GameService {
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-            PlayerService playerService) {
+                           PlayerService playerService) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
@@ -55,14 +62,20 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public GameDTO getGameById(Integer id) {
+    public Game findGameById(Integer id) {
+        return gameRepository.findById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+    }
+
+    @Override
+    public GameResponseDTO getGameById(Integer id) {
 
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
-        List<RosterDTO> rosters = rosterService.findRosterByGameId(id);
+        List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(id);
 
-        for (RosterDTO rosterDTO : rosters) {
+        for (RosterResponseDTO rosterDTO : rosters) {
             PlayerDTO playerDto = playerService.getPlayerById(rosterDTO.getPlayerId());
             rosterDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         }
@@ -83,7 +96,7 @@ public class GameServiceImpl implements GameService {
             goalDTO.setPlayerName(playerDto.getName());
         }
 
-        GameDTO gameDTO = new GameDTO();
+        GameResponseDTO gameDTO = new GameResponseDTO();
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);
         gameDTO.setGoals(goalDTOs);
@@ -93,21 +106,19 @@ public class GameServiceImpl implements GameService {
 
     @Override
     @Transactional
-    public GameDTO createGame(GameDTO gameDto) {
+    public void createGame(GameCreateRequestDTO gameDto) {
 
         Game game = new Game();
         game.setDateTime(gameDto.getDateTime());
         game.setWeather(gameDto.getWeather());
         game.setLocation(gameDto.getLocation());
-        game.setHomeTeamScore(gameDto.getHomeTeamScore());
-        game.setAwayTeamScore(gameDto.getAwayTeamScore());
 
         List<Roster> rosters = new ArrayList<>();
 
-        for (RosterDTO rosterDTO : gameDto.getRosters()) {
+        for (RosterCreateDTO rosterDTO : gameDto.getRosters()) {
             Roster roster = new Roster();
             roster.setGame(game);
-            roster.setTeamColor(rosterDTO.getTeamColor());
+            roster.setTeamColor(rosterDTO.getTeamColor().toUpperCase());
 
             Player player = playerMapper.playerDTOToPlayer(playerService.getPlayerById(rosterDTO.getPlayerId()));
 
@@ -126,25 +137,56 @@ public class GameServiceImpl implements GameService {
 
         rosters.forEach(roster -> roster.setGame(savedGame));
         rosterService.saveAllRosters(rosters);
-
-        return gameDto;
     }
 
     @Override
     @Transactional
-    public GameDTO updateGame(Integer id, GameDTO updatedGame) {
-
+    public void updateGame(Integer id, GameUpdateRequestDTO updatedGame) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+
+        if (game.isPlayed()) {
+            throw new IllegalArgumentException("Game has already been played. You cannot update game details.");
+        }
 
         updateFieldIfNotNull(updatedGame.getLocation(), game::setLocation);
         updateFieldIfNotNull(updatedGame.getWeather(), game::setWeather);
         updateFieldIfNotNull(updatedGame.getDateTime(), game::setDateTime);
 
-        game.setPlayed(updatedGame.isPlayed());
-
         gameRepository.save(game);
-        return null;
+
+        if (updatedGame.getRosters() != null && !updatedGame.getRosters().isEmpty()) {
+
+            List<Integer> rosterIds = updatedGame.getRosters().stream()
+                    .map(RosterUpdateDTO::getId)
+                    .collect(Collectors.toList());
+
+            List<Roster> existingRosters = rosterService.findAllById(rosterIds);
+
+            List<Integer> playerIds = updatedGame.getRosters().stream()
+                    .map(RosterUpdateDTO::getPlayerId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            Map<Integer, Player> playerMap = playerService.findAllById(playerIds).stream()
+                    .collect(Collectors.toMap(Player::getId, player -> player));
+
+            existingRosters.forEach(existingRoster -> {
+                updatedGame.getRosters().stream()
+                        .filter(rosterUpdateDTO -> rosterUpdateDTO.getId().equals(existingRoster.getId()))
+                        .findFirst()
+                        .ifPresent(rosterUpdateDTO -> {
+                            updateFieldIfNotNull(rosterUpdateDTO.getTeamColor().toUpperCase(), existingRoster::setTeamColor);
+
+                            Player player = playerMap.get(rosterUpdateDTO.getPlayerId());
+                            if (player != null) {
+                                existingRoster.setPlayer(player);
+                            }
+                        });
+            });
+
+            rosterService.updateAllRosters(existingRosters);
+        }
     }
 
     @Override
@@ -162,8 +204,8 @@ public class GameServiceImpl implements GameService {
             existingGame.setAwayTeamScore(existingGame.getAwayTeamScore() + 1);
         }
 
+        existingGame.setPlayed(true);
         gameRepository.save(existingGame);
-
     }
 
     @Override
