@@ -3,6 +3,7 @@ package com.squad.squad.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import org.springframework.stereotype.Service;
 
@@ -47,18 +48,14 @@ public class GoalServiceImpl implements GoalService {
     }
 
     @Override
-    public void addGoals(List<GoalAddRequestDTO> goalDtos) {
+    public void addGoals(AddGoalsRequestDTO requestDto) {
 
-        Game existingGame = null;
+        Integer gameId = requestDto.getGameId();
+        Game existingGame = gameService.findGameById(gameId);
+
+        List<GoalAddRequestDTO> goalDtos = requestDto.getGoals();
 
         for (GoalAddRequestDTO goalDto : goalDtos) {
-
-            if (existingGame == null) {
-                existingGame = gameService.findGameById(goalDto.getGameId());
-//                existingGame.setPlayed(true);
-
-//                gameService.updateGame(existingGame.getId(), gameMapper.gameToGameUpdateRequestDTO(existingGame));
-            }
 
             Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayerId()));
 
