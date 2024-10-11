@@ -90,7 +90,7 @@ public class GameDTOValidator {
                 errors.add("Roster size must be equal to " + game.getTeamSize() * 2);
             }
 
-            List<String> rosterErrors = rosterDTOValidator.validate(game.getRosters());
+            List<String> rosterErrors = rosterDTOValidator.validateUpdate(game.getRosters());
             if (!rosterErrors.isEmpty()) {
                 errors.addAll(rosterErrors);
             }
