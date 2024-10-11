@@ -53,6 +53,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+        
+        boolean isAuthenticated = SecurityContextHolder.getContext().getAuthentication() != null &&
+                SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
+
+        String path = request.getRequestURI();
+
+        if (isAuthenticated && (path.equals("/api/users/createUser") || path.equals("/api/users/login"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Authenticated users cannot access this endpoint");
+            return;
+        }
 
         filterChain.doFilter(request, response);
     }
