@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
+import com.squad.squad.dto.game.NextGameResponseDTO;
 import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
@@ -57,11 +58,11 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public LatestGamesDTO getLatestGame() {
+    public NextGameResponseDTO getLatestGame() {
 
         checkAndUpdateUnplayedGame();
 
-        return gameMapper.gameToLatestGameDTO(gameRepository.findTopByOrderByDateTimeDesc());
+        return gameMapper.gameToNextGameResponseDTO(gameRepository.findTopByOrderByDateTimeDesc());
     }
 
     @Override
@@ -234,12 +235,21 @@ public class GameServiceImpl implements GameService {
     @Override
     public void checkAndUpdateUnplayedGame() {
         Game unplayedGame = gameRepository.findByIsPlayedFalse();
-        LocalDateTime currentTime = LocalDateTime.now();
 
-        if (currentTime.isAfter(unplayedGame.getDateTime())) {
-            unplayedGame.setPlayed(true);
-            gameRepository.save(unplayedGame);
+        if (unplayedGame != null) {
+            LocalDateTime currentTime = LocalDateTime.now();
+
+            if (currentTime.isAfter(unplayedGame.getDateTime())) {
+                unplayedGame.setPlayed(true);
+                gameRepository.save(unplayedGame);
+            }
         }
+    }
+
+    public List<Roster> getRostersByGameId(Integer gameId) {
+        return gameRepository.findById(gameId)
+                .map(Game::getRoster)
+                .orElse(new ArrayList<>());
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {
