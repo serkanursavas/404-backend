@@ -25,7 +25,5 @@ public interface UserService {
 
     User getUserByUsername(String username);
 
-    void deleteById(Integer id);
-
     String login(String username, String password);
 }

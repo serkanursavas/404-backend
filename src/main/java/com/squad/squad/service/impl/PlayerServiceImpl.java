@@ -2,6 +2,8 @@ package com.squad.squad.service.impl;
 
 import java.util.List;
 
+import com.squad.squad.dto.player.GetAllActivePlayersDTO;
+import com.squad.squad.dto.player.GetAllPlayersDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -25,35 +27,26 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public List<PlayerDTO> getAllActivePlayers() {
-        return playerMapper.playersToPlayerDTOs(playerRepository.findByActive(true));
+    public List<GetAllPlayersDTO> getAllPlayers() {
+        return playerMapper.playersToGetAllPlayersDTOs(playerRepository.findAll());
     }
 
     @Override
     public PlayerDTO getPlayerById(Integer id) {
-        Player player = playerRepository.findByIdAndActive(id, true)
+        Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));
 
         return playerMapper.playerToPlayerDTO(player);
     }
 
     @Override
-    @Transactional
-    public Player createPlayer(Player player) {
-        return playerRepository.save(player);
-    }
-
-    @Override
-    @Transactional
-    public PlayerDTO updatePlayer(PlayerDTO updatedPlayer) {
+    public void updatePlayer(PlayerDTO updatedPlayer) {
         Player existingPlayer = playerRepository.findById(updatedPlayer.getId())
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + updatedPlayer.getId()));
 
         BeanUtils.copyProperties(updatedPlayer, existingPlayer);
-        existingPlayer.setActive(true);
 
-        return playerMapper.playerToPlayerDTO(playerRepository.save(existingPlayer));
-
+        playerRepository.save(existingPlayer);
     }
 
     @Override
@@ -61,19 +54,17 @@ public class PlayerServiceImpl implements PlayerService {
         Player existingPlayer = playerRepository.findById(deletedPlayer.getId())
                 .orElseThrow(() -> new RuntimeException("Player not foundasasdas with id: " + deletedPlayer.getId()));
 
-        BeanUtils.copyProperties(deletedPlayer, existingPlayer);
-        existingPlayer.setActive(true);
-
+        existingPlayer.setActive(false);
         playerRepository.save(existingPlayer);
     }
 
     @Override
-    @Transactional
-    public void deletePlayerById(Integer id) {
-        Player player = playerRepository.findById(id)
-                .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));
-
-        playerRepository.delete(player);
+    public List<GetAllActivePlayersDTO> getAllActivePlayers() {
+        return playerMapper.playersToGetAllActivePlayersDTOs(playerRepository.findByActive(true));
     }
 
+    @Override
+    public List<Player> findAllById(List<Integer> playerIds) {
+        return playerRepository.findAllById(playerIds);
+    }
 }

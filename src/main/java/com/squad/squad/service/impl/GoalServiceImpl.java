@@ -33,16 +33,15 @@ public class GoalServiceImpl implements GoalService {
     @Override
     public List<GoalDTO> getAllGoals() {
         return goalRepository.findAll().stream().map(
-                goal -> new GoalDTO(goal.getGame().getId(), goal.getPlayer().getId(), goal.getPlayer().getName(),
-                        goal.getTeamColor()))
+                        goal -> new GoalDTO(goal.getGame().getId(), goal.getPlayer().getId(), goal.getPlayer().getName(),
+                                goal.getTeamColor()))
                 .collect(Collectors.toList());
-
     }
 
     @Override
     public List<GoalDTO> getGoalsByGameId(Integer gameId) {
         return goalRepository.findGoalsByGameId(gameId).stream().map(
-                goal -> new GoalDTO(gameId, goal.getPlayer().getId(), goal.getPlayer().getName(), goal.getTeamColor()))
+                        goal -> new GoalDTO(gameId, goal.getPlayer().getId(), goal.getPlayer().getName(), goal.getTeamColor()))
                 .collect(Collectors.toList());
     }
 
@@ -54,10 +53,10 @@ public class GoalServiceImpl implements GoalService {
         for (GoalDTO goalDto : goalDtos) {
 
             if (existingGame == null) {
-                existingGame = gameService.findById(goalDto.getGameId());
+                existingGame = gameService.findGameById(goalDto.getGameId());
                 existingGame.setPlayed(true);
 
-                gameService.updateGame(existingGame.getId(), gameMapper.gameToGameDTO(existingGame));
+//                gameService.updateGame(existingGame.getId(), gameMapper.gameToGameDTO(existingGame));
             }
 
             Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayerId()));
@@ -71,7 +70,5 @@ public class GoalServiceImpl implements GoalService {
 
             gameService.updateScoreWithGoal(goal);
         }
-
     }
-
 }

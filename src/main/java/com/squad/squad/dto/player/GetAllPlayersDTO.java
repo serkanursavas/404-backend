@@ -1,12 +1,11 @@
-package com.squad.squad.dto;
+package com.squad.squad.dto.player;
 
-public class PlayerDTO {
+public class GetAllPlayersDTO {
 
     private Integer id;
     private String name;
-    private String surname;
-    private String foot;
     private String photo;
+    private double rating;
     private String position;
     private boolean active;
 
@@ -26,28 +25,20 @@ public class PlayerDTO {
         this.name = name;
     }
 
-    public String getSurname() {
-        return surname;
-    }
-
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
-
-    public String getFoot() {
-        return foot;
-    }
-
-    public void setFoot(String foot) {
-        this.foot = foot;
-    }
-
     public String getPhoto() {
         return photo;
     }
 
     public void setPhoto(String photo) {
         this.photo = photo;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
     }
 
     public String getPosition() {

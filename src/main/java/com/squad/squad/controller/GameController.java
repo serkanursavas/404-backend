@@ -1,6 +1,9 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.GameDTOValidator;
+import com.squad.squad.dto.game.GameCreateRequestDTO;
+import com.squad.squad.dto.game.GameResponseDTO;
+import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,12 +40,12 @@ public class GameController {
     }
 
     @GetMapping("/getGameById/{id}")
-    public ResponseEntity<GameDTO> getGameById(@PathVariable Integer id) {
+    public ResponseEntity<GameResponseDTO> getGameById(@PathVariable Integer id) {
         return ResponseEntity.ok(gameService.getGameById(id));
     }
 
-    @PostMapping("/createGame")
-    public ResponseEntity<?> createGame(@RequestBody GameDTO gameDto) {
+    @PostMapping("/admin/createGame")
+    public ResponseEntity<?> createGame(@RequestBody GameCreateRequestDTO gameDto) {
         List<String> errors = gameDTOValidator.validate(gameDto);
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(errors);
@@ -52,9 +55,9 @@ public class GameController {
         return ResponseEntity.ok("Game created successfully");
     }
 
-    @PutMapping("/updateGame/{id}")
-    public ResponseEntity<?> updateGame(@PathVariable Integer id, @RequestBody GameDTO updatedGame) {
-        List<String> errors = gameDTOValidator.validate(updatedGame);
+    @PutMapping("/admin/updateGame/{id}")
+    public ResponseEntity<?> updateGame(@PathVariable Integer id, @RequestBody GameUpdateRequestDTO updatedGame) {
+        List<String> errors = gameDTOValidator.updateValidate(updatedGame);
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(errors);
         }

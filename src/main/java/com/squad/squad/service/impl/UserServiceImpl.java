@@ -118,7 +118,6 @@ public class UserServiceImpl implements UserService {
             User user = getUserByUsername(username);
             PlayerDTO player = playerService.getPlayerById(user.getId());
 
-            player.setActive(false);
             playerService.softDelete(player);
             userRepository.deleteByUsername(username);
         } else {
@@ -146,14 +145,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
-    }
-
-    @Override
-    public void deleteById(Integer id) {
-        try {
-            userRepository.deleteById(id);
-        } catch (Exception e) {
-            throw new UserNotFoundException("User not found with id: " + id);
-        }
     }
 }

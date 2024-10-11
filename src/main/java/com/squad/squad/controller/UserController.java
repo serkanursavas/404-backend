@@ -24,7 +24,7 @@ public class UserController {
         this.userDTOValidator = userDTOValidator;
     }
 
-    @GetMapping("/getAllUsers")
+    @GetMapping("/admin/getAllUsers")
     public ResponseEntity<List<GetAllUsersDTO>> getAllUsers() {
         List<GetAllUsersDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);

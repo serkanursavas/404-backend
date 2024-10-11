@@ -6,14 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -29,18 +22,28 @@ public class Roster {
     @Column(nullable = true)
     private double rating;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
     private Game game;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", referencedColumnName = "id", nullable = false)
     private Player player;
 
     @OneToMany(mappedBy = "roster")
     @JsonIgnore
     private List<Rating> rate;
+
+    public Roster() {
+    }
+
+    public Roster(Integer id, String teamColor, Game game, Player player) {
+        this.id = id;
+        this.teamColor = teamColor;
+        this.game = game;
+        this.player = player;
+    }
 
     public Integer getId() {
         return id;
@@ -89,5 +92,4 @@ public class Roster {
     public void setRate(List<Rating> rate) {
         this.rate = rate;
     }
-
 }

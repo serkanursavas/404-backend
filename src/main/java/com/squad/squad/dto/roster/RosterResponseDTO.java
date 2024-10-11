@@ -1,8 +1,8 @@
-package com.squad.squad.dto;
+package com.squad.squad.dto.roster;
 
 import jakarta.validation.constraints.NotNull;
 
-public class RosterDTO {
+public class RosterResponseDTO {
 
     @NotNull(message = "Player ID cannot be null")
     private Integer id;
@@ -10,10 +10,9 @@ public class RosterDTO {
     private double rating;
     private Integer playerId;
     private String playerName;
-    private Integer gameId;
 
     // Default constructor
-    public RosterDTO() {
+    public RosterResponseDTO() {
     }
 
     // Getters and Setters
@@ -56,13 +55,5 @@ public class RosterDTO {
 
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
-    }
-
-    public Integer getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(Integer gameId) {
-        this.gameId = gameId;
     }
 }

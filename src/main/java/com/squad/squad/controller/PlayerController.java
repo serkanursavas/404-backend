@@ -1,6 +1,8 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.PlayerDTOValidator;
+import com.squad.squad.dto.player.GetAllActivePlayersDTO;
+import com.squad.squad.dto.player.GetAllPlayersDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,9 +11,7 @@ import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.service.PlayerService;
 
 import java.util.List;
-import java.util.Objects;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -29,8 +29,8 @@ public class PlayerController {
     }
 
     @GetMapping("/getAllPlayers")
-    public ResponseEntity<List<PlayerDTO>> getAllPlayers() {
-        return ResponseEntity.ok(playerService.getAllActivePlayers());
+    public ResponseEntity<List<GetAllPlayersDTO>> getAllPlayers() {
+        return ResponseEntity.ok(playerService.getAllPlayers());
     }
 
     @GetMapping("/getPlayerById/{id}")
@@ -38,7 +38,7 @@ public class PlayerController {
         return ResponseEntity.ok(playerService.getPlayerById(id));
     }
 
-    @PutMapping("/updatePlayer")
+    @PutMapping("/admin/updatePlayer")
     public ResponseEntity<?> updatePlayer(@RequestBody PlayerDTO updatedPlayer) {
         List<String> errors = playerDTOValidator.validateUpdate(updatedPlayer);
 
@@ -50,9 +50,8 @@ public class PlayerController {
         return ResponseEntity.ok("Player updated successfully");
     }
 
-    @DeleteMapping("/deletePlayerById/{id}")
-    public ResponseEntity<Void> deletePlayerById(@PathVariable Integer id) {
-        playerService.deletePlayerById(id);
-        return ResponseEntity.noContent().build();
+    @GetMapping("/admin/getAllActivePlayers")
+    public List<GetAllActivePlayersDTO> getAllActivePlayers() {
+        return playerService.getAllActivePlayers();
     }
 }
