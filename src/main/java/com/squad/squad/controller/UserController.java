@@ -2,6 +2,7 @@ package com.squad.squad.controller;
 
 import com.squad.squad.dto.user.*;
 import com.squad.squad.entity.User;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
@@ -61,7 +62,7 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
-    @PutMapping("/admin/updateUserByUsername/{username}")
+    @PutMapping("/updateProfile/{username}")
     public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserUpdateRequestDTO updatedUser) {
         List<String> errors = userDTOValidator.validateUpdate(updatedUser);
         if (!errors.isEmpty()) {
@@ -81,6 +82,23 @@ public class UserController {
         }
 
         userService.updateUser(username, updatedUser);
+        return ResponseEntity.ok("User updated successfully.");
+    }
+
+    @PutMapping("/admin/updateUserRole/{username}")
+    public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserRoleUpdateRequestDTO updatedRole) {
+        List<String> errors = userDTOValidator.validateRoleUpdate(updatedRole);
+        if (!errors.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
+        boolean userExists = userService.existsByUsername(username);
+        if (!userExists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found.");
+        }
+
+        userService.updateUserRole(username, updatedRole);
         return ResponseEntity.ok("User updated successfully.");
     }
 
