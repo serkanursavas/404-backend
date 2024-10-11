@@ -1,6 +1,7 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.GoalDTOValidator;
+import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,13 +28,8 @@ public class GoalController {
         this.goalDTOValidator = goalDTOValidator;
     }
 
-    @GetMapping("/getAllGoals")
-    public List<GoalDTO> getAllGoals() {
-        return goalService.getAllGoals();
-    }
-
     @PostMapping("/addGoals")
-    public ResponseEntity<?> addGoals(@RequestBody List<GoalDTO> goalDtos) {
+    public ResponseEntity<?> addGoals(@RequestBody List<GoalAddRequestDTO> goalDtos) {
         List<String> errors = goalDTOValidator.validate(goalDtos);
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(errors);

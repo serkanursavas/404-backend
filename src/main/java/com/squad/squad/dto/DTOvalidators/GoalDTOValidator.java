@@ -3,6 +3,7 @@ package com.squad.squad.dto.DTOvalidators;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import org.springframework.stereotype.Component;
 
 import com.squad.squad.dto.GoalDTO;
@@ -11,7 +12,7 @@ import com.squad.squad.enums.TeamColor;
 @Component
 public class GoalDTOValidator {
 
-    public List<String> validate(List<GoalDTO> goals) {
+    public List<String> validate(List<GoalAddRequestDTO> goals) {
 
         List<String> errors = new ArrayList<>();
 
@@ -20,7 +21,7 @@ public class GoalDTOValidator {
             return errors;
         }
 
-        for (GoalDTO goal : goals) {
+        for (GoalAddRequestDTO goal : goals) {
 
             if (goal.getGameId() == null) {
                 errors.add("Game ID cannot be null");
@@ -39,10 +40,8 @@ public class GoalDTOValidator {
                     errors.add(e.getMessage());
                 }
             }
-
         }
 
         return errors;
     }
-
 }

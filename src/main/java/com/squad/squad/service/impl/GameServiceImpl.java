@@ -9,9 +9,11 @@ import java.util.stream.Collectors;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
+import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.dto.roster.RosterUpdateDTO;
+import com.squad.squad.mapper.GoalMapper;
 import org.springframework.beans.BeanUtils;
 
 import org.springframework.stereotype.Service;
@@ -45,6 +47,7 @@ public class GameServiceImpl implements GameService {
     private final RosterService rosterService;
     private final PlayerService playerService;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
+    private final GoalMapper goalMapper = GoalMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
                            PlayerService playerService) {
@@ -80,18 +83,9 @@ public class GameServiceImpl implements GameService {
             rosterDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         }
 
-        List<Goal> goals = game.getGoal();
-        List<GoalDTO> goalDTOs = goals.stream()
-                .map(goal -> {
-                    GoalDTO goalDTO = new GoalDTO();
-                    BeanUtils.copyProperties(goal, goalDTO);
-                    PlayerDTO playerDto = playerService.getPlayerById(goal.getPlayer().getId());
-                    goalDTO.setPlayerName(playerDto.getName());
-                    return goalDTO;
-                })
-                .collect(Collectors.toList());
+        List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
 
-        for (GoalDTO goalDTO : goalDTOs) {
+        for (GoalResponseDTO goalDTO : goals) {
             PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayerId());
             goalDTO.setPlayerName(playerDto.getName());
         }
@@ -99,7 +93,7 @@ public class GameServiceImpl implements GameService {
         GameResponseDTO gameDTO = new GameResponseDTO();
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);
-        gameDTO.setGoals(goalDTOs);
+        gameDTO.setGoals(goals);
 
         return gameDTO;
     }
