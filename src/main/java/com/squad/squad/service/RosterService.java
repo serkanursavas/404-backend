@@ -8,17 +8,11 @@ import com.squad.squad.entity.Roster;
 
 public interface RosterService {
 
-    List<RosterDTO> getAllRosters();
-
     Roster getRosterById(Integer id);
 
     List<RosterResponseDTO> findRosterByGameId(Integer gameId);
 
-    Roster saveRoster(Roster roster);
-
     void saveAllRosters(List<Roster> rosters);
-
-    Roster updateRoster(RosterDTO updateRoster);
 
     void updateAllRosters(List<Roster> rosters);
 
