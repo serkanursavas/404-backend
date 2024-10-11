@@ -22,12 +22,12 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private String role = "ROLE_USER";
+    private String role = "USER";
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "player_id", referencedColumnName = "id")
     private Player player;
 
