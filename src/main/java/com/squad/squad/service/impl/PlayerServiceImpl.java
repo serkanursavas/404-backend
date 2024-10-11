@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.GetAllPlayersDTO;
+import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +41,7 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public void updatePlayer(PlayerDTO updatedPlayer) {
+    public void updatePlayer(PlayerUpdateRequestDTO updatedPlayer) {
         Player existingPlayer = playerRepository.findById(updatedPlayer.getId())
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + updatedPlayer.getId()));
 

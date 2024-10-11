@@ -82,7 +82,7 @@ public class RosterServiceImpl implements RosterService {
                     .orElse(0.0);
 
             player.setRating(generalRating);
-            playerService.updatePlayer(playerMapper.playerToPlayerDTO(player));
+            playerService.updatePlayer(playerMapper.playerToPlayerUpdateRequestDTO(player));
         }
     }
 
