@@ -30,5 +30,5 @@ public interface GameService {
 
     LatestGamesDTO getLatestGame();
 
-    void checkAndUpdateUnplayedGames();
+    void checkAndUpdateUnplayedGame();
 }

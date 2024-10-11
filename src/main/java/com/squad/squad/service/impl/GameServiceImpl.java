@@ -59,7 +59,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public LatestGamesDTO getLatestGame() {
 
-        checkAndUpdateUnplayedGames();
+        checkAndUpdateUnplayedGame();
 
         return gameMapper.gameToLatestGameDTO(gameRepository.findTopByOrderByDateTimeDesc());
     }
@@ -109,6 +109,10 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public void createGame(GameCreateRequestDTO gameDto) {
+
+        if (gameRepository.existsByIsPlayedFalse()) {
+            throw new IllegalArgumentException("There is already a planned game.");
+        }
 
         Game game = new Game();
         game.setDateTime(gameDto.getDateTime());
@@ -228,16 +232,13 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void checkAndUpdateUnplayedGames() {
-        List<Game> unplayedGames = gameRepository.findByIsPlayedFalse();
+    public void checkAndUpdateUnplayedGame() {
+        Game unplayedGame = gameRepository.findByIsPlayedFalse();
         LocalDateTime currentTime = LocalDateTime.now();
 
-        for (Game game : unplayedGames) {
-            if (currentTime.isAfter(game.getDateTime())) {
-                game.setPlayed(true);
-                gameRepository.save(game); // Oyun durumunu güncelle
-                System.out.println("Game ID " + game.getId() + " is now marked as played.");
-            }
+        if (currentTime.isAfter(unplayedGame.getDateTime())) {
+            unplayedGame.setPlayed(true);
+            gameRepository.save(unplayedGame);
         }
     }
 

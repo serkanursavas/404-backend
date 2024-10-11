@@ -11,5 +11,7 @@ import java.util.List;
 public interface GameRepository extends JpaRepository<Game, Integer> {
     Game findTopByOrderByDateTimeDesc();
 
-    List<Game> findByIsPlayedFalse();
+    Game findByIsPlayedFalse();
+
+    boolean existsByIsPlayedFalse();
 }
