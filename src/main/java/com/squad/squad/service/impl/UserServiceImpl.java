@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User savedUser = new User();
-        savedUser.setUsername(user.getUsername());
+        savedUser.setUsername(user.getUsername().toLowerCase());
         savedUser.setPassword(encodedPassword);
 
         Player player = new Player();
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName(); // Token içinden kullanıcı adını alır
 
-        if (!currentUsername.equals(username)) {
+        if (!currentUsername.equals(username.toLowerCase())) {
             throw new InvalidCredentialsException("You can only update your own profile.");
         }
 
@@ -152,7 +152,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO) {
         User user = getUserByUsername(username);
-        user.setRole(roleDTO.getRole());
+        user.setRole(roleDTO.getRole().toUpperCase());
 
         userRepository.save(user);
     }

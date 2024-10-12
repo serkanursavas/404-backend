@@ -1,24 +1,22 @@
 package com.squad.squad.dto.game;
 
-import com.squad.squad.dto.goal.GoalResponseDTO;
-import com.squad.squad.dto.roster.RosterResponseDTO;
+import com.squad.squad.dto.GoalDTO;
+import com.squad.squad.dto.RosterDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class GameResponseDTO {
+public class NextGameResponseDTO {
+
     private Integer id;
     private String location;
     private String weather;
     private Integer homeTeamScore;
     private Integer awayTeamScore;
     private LocalDateTime dateTime;
-    private List<RosterResponseDTO> rosters;
-    private List<GoalResponseDTO> goals;
     private boolean isPlayed;
     private boolean voteMode;
 
-    // Getters and Setters
     public Integer getId() {
         return id;
     }
@@ -67,28 +65,12 @@ public class GameResponseDTO {
         this.dateTime = dateTime;
     }
 
-    public List<RosterResponseDTO> getRosters() {
-        return rosters;
-    }
-
-    public void setRosters(List<RosterResponseDTO> rosters) {
-        this.rosters = rosters;
-    }
-
-    public List<GoalResponseDTO> getGoals() {
-        return goals;
-    }
-
-    public void setGoals(List<GoalResponseDTO> goals) {
-        this.goals = goals;
-    }
-
     public boolean isPlayed() {
         return isPlayed;
     }
 
-    public void setPlayed(boolean isPlayed) {
-        this.isPlayed = isPlayed;
+    public void setPlayed(boolean played) {
+        isPlayed = played;
     }
 
     public boolean isVoteMode() {

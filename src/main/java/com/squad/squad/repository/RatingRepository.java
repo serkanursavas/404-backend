@@ -18,5 +18,8 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
     @Query("SELECT COUNT(r) FROM Rating r WHERE r.roster.game.id = :game_id AND r.roster.teamColor = :team_color")
     Integer countByRosterGameIdAndTeamColor(@Param("game_id") Integer game_id, @Param("team_color") String team_color);
 
-    Double findAverageRatingByRoster(Roster roster);
+    @Query("SELECT AVG(r.rate) FROM Rating r WHERE r.roster = :roster")
+    Double findAverageRatingByRoster(@Param("roster") Roster roster);
+
+    boolean existsByPlayerIdAndRosterId(Integer playerId, Integer rosterId);
 }

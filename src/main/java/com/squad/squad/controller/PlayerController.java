@@ -3,6 +3,7 @@ package com.squad.squad.controller;
 import com.squad.squad.dto.DTOvalidators.PlayerDTOValidator;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.GetAllPlayersDTO;
+import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,7 +40,7 @@ public class PlayerController {
     }
 
     @PutMapping("/admin/updatePlayer")
-    public ResponseEntity<?> updatePlayer(@RequestBody PlayerDTO updatedPlayer) {
+    public ResponseEntity<?> updatePlayer(@RequestBody PlayerUpdateRequestDTO updatedPlayer) {
         List<String> errors = playerDTOValidator.validateUpdate(updatedPlayer);
 
         if (!errors.isEmpty()) {

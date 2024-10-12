@@ -1,5 +1,6 @@
 package com.squad.squad.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,18 +10,19 @@ import java.util.stream.Collectors;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
+import com.squad.squad.dto.game.NextGameResponseDTO;
+import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.dto.roster.RosterUpdateDTO;
+import com.squad.squad.mapper.GameMapper;
+import com.squad.squad.mapper.GoalMapper;
 import org.springframework.beans.BeanUtils;
 
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.dto.GameDTO;
-import com.squad.squad.dto.GoalDTO;
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 import com.squad.squad.entity.Player;
@@ -45,12 +47,22 @@ public class GameServiceImpl implements GameService {
     private final RosterService rosterService;
     private final PlayerService playerService;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
+    private final GoalMapper goalMapper = GoalMapper.INSTANCE;
+    private final GameMapper gameMapper = GameMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
                            PlayerService playerService) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
+    }
+
+    @Override
+    public NextGameResponseDTO getLatestGame() {
+
+        checkAndUpdateUnplayedGame();
+
+        return gameMapper.gameToNextGameResponseDTO(gameRepository.findTopByOrderByDateTimeDesc());
     }
 
     @Override
@@ -80,18 +92,9 @@ public class GameServiceImpl implements GameService {
             rosterDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         }
 
-        List<Goal> goals = game.getGoal();
-        List<GoalDTO> goalDTOs = goals.stream()
-                .map(goal -> {
-                    GoalDTO goalDTO = new GoalDTO();
-                    BeanUtils.copyProperties(goal, goalDTO);
-                    PlayerDTO playerDto = playerService.getPlayerById(goal.getPlayer().getId());
-                    goalDTO.setPlayerName(playerDto.getName());
-                    return goalDTO;
-                })
-                .collect(Collectors.toList());
+        List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
 
-        for (GoalDTO goalDTO : goalDTOs) {
+        for (GoalResponseDTO goalDTO : goals) {
             PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayerId());
             goalDTO.setPlayerName(playerDto.getName());
         }
@@ -99,7 +102,7 @@ public class GameServiceImpl implements GameService {
         GameResponseDTO gameDTO = new GameResponseDTO();
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);
-        gameDTO.setGoals(goalDTOs);
+        gameDTO.setGoals(goals);
 
         return gameDTO;
     }
@@ -107,6 +110,10 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public void createGame(GameCreateRequestDTO gameDto) {
+
+        if (gameRepository.existsByIsPlayedFalse()) {
+            throw new IllegalArgumentException("There is already a planned game.");
+        }
 
         Game game = new Game();
         game.setDateTime(gameDto.getDateTime());
@@ -223,6 +230,26 @@ public class GameServiceImpl implements GameService {
     public Game findById(Integer id) {
         return gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+    }
+
+    @Override
+    public void checkAndUpdateUnplayedGame() {
+        Game unplayedGame = gameRepository.findByIsPlayedFalse();
+
+        if (unplayedGame != null) {
+            LocalDateTime currentTime = LocalDateTime.now();
+
+            if (currentTime.isAfter(unplayedGame.getDateTime())) {
+                unplayedGame.setPlayed(true);
+                gameRepository.save(unplayedGame);
+            }
+        }
+    }
+
+    public List<Roster> getRostersByGameId(Integer gameId) {
+        return gameRepository.findById(gameId)
+                .map(Game::getRoster)
+                .orElse(new ArrayList<>());
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {

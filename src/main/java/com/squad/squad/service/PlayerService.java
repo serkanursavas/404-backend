@@ -5,6 +5,7 @@ import java.util.List;
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.GetAllPlayersDTO;
+import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import com.squad.squad.entity.Player;
 
 public interface PlayerService {
@@ -13,7 +14,7 @@ public interface PlayerService {
 
     PlayerDTO getPlayerById(Integer id);
 
-    void updatePlayer(PlayerDTO player);
+    void updatePlayer(PlayerUpdateRequestDTO player);
 
     void softDelete(PlayerDTO deletedPlayer);
 

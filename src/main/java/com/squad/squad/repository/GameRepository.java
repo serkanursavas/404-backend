@@ -5,7 +5,13 @@ import org.springframework.stereotype.Repository;
 
 import com.squad.squad.entity.Game;
 
+import java.util.List;
+
 @Repository
 public interface GameRepository extends JpaRepository<Game, Integer> {
+    Game findTopByOrderByDateTimeDesc();
 
+    Game findByIsPlayedFalse();
+
+    boolean existsByIsPlayedFalse();
 }
