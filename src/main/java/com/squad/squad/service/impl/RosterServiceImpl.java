@@ -97,6 +97,11 @@ public class RosterServiceImpl implements RosterService {
         return rosterRepository.findAllById(rosterIds);
     }
 
+    @Override
+    public Roster getRosterByPlayerId(Integer id) {
+        return rosterRepository.findByPlayerId(id);
+    }
+
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {
         if (value != null) {
             setter.accept(value);
