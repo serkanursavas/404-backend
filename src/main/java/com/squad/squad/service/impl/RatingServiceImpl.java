@@ -11,8 +11,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.dto.GameDTO;
-import com.squad.squad.dto.RatingDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Rating;
 import com.squad.squad.entity.Roster;
@@ -104,7 +102,7 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public double calculateAvarageRating(Roster roster) {
+    public double calculateAverageRating(Roster roster) {
         Double average = ratingRepository.findAverageRatingByRoster(roster);
         return average != null ? average : 0.0;
     }
@@ -116,7 +114,7 @@ public class RatingServiceImpl implements RatingService {
         List<Roster> rosters = rosterService.findRosterByGameIdAndTeamColor(gameId, teamColor);
 
         for (Roster roster : rosters) {
-            double newRating = calculateAvarageRating(roster);
+            double newRating = calculateAverageRating(roster);
             roster.setRating(newRating);
         }
 
