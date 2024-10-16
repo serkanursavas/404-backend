@@ -1,8 +1,6 @@
 package com.squad.squad.dto.roster;
 
-import com.squad.squad.dto.RosterDTO;
-
-public class RosterCreateDTO extends RosterDTO {
+public class RosterCreateDTO {
 
     private String teamColor;
     private Integer playerId;

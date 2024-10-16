@@ -28,6 +28,9 @@ public class Game {
     private boolean voteMode = false;
 
     @Column(nullable = false)
+    private boolean isVoted = false;
+
+    @Column(nullable = false)
     private String location;
 
     @Column(nullable = false)
@@ -127,5 +130,13 @@ public class Game {
 
     public void setGoal(List<Goal> goal) {
         this.goal = goal;
+    }
+
+    public boolean isVoted() {
+        return isVoted;
+    }
+
+    public void setVoted(boolean voted) {
+        isVoted = voted;
     }
 }

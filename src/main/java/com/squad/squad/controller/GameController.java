@@ -4,6 +4,7 @@ import com.squad.squad.dto.DTOvalidators.GameDTOValidator;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
+import com.squad.squad.dto.game.NextGameResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/games")
-
 public class GameController {
 
     private final GameService gameService;
@@ -66,9 +66,21 @@ public class GameController {
         return ResponseEntity.ok("Game updated successfully");
     }
 
-    @DeleteMapping("/deleteGame/{id}")
+    @DeleteMapping("/admin/deleteGame/{id}")
     public ResponseEntity<Void> deleteGame(@PathVariable Integer id) {
         gameService.deleteGame(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/getNextGame")
+    public ResponseEntity<?> getNextGame() {
+
+        NextGameResponseDTO latestGame = gameService.getLatestGame();
+
+        if (latestGame != null) {
+            return ResponseEntity.ok(latestGame);
+        } else {
+            return ResponseEntity.badRequest().body("Game not found");
+        }
     }
 }

@@ -82,7 +82,7 @@ public class RosterServiceImpl implements RosterService {
                     .orElse(0.0);
 
             player.setRating(generalRating);
-            playerService.updatePlayer(playerMapper.playerToPlayerDTO(player));
+            playerService.updatePlayer(playerMapper.playerToPlayerUpdateRequestDTO(player));
         }
     }
 
@@ -95,6 +95,11 @@ public class RosterServiceImpl implements RosterService {
     @Override
     public List<Roster> findAllById(List<Integer> rosterIds) {
         return rosterRepository.findAllById(rosterIds);
+    }
+
+    @Override
+    public Roster getRosterByPlayerId(Integer id) {
+        return rosterRepository.findByPlayerId(id);
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {

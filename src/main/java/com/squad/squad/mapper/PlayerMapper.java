@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.GetAllPlayersDTO;
+import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -17,11 +18,13 @@ public interface PlayerMapper {
 
     PlayerDTO playerToPlayerDTO(Player player);
 
+    PlayerUpdateRequestDTO playerToPlayerUpdateRequestDTO(Player player);
+
     Player playerDTOToPlayer(PlayerDTO playerDTO);
 
     @Mapping(source = "active", target = "active")
     List<GetAllPlayersDTO> playersToGetAllPlayersDTOs(List<Player> players);
-    
+
     @Mapping(source = "name", target = "playerName")
     GetAllActivePlayersDTO playerToGetAllActivePlayersDTO(Player player);
 

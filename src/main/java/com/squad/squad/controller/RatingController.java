@@ -1,5 +1,9 @@
 package com.squad.squad.controller;
 
+import com.squad.squad.dto.DTOvalidators.RatingDTOValidator;
+import com.squad.squad.dto.rating.AddRatingRequestDTO;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,14 +22,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class RatingController {
 
     private final RatingService ratingService;
+    private final RatingDTOValidator ratingDTOValidator;
 
-    public RatingController(RatingService ratingService) {
+    public RatingController(RatingService ratingService, RatingDTOValidator ratingDTOValidator) {
         this.ratingService = ratingService;
+        this.ratingDTOValidator = ratingDTOValidator;
     }
 
     @Transactional
     @PostMapping("/saveRatings")
-    public void saveRatings(@RequestBody List<RatingDTO> ratings) {
+    public ResponseEntity<?> saveRatings(@RequestBody List<AddRatingRequestDTO> ratings) {
+        List<String> errors = ratingDTOValidator.validate(ratings);
+        if (!errors.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
         ratingService.saveRating(ratings);
+        return ResponseEntity.ok("Your vote sent successfully");
     }
 }

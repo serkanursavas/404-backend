@@ -7,8 +7,10 @@ import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
+import com.squad.squad.dto.game.NextGameResponseDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
+import com.squad.squad.entity.Roster;
 
 public interface GameService {
 
@@ -27,4 +29,10 @@ public interface GameService {
     void deleteGame(Integer id);
 
     Game findById(Integer id);
+
+    NextGameResponseDTO getLatestGame();
+
+    void checkAndUpdateUnplayedGame();
+
+    List<Roster> getRostersByGameId(Integer gameId);
 }

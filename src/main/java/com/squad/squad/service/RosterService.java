@@ -23,4 +23,6 @@ public interface RosterService {
     List<Roster> findRosterByGameIdAndTeamColor(Integer gameId, String teamColor);
 
     List<Roster> findAllById(List<Integer> rosterIds);
+
+    Roster getRosterByPlayerId(Integer id);
 }

@@ -105,6 +105,6 @@ public class UserController {
     @DeleteMapping("/admin/deleteUser/{username}")
     public ResponseEntity<String> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
-        return ResponseEntity.ok("User deleted successfully with username: " + username);
+        return ResponseEntity.ok("User deleted successfully with username: " + username.toLowerCase());
     }
 }

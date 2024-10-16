@@ -2,14 +2,14 @@ package com.squad.squad.service;
 
 import java.util.List;
 
-import com.squad.squad.dto.RatingDTO;
+import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import com.squad.squad.entity.Roster;
 
 public interface RatingService {
 
-    void saveRating(List<RatingDTO> ratings);
+    void saveRating(List<AddRatingRequestDTO> ratings);
 
-    double calculateAvarageRating(Roster roster);
+    double calculateAverageRating(Roster roster);
 
     void clearAllRatings();
 

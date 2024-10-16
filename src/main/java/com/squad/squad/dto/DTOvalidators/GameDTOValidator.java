@@ -39,12 +39,12 @@ public class GameDTOValidator {
 
         if (game.getTeamSize() == null || game.getTeamSize() < 6 || game.getTeamSize() > 11) {
             errors.add("Team size cannot be empty and must be between 6 and 11");
+        } else if (game.getRosters().size() != game.getTeamSize() * 2) {
+            errors.add("Roster size must be equal to " + game.getTeamSize() * 2);
         }
 
         if (game.getRosters() == null || game.getRosters().isEmpty()) {
             errors.add("Rosters cannot be empty");
-        } else if (game.getRosters().size() != game.getTeamSize() * 2) {
-            errors.add("Roster size must be equal to " + game.getTeamSize() * 2);
         }
 
         rosterDTOValidator.validate(game.getRosters());
@@ -85,12 +85,11 @@ public class GameDTOValidator {
             if (game.getTeamSize() < 6 || game.getTeamSize() > 11) {
                 errors.add("Team size must be between 6 and 11.");
             }
-
             if (game.getRosters().size() != game.getTeamSize() * 2) {
                 errors.add("Roster size must be equal to " + game.getTeamSize() * 2);
             }
 
-            List<String> rosterErrors = rosterDTOValidator.validate(game.getRosters());
+            List<String> rosterErrors = rosterDTOValidator.validateUpdate(game.getRosters());
             if (!rosterErrors.isEmpty()) {
                 errors.addAll(rosterErrors);
             }

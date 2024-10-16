@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import org.springframework.stereotype.Component;
 
 import com.squad.squad.dto.RatingDTO;
@@ -12,38 +13,41 @@ import com.squad.squad.dto.RatingDTO;
 @Component
 public class RatingDTOValidator {
 
-    public List<String> validate(List<RatingDTO> ratings) {
-
+    public List<String> validate(List<AddRatingRequestDTO> ratings) {
         List<String> errors = new ArrayList<>();
-        Set<Integer> rosterIds = new HashSet<>();
+        Set<Integer> votedRosterIds = new HashSet<>();
 
+        // Boş liste veya null kontrolü
         if (ratings == null || ratings.isEmpty()) {
-            errors.add("Ratings list cannot be empty");
+            errors.add("Rating list cannot be null or empty.");
             return errors;
         }
 
-        for (RatingDTO rating : ratings) {
+        for (AddRatingRequestDTO rating : ratings) {
 
-            if (rating.getPlayerId() == null) {
-                errors.add("Player ID cannot be null");
+            // Player ID null ve negatif değer kontrolü
+            if (rating.getPlayerId() == null || rating.getPlayerId() <= 0) {
+                errors.add("Player ID must be a positive number.");
             }
 
+            // Rate null ve geçerli aralık kontrolü
             if (rating.getRate() == null) {
-                errors.add("Rate cannot be empty");
-            } else if (rating.getRate() > 10 || rating.getRate() < 1) {
-                errors.add("Rate must be between 1 and 10. Invalid rate for player ID: " + rating.getPlayerId());
+                errors.add("Rate cannot be null.");
+            } else if (rating.getRate() < 1 || rating.getRate() > 10) {
+                errors.add("Rate must be between 1 and 10.");
             }
 
-            if (rating.getRosterId() == null) {
-                errors.add("Roster ID cannot be null");
-            } else if (!rosterIds.add(rating.getRosterId())) {
-                errors.add("Duplicate rating for roster ID: " + rating.getRosterId());
+            // Roster ID null ve negatif değer kontrolü
+            if (rating.getRosterId() == null || rating.getRosterId() <= 0) {
+                errors.add("Roster ID must be a positive number.");
+            } else {
+                // Aynı rosterId'ye birden fazla oy verilmesini engelle
+                if (!votedRosterIds.add(rating.getRosterId())) {
+                    errors.add("Duplicate vote detected for roster ID: " + rating.getRosterId());
+                }
             }
-
         }
 
         return errors;
-
     }
-
 }

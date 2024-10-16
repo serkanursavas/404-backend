@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.squad.squad.dto.PlayerCreateDTO;
+import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import org.springframework.stereotype.Component;
 
 import com.squad.squad.dto.PlayerDTO;
@@ -34,7 +35,7 @@ public class PlayerDTOValidator {
         return errors;
     }
 
-    public List<String> validateUpdate(PlayerDTO player) {
+    public List<String> validateUpdate(PlayerUpdateRequestDTO player) {
         List<String> errors = new ArrayList<>();
 
         // Eğer isim boşsa veya null ise hata ekle

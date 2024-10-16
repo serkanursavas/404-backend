@@ -1,15 +1,13 @@
 package com.squad.squad.dto.roster;
 
-import com.squad.squad.dto.RosterDTO;
 import jakarta.validation.constraints.NotNull;
 
-public class RosterUpdateDTO extends RosterDTO {
+public class RosterUpdateDTO {
 
     @NotNull(message = "Player ID cannot be null")
     private Integer id;
     private String teamColor;
     private Integer playerId;
-    private Integer gameId;
 
     // Default constructor
     public RosterUpdateDTO() {
@@ -39,13 +37,5 @@ public class RosterUpdateDTO extends RosterDTO {
 
     public void setPlayerId(Integer playerId) {
         this.playerId = playerId;
-    }
-
-    public Integer getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(Integer gameId) {
-        this.gameId = gameId;
     }
 }
