@@ -1,6 +1,6 @@
 package com.squad.squad.dto.user;
 
-public class UserLoginResponseDTO {
+public class AuthResponseDTO {
 
     private String token;
 

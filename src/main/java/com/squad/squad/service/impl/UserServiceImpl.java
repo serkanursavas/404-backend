@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDTO createUser(UserCreateRequestDTO user) {
+    public String createUser(UserCreateRequestDTO user) {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User savedUser = new User();
@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(savedUser);
 
-        return userMapper.userToUserResponseDTO(savedUser);
+        return jwtUtils.generateToken(savedUser.getUsername(), savedUser.getRole());
     }
 
     @Override
