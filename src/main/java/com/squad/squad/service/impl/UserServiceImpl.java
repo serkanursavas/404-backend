@@ -131,11 +131,11 @@ public class UserServiceImpl implements UserService {
     public String resetPassword(String username) {
         User user = getUserByUsername(username);
 
-        String encodedPassword = passwordEncoder.encode(user.getUsername());
+        String encodedPassword = passwordEncoder.encode("reset" + user.getUsername());
         user.setPassword(encodedPassword);
         userRepository.save(user);
 
-        return "Password reset successfully for user: " + username;
+        return "Password reset to reset" + username + " successfully for user: " + username;
     }
 
     @Override
