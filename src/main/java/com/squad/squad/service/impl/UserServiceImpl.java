@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.squad.squad.dto.user.*;
 import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.mapper.UserMapper;
+import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.security.JwtUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -51,7 +52,10 @@ public class UserServiceImpl implements UserService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));
 
-            return jwtUtils.generateToken(username,
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Integer userId = userDetails.getId();
+
+            return jwtUtils.generateToken(userId, username,
                     authentication.getAuthorities().stream()
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.joining(",")));
@@ -80,7 +84,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(savedUser);
 
-        return jwtUtils.generateToken(savedUser.getUsername(), savedUser.getRole());
+        return jwtUtils.generateToken(savedUser.getId(), savedUser.getUsername(), savedUser.getRole());
     }
 
     @Override
