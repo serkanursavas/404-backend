@@ -1,8 +1,6 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.user.*;
-import com.squad.squad.entity.User;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
@@ -44,14 +42,16 @@ public class UserController {
                     .body("Username already exists. Please choose a different username.");
         }
 
-        UserResponseDTO createdUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+        String token = userService.createUser(user);
+        AuthResponseDTO response = new AuthResponseDTO();
+        response.setToken(token);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserLoginResponseDTO> login(@RequestBody UserLoginRequestDTO userLoginRequestDTO) {
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody UserLoginRequestDTO userLoginRequestDTO) {
         String token = userService.login(userLoginRequestDTO.getUsername(), userLoginRequestDTO.getPassword());
-        UserLoginResponseDTO response = new UserLoginResponseDTO();
+        AuthResponseDTO response = new AuthResponseDTO();
         response.setToken(token);
         return ResponseEntity.ok(response);
     }
