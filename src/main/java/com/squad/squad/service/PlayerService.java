@@ -4,13 +4,12 @@ import java.util.List;
 
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
-import com.squad.squad.dto.player.GetAllPlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import com.squad.squad.entity.Player;
 
 public interface PlayerService {
 
-    List<GetAllPlayersDTO> getAllPlayers();
+    List<PlayerDTO> getAllPlayers();
 
     PlayerDTO getPlayerById(Integer id);
 

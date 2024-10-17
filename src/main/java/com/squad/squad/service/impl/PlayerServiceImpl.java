@@ -3,7 +3,6 @@ package com.squad.squad.service.impl;
 import java.util.List;
 
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
-import com.squad.squad.dto.player.GetAllPlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -14,8 +13,6 @@ import com.squad.squad.exception.PlayerNotFoundException;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.PlayerRepository;
 import com.squad.squad.service.PlayerService;
-
-import jakarta.transaction.Transactional;
 
 @Service
 public class PlayerServiceImpl implements PlayerService {
@@ -28,8 +25,8 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public List<GetAllPlayersDTO> getAllPlayers() {
-        return playerMapper.playersToGetAllPlayersDTOs(playerRepository.findAll());
+    public List<PlayerDTO> getAllPlayers() {
+        return playerMapper.playersToPlayerDTOs(playerRepository.findAll());
     }
 
     @Override

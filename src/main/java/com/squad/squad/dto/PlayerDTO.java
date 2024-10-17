@@ -7,8 +7,17 @@ public class PlayerDTO {
     private String surname;
     private String foot;
     private String photo;
+    private double rating;
     private String position;
-    private boolean active;
+    private boolean active = true;
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
 
     public Integer getId() {
         return id;
