@@ -3,6 +3,7 @@ package com.squad.squad.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.squad.squad.dto.TopScorerDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import org.springframework.stereotype.Service;
@@ -68,5 +69,9 @@ public class GoalServiceImpl implements GoalService {
 
             gameService.updateScoreWithGoal(goal);
         }
+    }
+
+    public List<TopScorerDTO> getTopScorers() {
+        return goalRepository.findTopScorers();
     }
 }

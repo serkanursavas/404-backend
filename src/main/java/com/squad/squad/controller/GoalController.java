@@ -1,21 +1,18 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.GoalDTOValidator;
+import com.squad.squad.dto.TopScorerDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.service.GameService;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.service.GoalService;
 
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/goals")
@@ -42,7 +39,7 @@ public class GoalController {
         }
 
         List<Roster> gameRosters = gameService.getRostersByGameId(gameId);
-        
+
         List<String> errors = goalDTOValidator.validate(goalDtos, gameRosters);
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(errors);
@@ -50,5 +47,10 @@ public class GoalController {
 
         goalService.addGoals(requestDto);
         return ResponseEntity.ok("Goals created successfully");
+    }
+
+    @GetMapping("/topScorers")
+    public List<TopScorerDTO> getTopScorers() {
+        return goalService.getTopScorers();
     }
 }
