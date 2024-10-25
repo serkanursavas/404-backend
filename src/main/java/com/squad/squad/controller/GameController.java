@@ -77,12 +77,9 @@ public class GameController {
     @GetMapping("/getNextGame")
     public ResponseEntity<?> getNextGame() {
         GameResponseDTO latestGame = gameService.getLatestGame();
-        System.out.println("getNExtGameeeeeeeeee");
         if (latestGame != null) {
-            System.out.println("Successssssssssssss");
             return ResponseEntity.ok(latestGame);
         } else {
-            System.out.println("failedddddddddddddddddddd");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No upcoming matches available");
         }
     }
