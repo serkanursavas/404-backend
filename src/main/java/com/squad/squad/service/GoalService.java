@@ -3,7 +3,7 @@ package com.squad.squad.service;
 import java.util.List;
 
 import com.squad.squad.dto.GoalDTO;
-import com.squad.squad.dto.TopScorerDTO;
+import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 
 public interface GoalService {
@@ -13,5 +13,5 @@ public interface GoalService {
 
     void addGoals(AddGoalsRequestDTO requestDto);
 
-    List<TopScorerDTO> getTopScorers();
+    List<TopListsDTO> getTopScorers();
 }

@@ -1,7 +1,7 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.GoalDTOValidator;
-import com.squad.squad.dto.TopScorerDTO;
+import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import com.squad.squad.entity.Roster;
@@ -50,7 +50,7 @@ public class GoalController {
     }
 
     @GetMapping("/topScorers")
-    public List<TopScorerDTO> getTopScorers() {
+    public List<TopListsDTO> getTopScorers() {
         return goalService.getTopScorers();
     }
 }
