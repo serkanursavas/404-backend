@@ -1,7 +1,9 @@
 package com.squad.squad.service.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import org.springframework.beans.BeanUtils;
@@ -64,5 +66,16 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     public List<Player> findAllById(List<Integer> playerIds) {
         return playerRepository.findAllById(playerIds);
+    }
+
+    public List<TopListsDTO> getTopRatedPlayers() {
+        return playerRepository.findTopRatedPlayers().stream()
+                .map(record -> new TopListsDTO(
+                        (Integer) record[0],    // playerId
+                        (String) record[1],     // name
+                        (String) record[2],     // surname
+                        (Double) record[3]      // rating
+                ))
+                .collect(Collectors.toList());
     }
 }
