@@ -22,4 +22,6 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
     Double findAverageRatingByRoster(@Param("roster") Roster roster);
 
     boolean existsByPlayerIdAndRosterId(Integer playerId, Integer rosterId);
+
+    boolean existsByPlayerId(Integer playerId);
 }
