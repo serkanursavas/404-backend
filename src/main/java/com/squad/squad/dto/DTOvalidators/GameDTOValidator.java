@@ -27,10 +27,6 @@ public class GameDTOValidator {
             errors.add("Location cannot be empty");
         }
 
-        if (isNullOrEmpty(game.getWeather())) {
-            errors.add("Weather info cannot be empty");
-        }
-
         if (game.getDateTime() == null) {
             errors.add("Date cannot be empty");
         } else if (game.getDateTime().isBefore(LocalDateTime.now())) {
@@ -66,10 +62,6 @@ public class GameDTOValidator {
 
         if (game.getLocation() != null && game.getLocation().trim().isEmpty()) {
             errors.add("Location cannot be empty if provided.");
-        }
-
-        if (game.getWeather() != null && game.getWeather().trim().isEmpty()) {
-            errors.add("Weather info cannot be empty if provided.");
         }
 
         if (game.getDateTime() != null && game.getDateTime().isBefore(LocalDateTime.now())) {

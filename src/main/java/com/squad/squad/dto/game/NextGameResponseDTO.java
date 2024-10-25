@@ -15,7 +15,7 @@ public class NextGameResponseDTO {
     private Integer awayTeamScore;
     private LocalDateTime dateTime;
     private boolean isPlayed;
-    private boolean voteMode;
+    private boolean isVoted;
 
     public Integer getId() {
         return id;
@@ -73,11 +73,11 @@ public class NextGameResponseDTO {
         isPlayed = played;
     }
 
-    public boolean isVoteMode() {
-        return voteMode;
+    public boolean isVoted() {
+        return isVoted;
     }
 
-    public void setVoteMode(boolean voteMode) {
-        this.voteMode = voteMode;
+    public void setVoted(boolean voted) {
+        isVoted = voted;
     }
 }
