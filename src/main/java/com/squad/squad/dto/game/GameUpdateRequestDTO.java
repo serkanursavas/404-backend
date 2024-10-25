@@ -11,7 +11,6 @@ import java.util.List;
 public class GameUpdateRequestDTO {
     private Integer id;
     private String location;
-    private String weather;
     private LocalDateTime dateTime;
     private Integer teamSize;
     private List<RosterUpdateDTO> rosters;
@@ -31,14 +30,6 @@ public class GameUpdateRequestDTO {
 
     public void setLocation(String location) {
         this.location = location;
-    }
-
-    public String getWeather() {
-        return weather;
-    }
-
-    public void setWeather(String weather) {
-        this.weather = weather;
     }
 
     public LocalDateTime getDateTime() {

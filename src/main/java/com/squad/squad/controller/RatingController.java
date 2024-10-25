@@ -4,8 +4,7 @@ import com.squad.squad.dto.DTOvalidators.RatingDTOValidator;
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.RatingDTO;
 import com.squad.squad.service.RatingService;
@@ -13,9 +12,6 @@ import com.squad.squad.service.RatingService;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
-
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/ratings")
@@ -39,5 +35,10 @@ public class RatingController {
 
         ratingService.saveRating(ratings);
         return ResponseEntity.ok("Your vote sent successfully");
+    }
+
+    @GetMapping("/checkVote/{playerId}")
+    public boolean checkVote(@PathVariable Integer playerId) {
+        return ratingService.checkVote(playerId);
     }
 }

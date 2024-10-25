@@ -2,13 +2,10 @@ package com.squad.squad.service.impl;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
-import com.squad.squad.dto.mapper.RosterDTOMapper;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.exception.RosterNotFoundException;
@@ -98,8 +95,8 @@ public class RosterServiceImpl implements RosterService {
     }
 
     @Override
-    public Roster getRosterByPlayerId(Integer id) {
-        return rosterRepository.findByPlayerId(id);
+    public Roster getRosterByPlayerIdAndGameId(Integer gameId, Integer playerId) {
+        return rosterRepository.findByGameIdAndPlayerId(gameId, playerId);
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {

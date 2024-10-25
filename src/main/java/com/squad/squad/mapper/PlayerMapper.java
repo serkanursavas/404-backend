@@ -18,6 +18,9 @@ public interface PlayerMapper {
 
     PlayerDTO playerToPlayerDTO(Player player);
 
+    @Mapping(source = "active", target = "active")
+    List<PlayerDTO> playersToPlayerDTOs(List<Player> players);
+
     PlayerUpdateRequestDTO playerToPlayerUpdateRequestDTO(Player player);
 
     Player playerDTOToPlayer(PlayerDTO playerDTO);

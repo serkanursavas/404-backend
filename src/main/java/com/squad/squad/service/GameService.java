@@ -2,21 +2,23 @@ package com.squad.squad.service;
 
 import java.util.List;
 
-import com.squad.squad.dto.GameDTO;
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
-import com.squad.squad.dto.game.NextGameResponseDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 import com.squad.squad.entity.Roster;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface GameService {
 
-    List<LatestGamesDTO> getAllGames();
+    Page<LatestGamesDTO> getAllGames();
 
     GameResponseDTO getGameById(Integer id);
+
+    Page<LatestGamesDTO> getAllGames(Pageable pageable);
 
     Game findGameById(Integer id);
 
@@ -30,9 +32,11 @@ public interface GameService {
 
     Game findById(Integer id);
 
-    NextGameResponseDTO getLatestGame();
+    GameResponseDTO getLatestGame();
 
     void checkAndUpdateUnplayedGame();
 
     List<Roster> getRostersByGameId(Integer gameId);
+
+    void updateVote(Game game);
 }

@@ -1,5 +1,8 @@
 package com.squad.squad.dto;
 
+import com.squad.squad.dto.goal.GoalResponseDTO;
+import com.squad.squad.dto.roster.RosterResponseDTO;
+
 import java.time.LocalDateTime;
 import java.util.List;
 

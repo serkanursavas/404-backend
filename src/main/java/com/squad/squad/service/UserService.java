@@ -9,7 +9,7 @@ public interface UserService {
 
     boolean existsByUsername(String username);
 
-    UserResponseDTO createUser(UserCreateRequestDTO user);
+    String createUser(UserCreateRequestDTO user);
 
     List<GetAllUsersDTO> getAllUsers();
 

@@ -19,11 +19,12 @@ public class JwtUtils {
     private static final SecretKey SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(SECRET_KEY_STRING), "HmacSHA256");
 
     // JWT token oluşturma
-    public String generateToken(String username, String role) {
+    public String generateToken(Integer id, String username, String role) {
 
         return Jwts.builder()
                 .setSubject(username.toLowerCase())  // Kullanıcı adını subject olarak ayarlıyoruz
-                .claim("role", role)   // Rol bilgisini doğrudan claim olarak ekliyoruz
+                .claim("role", role)
+                .claim("id", id)       // ID'yi de claim olarak ekliyoruz// Rol bilgisini doğrudan claim olarak ekliyoruz
                 .setIssuedAt(new Date())  // Token oluşturulma tarihini ayarlıyoruz
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))  // Token geçerlilik süresini ayarlıyoruz
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)  // İmzalama işlemi yapılıyor

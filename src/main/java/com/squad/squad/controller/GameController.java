@@ -5,22 +5,20 @@ import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import com.squad.squad.dto.game.NextGameResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.service.GameService;
 
+import java.util.HashMap;
 import java.util.List;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PutMapping;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/games")
@@ -35,8 +33,12 @@ public class GameController {
     }
 
     @GetMapping("/getAllGames")
-    public ResponseEntity<List<LatestGamesDTO>> getAllGames() {
-        return ResponseEntity.ok(gameService.getAllGames());
+    public ResponseEntity<Page<LatestGamesDTO>> getAllGames(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<LatestGamesDTO> gamesPage = gameService.getAllGames(pageable);
+        return ResponseEntity.ok(gamesPage);
     }
 
     @GetMapping("/getGameById/{id}")
@@ -74,13 +76,14 @@ public class GameController {
 
     @GetMapping("/getNextGame")
     public ResponseEntity<?> getNextGame() {
-
-        NextGameResponseDTO latestGame = gameService.getLatestGame();
-
+        GameResponseDTO latestGame = gameService.getLatestGame();
+        System.out.println("getNExtGameeeeeeeeee");
         if (latestGame != null) {
+            System.out.println("Successssssssssssss");
             return ResponseEntity.ok(latestGame);
         } else {
-            return ResponseEntity.badRequest().body("Game not found");
+            System.out.println("failedddddddddddddddddddd");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No upcoming matches available");
         }
     }
 }

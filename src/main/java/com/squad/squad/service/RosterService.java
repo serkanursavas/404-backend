@@ -2,7 +2,6 @@ package com.squad.squad.service;
 
 import java.util.List;
 
-import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.entity.Roster;
 
@@ -24,5 +23,5 @@ public interface RosterService {
 
     List<Roster> findAllById(List<Integer> rosterIds);
 
-    Roster getRosterByPlayerId(Integer id);
+    Roster getRosterByPlayerIdAndGameId(Integer gameId, Integer playerId);
 }

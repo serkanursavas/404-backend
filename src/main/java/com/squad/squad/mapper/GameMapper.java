@@ -1,6 +1,7 @@
 package com.squad.squad.mapper;
 
 import com.squad.squad.dto.LatestGamesDTO;
+import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import com.squad.squad.dto.game.NextGameResponseDTO;
 import org.mapstruct.Mapper;
@@ -15,6 +16,8 @@ public interface GameMapper {
     GameMapper INSTANCE = Mappers.getMapper(GameMapper.class);
 
     GameDTO gameToGameDTO(Game game);
+
+    GameResponseDTO gameToGameResponseDTO(Game game);
 
     GameUpdateRequestDTO gameToGameUpdateRequestDTO(Game game);
 

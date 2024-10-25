@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
-import com.squad.squad.dto.game.NextGameResponseDTO;
 import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
@@ -19,6 +18,8 @@ import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
 import org.springframework.beans.BeanUtils;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.LatestGamesDTO;
@@ -58,25 +59,29 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public NextGameResponseDTO getLatestGame() {
+    public GameResponseDTO getLatestGame() {
 
         checkAndUpdateUnplayedGame();
 
-        return gameMapper.gameToNextGameResponseDTO(gameRepository.findTopByOrderByDateTimeDesc());
+        return gameMapper.gameToGameResponseDTO(gameRepository.findTopByOrderByDateTimeDesc());
     }
 
     @Override
-    public List<LatestGamesDTO> getAllGames() {
-        return gameRepository.findAll().stream()
-                .map(game -> new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
-                        game.getAwayTeamScore(), game.isPlayed()))
-                .collect(Collectors.toList());
+    public Page<LatestGamesDTO> getAllGames(Pageable pageable) {
+        return gameRepository.findAll(pageable).map(game ->
+                new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
+                        game.getAwayTeamScore(), game.isPlayed()));
     }
 
     @Override
     public Game findGameById(Integer id) {
         return gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+    }
+
+    @Override
+    public Page<LatestGamesDTO> getAllGames() {
+        return null;
     }
 
     @Override
@@ -96,7 +101,7 @@ public class GameServiceImpl implements GameService {
 
         for (GoalResponseDTO goalDTO : goals) {
             PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayerId());
-            goalDTO.setPlayerName(playerDto.getName());
+            goalDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         }
 
         GameResponseDTO gameDTO = new GameResponseDTO();
@@ -157,7 +162,6 @@ public class GameServiceImpl implements GameService {
         }
 
         updateFieldIfNotNull(updatedGame.getLocation(), game::setLocation);
-        updateFieldIfNotNull(updatedGame.getWeather(), game::setWeather);
         updateFieldIfNotNull(updatedGame.getDateTime(), game::setDateTime);
 
         gameRepository.save(game);
@@ -205,7 +209,7 @@ public class GameServiceImpl implements GameService {
 
         TeamColor teamColor = TeamColor.fromString(goal.getTeamColor());
 
-        if (teamColor == TeamColor.WHITE) {
+        if (teamColor == TeamColor.BLACK) {
             existingGame.setHomeTeamScore(existingGame.getHomeTeamScore() + 1);
         } else {
             existingGame.setAwayTeamScore(existingGame.getAwayTeamScore() + 1);
@@ -250,6 +254,11 @@ public class GameServiceImpl implements GameService {
         return gameRepository.findById(gameId)
                 .map(Game::getRoster)
                 .orElse(new ArrayList<>());
+    }
+
+    @Override
+    public void updateVote(Game game) {
+        gameRepository.save(game);
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {

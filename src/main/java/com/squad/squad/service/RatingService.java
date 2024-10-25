@@ -16,4 +16,6 @@ public interface RatingService {
     void updateRatingsForGame(Integer gameId, String teamColor);
 
     void checkIfVotingIsComplete(Integer gameId, String teamColor);
+
+    boolean checkVote(Integer playerId);
 }
