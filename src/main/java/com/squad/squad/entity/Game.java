@@ -25,9 +25,6 @@ public class Game {
     private boolean isPlayed = false;
 
     @Column(nullable = false)
-    private boolean voteMode = false;
-
-    @Column(nullable = false)
     private boolean isVoted = false;
 
     @Column(nullable = false)
@@ -66,14 +63,6 @@ public class Game {
 
     public void setPlayed(boolean isPlayed) {
         this.isPlayed = isPlayed;
-    }
-
-    public boolean isVoteMode() {
-        return voteMode;
-    }
-
-    public void setVoteMode(boolean voteMode) {
-        this.voteMode = voteMode;
     }
 
     public String getLocation() {

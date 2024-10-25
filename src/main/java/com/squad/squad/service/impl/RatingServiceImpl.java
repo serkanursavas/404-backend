@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import com.squad.squad.entity.Game;
+import com.squad.squad.entity.Rating;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
@@ -12,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.entity.Player;
-import com.squad.squad.entity.Rating;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.RatingRepository;
@@ -62,7 +62,7 @@ public class RatingServiceImpl implements RatingService {
             if (gameId == null && voterTeamColor == null) {
                 gameId = existingRoster.getGame().getId();
 
-                Roster voterRoster = rosterService.getRosterByPlayerId(existingPlayer.getId());
+                Roster voterRoster = rosterService.getRosterByPlayerIdAndGameId(gameId, existingPlayer.getId());
 
                 if (voterRoster == null) {
                     throw new IllegalStateException("Voter player is not in the roster for this game." + getCurrentPlayerId());
@@ -71,7 +71,8 @@ public class RatingServiceImpl implements RatingService {
                 voterTeamColor = voterRoster.getTeamColor();
 
                 Game existingGame = gameService.findGameById(gameId);
-                if (!existingGame.isPlayed() || !existingGame.isVoteMode() || existingGame.isVoted()) {
+
+                if (!existingGame.isPlayed() || existingGame.isVoted()) {
                     throw new IllegalStateException("Voting is not allowed for this game. Check game state.");
                 }
             }
@@ -125,13 +126,20 @@ public class RatingServiceImpl implements RatingService {
     @Transactional
     public void checkIfVotingIsComplete(Integer gameId, String teamColor) {
 
-        Integer totalVotes = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
+        Integer totalVotesByTeam = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
         Game game = gameService.findGameById(gameId);
         Integer expectedVotes = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
 
-        if (totalVotes.equals(expectedVotes)) {
+        if (totalVotesByTeam.equals(expectedVotes)) {
             updateRatingsForGame(gameId, teamColor);
             rosterService.updatePlayerGeneralRating(gameId);
+        }
+
+        Integer totalVotes = (int) ratingRepository.count();
+
+        if (totalVotes.equals(expectedVotes * 2)) {
+            game.setVoted(true);
+            gameService.updateVote(game);
         }
     }
 
@@ -147,5 +155,10 @@ public class RatingServiceImpl implements RatingService {
             return Integer.valueOf(userDetails.getUsername());
         }
         throw new IllegalStateException("Current user not found");
+    }
+
+    @Override
+    public boolean checkVote(Integer playerId) {
+        return ratingRepository.existsByPlayerId(playerId);
     }
 }

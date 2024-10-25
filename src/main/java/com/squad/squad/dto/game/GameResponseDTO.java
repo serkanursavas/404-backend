@@ -1,5 +1,6 @@
 package com.squad.squad.dto.game;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 
@@ -16,7 +17,7 @@ public class GameResponseDTO {
     private List<RosterResponseDTO> rosters;
     private List<GoalResponseDTO> goals;
     private boolean isPlayed;
-    private boolean voteMode;
+    private boolean isVoted;
 
     // Getters and Setters
     public Integer getId() {
@@ -91,11 +92,11 @@ public class GameResponseDTO {
         this.isPlayed = isPlayed;
     }
 
-    public boolean isVoteMode() {
-        return voteMode;
+    public boolean isVoted() {
+        return isVoted;
     }
 
-    public void setVoteMode(boolean voteMode) {
-        this.voteMode = voteMode;
+    public void setVoted(boolean voted) {
+        this.isVoted = voted;
     }
 }
