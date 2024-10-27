@@ -20,7 +20,7 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 
     boolean existsByIsPlayedFalse();
 
-    Page<Game> findAll(Pageable pageable);
+    Page<Game> findAllByOrderByDateTimeDesc(Pageable pageable);
 
     @Query("SELECT new com.squad.squad.dto.MvpDTO(p.id, p.name, p.surname, p.photo, p.position, r.rating) " +
             "FROM Player p " +

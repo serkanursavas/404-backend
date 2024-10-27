@@ -68,7 +68,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Page<LatestGamesDTO> getAllGames(Pageable pageable) {
-        return gameRepository.findAll(pageable).map(game ->
+        return gameRepository.findAllByOrderByDateTimeDesc(pageable).map(game ->
                 new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
                         game.getAwayTeamScore(), game.isPlayed()));
     }
