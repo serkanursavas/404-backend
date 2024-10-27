@@ -1,5 +1,7 @@
 package com.squad.squad.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public class PlayerDTO {
 
     private Integer id;
@@ -12,7 +14,7 @@ public class PlayerDTO {
     private boolean active = true;
 
     public double getRating() {
-        return rating;
+        return Math.round(rating * 100.0) / 100.0;
     }
 
     public void setRating(double rating) {
