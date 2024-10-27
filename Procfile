@@ -1,0 +1,1 @@
+web: java -jar target/squad-404.jar --server.port=$PORT
