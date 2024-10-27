@@ -1,8 +1,10 @@
 package com.squad.squad.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.squad.squad.dto.LatestGamesDTO;
+import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
@@ -39,4 +41,6 @@ public interface GameService {
     List<Roster> getRostersByGameId(Integer gameId);
 
     void updateVote(Game game);
+
+    Optional<MvpDTO> getMvpPlayer();
 }

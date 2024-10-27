@@ -1,12 +1,12 @@
 package com.squad.squad.service.impl;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
@@ -265,5 +265,15 @@ public class GameServiceImpl implements GameService {
         if (value != null) {
             setter.accept(value);
         }
+    }
+
+    @Override
+    public Optional<MvpDTO> getMvpPlayer() {
+        // Son oynanan maçtaki tüm oyuncuları alıyoruz
+        List<MvpDTO> players = gameRepository.findMvpPlayers();
+
+        // Listeden en yüksek rating'e sahip oyuncuyu bulmak için stream kullanıyoruz
+        return players.stream()
+                .max(Comparator.comparingDouble(MvpDTO::getRating));
     }
 }

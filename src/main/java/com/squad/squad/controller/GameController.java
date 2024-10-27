@@ -1,6 +1,7 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.GameDTOValidator;
+import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
@@ -19,6 +20,7 @@ import com.squad.squad.service.GameService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/games")
@@ -82,5 +84,12 @@ public class GameController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No upcoming matches available");
         }
+    }
+
+    @GetMapping("/getMvp")
+    public ResponseEntity<MvpDTO> getMvpPlayer() {
+        Optional<MvpDTO> mvpPlayer = gameService.getMvpPlayer();
+        return mvpPlayer.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 }
