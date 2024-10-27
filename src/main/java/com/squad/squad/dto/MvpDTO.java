@@ -58,8 +58,8 @@ public class MvpDTO {
         this.position = position;
     }
 
-    public Double getRating() {
-        return rating;
+    public double getRating() {
+        return Math.round(rating * 100.0) / 100.0;
     }
 
     public void setRating(Double rating) {
