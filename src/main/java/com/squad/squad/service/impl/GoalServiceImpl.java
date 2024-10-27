@@ -1,5 +1,6 @@
 package com.squad.squad.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,6 +73,19 @@ public class GoalServiceImpl implements GoalService {
     }
 
     public List<TopListsDTO> getTopScorers() {
-        return goalRepository.findTopScorers();
+        List<Object[]> results = goalRepository.findTopScorersNative();
+        List<TopListsDTO> topScorers = new ArrayList<>();
+
+        for (Object[] result : results) {
+            Integer playerId = (Integer) result[0];
+            String name = (String) result[1];
+            String surname = (String) result[2];
+            Long goalCount = ((Number) result[3]).longValue(); // Long'a dönüştürüyoruz
+
+            TopListsDTO dto = new TopListsDTO(playerId, name, surname, goalCount);
+            topScorers.add(dto);
+        }
+
+        return topScorers;
     }
 }

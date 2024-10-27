@@ -14,9 +14,11 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
 
     List<Goal> findGoalsByGameId(Integer game_id);
 
-    @Query("SELECT new com.squad.squad.dto.TopListsDTO(g.player.id, g.player.name, g.player.surname, COUNT(g)) " +
-            "FROM Goal g " +
-            "GROUP BY g.player.id, g.player.name, g.player.surname " +
-            "ORDER BY COUNT(g) DESC")
-    List<TopListsDTO> findTopScorers();
+    @Query(value = "SELECT g.player_id AS playerId, p.name AS name, p.surname AS surname, COUNT(g.id) AS goalCount " +
+            "FROM goal g " +
+            "JOIN player p ON g.player_id = p.id " +
+            "GROUP BY g.player_id, p.name, p.surname " +
+            "ORDER BY goalCount DESC " +
+            "LIMIT 5", nativeQuery = true)
+    List<Object[]> findTopScorersNative();
 }

@@ -59,7 +59,8 @@ public class TopListsDTO {
     }
 
     public Double getRating() {
-        return rating;
+        // Rating null ise, null döner, değilse yuvarlanmış değeri döner
+        return rating != null ? Math.round(rating * 100.0) / 100.0 : null;
     }
 
     public void setRating(Double rating) {
