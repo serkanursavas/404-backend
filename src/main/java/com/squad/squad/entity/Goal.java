@@ -27,7 +27,6 @@ public class Goal {
 
     @ManyToOne
     @JoinColumn(name = "player_id", referencedColumnName = "id", nullable = false)
-    @JsonIgnore
     private Player player;
 
     public Integer getId() {
@@ -61,5 +60,4 @@ public class Goal {
     public void setPlayer(Player player) {
         this.player = player;
     }
-
 }

@@ -1,6 +1,7 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.PlayerDTOValidator;
+import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.GetAllPlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
@@ -54,5 +55,10 @@ public class PlayerController {
     @GetMapping("/admin/getAllActivePlayers")
     public List<GetAllActivePlayersDTO> getAllActivePlayers() {
         return playerService.getAllActivePlayers();
+    }
+
+    @GetMapping("/getTopRatedPlayers")
+    public List<TopListsDTO> getTopRatedPlayers() {
+        return playerService.getTopRatedPlayers();
     }
 }

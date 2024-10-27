@@ -86,7 +86,6 @@ public class RatingServiceImpl implements RatingService {
             }
 
             boolean hasAlreadyVoted = ratingRepository.existsByPlayerIdAndRosterId(existingPlayer.getId(), ratingDto.getRosterId());
-            System.out.println(existingPlayer.getId() + " " + ratingDto.getRosterId());
             if (hasAlreadyVoted) {
                 throw new IllegalArgumentException("You have already voted for this player.");
             }
