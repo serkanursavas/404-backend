@@ -18,7 +18,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     Optional<Player> findByIdAndActive(Integer id, boolean active);
 
     @Query(value = "SELECT p.id as playerId, p.name, p.surname, p.rating " +
-            "FROM Player p " +
+            "FROM player p " +
             "WHERE p.rating IS NOT NULL " +
             "ORDER BY p.rating DESC " +
             "LIMIT 5", nativeQuery = true)
