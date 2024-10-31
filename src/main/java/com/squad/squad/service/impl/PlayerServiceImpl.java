@@ -1,13 +1,16 @@
 package com.squad.squad.service.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.PlayerDTO;
@@ -78,5 +81,23 @@ public class PlayerServiceImpl implements PlayerService {
                         (Double) record[3]      // rating
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Cacheable(value = "playerCache")
+    @Transactional
+    public Map<Integer, PlayerDTO> findPlayersByIds(List<Integer> playerIds) {
+        // Player bilgilerini repository üzerinden topluca çekelim
+        List<Player> players = playerRepository.findByIdIn(playerIds);
+
+        // Player nesnelerini Map yapısına dönüştürüp döndür
+        return players.stream()
+                .collect(Collectors.toMap(Player::getId, player -> {
+                    PlayerDTO playerDTO = new PlayerDTO();
+                    playerDTO.setId(player.getId());
+                    playerDTO.setName(player.getName());
+                    playerDTO.setSurname(player.getSurname());
+                    // Diğer gerekli alanları burada set edebilirsiniz
+                    return playerDTO;
+                }));
     }
 }

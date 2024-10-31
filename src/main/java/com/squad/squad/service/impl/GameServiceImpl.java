@@ -91,19 +91,28 @@ public class GameServiceImpl implements GameService {
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(id);
-
-        for (RosterResponseDTO rosterDTO : rosters) {
-            PlayerDTO playerDto = playerService.getPlayerById(rosterDTO.getPlayerId());
-            rosterDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
-        }
-
         List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
 
-        for (GoalResponseDTO goalDTO : goals) {
-            PlayerDTO playerDto = playerService.getPlayerById(goalDTO.getPlayerId());
-            goalDTO.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
-        }
+        // 1. Roster ve Goal içerisindeki tüm playerId'leri toplayın
+        Set<Integer> playerIds = new HashSet<>();
+        rosters.forEach(roster -> playerIds.add(roster.getPlayerId()));
+        goals.forEach(goal -> playerIds.add(goal.getPlayerId()));
 
+        // 2. Tüm player bilgilerini bir defada çekin
+        Map<Integer, PlayerDTO> playerMap = playerService.findPlayersByIds(new ArrayList<>(playerIds));
+
+        // 3. Kadro ve goller için oyuncu bilgilerini set edin
+        rosters.forEach(roster -> {
+            PlayerDTO playerDto = playerMap.get(roster.getPlayerId());
+            roster.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
+        });
+
+        goals.forEach(goal -> {
+            PlayerDTO playerDto = playerMap.get(goal.getPlayerId());
+            goal.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
+        });
+
+        // GameResponseDTO'yu oluşturun
         GameResponseDTO gameDTO = new GameResponseDTO();
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);

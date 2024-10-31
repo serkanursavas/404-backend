@@ -23,4 +23,6 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "ORDER BY p.rating DESC " +
             "LIMIT 5", nativeQuery = true)
     List<Object[]> findTopRatedPlayers();
+
+    List<Player> findByIdIn(List<Integer> ids);
 }
