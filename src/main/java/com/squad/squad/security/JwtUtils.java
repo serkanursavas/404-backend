@@ -13,10 +13,16 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
-    private static final long JWT_EXPIRATION_MS = 86400000; // Token geçerlilik süresi (1 gün)
+    private static final long JWT_EXPIRATION_MS = 259200000; // Token geçerlilik süresi (1 gün)
 
     private static final String SECRET_KEY_STRING = System.getenv("JWT_SECRET_KEY");
     private static final SecretKey SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(SECRET_KEY_STRING), "HmacSHA256");
+
+    static {
+        if (SECRET_KEY_STRING == null || SECRET_KEY_STRING.isEmpty()) {
+            throw new IllegalStateException("JWT_SECRET_KEY environment variable is not set!");
+        }
+    }
 
     // JWT token oluşturma
     public String generateToken(Integer id, String username, String role) {
