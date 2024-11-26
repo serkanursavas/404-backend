@@ -16,6 +16,7 @@ import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.dto.roster.RosterUpdateDTO;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
 import org.springframework.data.domain.Page;
@@ -284,5 +285,24 @@ public class GameServiceImpl implements GameService {
         // Listeden en yüksek rating'e sahip oyuncuyu bulmak için stream kullanıyoruz
         return players.stream()
                 .max(Comparator.comparingDouble(MvpDTO::getRating));
+    }
+
+    @Override
+    public void updateWeather(Integer id,String weather) {
+        Game game = gameRepository.findById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+
+        // Fazladan tırnakları kaldır
+        String cleanedWeather = weather.replace("\"", "").trim();
+        System.out.println("Cleaned weather: " + cleanedWeather);
+
+        if (StringUtils.isNotBlank(game.getWeather())) {
+            throw new IllegalArgumentException("Game has already weather info. You cannot update weather.");
+        }
+
+        updateFieldIfNotNull(cleanedWeather, game::setWeather);
+
+        gameRepository.save(game);
+
     }
 }

@@ -92,4 +92,16 @@ public class GameController {
         return mvpPlayer.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
+
+    @PutMapping("/updateWeather/{id}")
+    public ResponseEntity<?> updateWeather(@PathVariable Integer id, @RequestBody String weather) {
+
+        System.out.println("Received weather: " + weather);
+
+
+
+
+        gameService.updateWeather(id, weather);
+        return ResponseEntity.ok("Game updated successfully");
+    }
 }
