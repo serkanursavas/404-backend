@@ -19,20 +19,26 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
     @Query(value = "SELECT p.id AS playerId, p.name, p.surname, p.rating " +
             "FROM player p " +
-            "JOIN roster r ON p.id = r.player_id " +
+            "WHERE p.rating IS NOT NULL " +
+            "ORDER BY p.rating DESC " +
+            "LIMIT 100",  // Daha fazla oyuncu çekip filtreleme yapabiliriz
+            nativeQuery = true)
+    List<Object[]> findTopRatedPlayers();
+
+    @Query(value = "SELECT DISTINCT r.player_id " +
+            "FROM roster r " +
             "JOIN ( " +
             "    SELECT g.id " +
             "    FROM game g " +
             "    WHERE g.is_played = 1 " +
             "    ORDER BY g.date_time DESC " +
             "    LIMIT 2 " +
-            ") RecentGames ON r.game_id = RecentGames.id " +
-            "WHERE p.rating IS NOT NULL " +
-            "GROUP BY p.id " +
-            "ORDER BY p.rating DESC " +
-            "LIMIT 5",
+            ") RecentGames ON r.game_id = RecentGames.id",
             nativeQuery = true)
-    List<Object[]> findTopRatedPlayers();
+    List<Integer> findPlayersInRecentGames();
+
+
+
 
     List<Player> findByIdIn(List<Integer> ids);
 }

@@ -72,14 +72,25 @@ public class PlayerServiceImpl implements PlayerService {
         return playerRepository.findAllById(playerIds);
     }
 
-    public List<TopListsDTO> getTopRatedPlayers() {
-        return playerRepository.findTopRatedPlayers().stream()
+    public List<TopListsDTO> getTopRatedPlayersWithoutRecentGames() {
+        // 1. Top Rated oyuncuları al
+        List<Object[]> topRatedPlayers = playerRepository.findTopRatedPlayers();
+        List<TopListsDTO> topRatedList = topRatedPlayers.stream()
                 .map(record -> new TopListsDTO(
                         (Integer) record[0],    // playerId
                         (String) record[1],     // name
                         (String) record[2],     // surname
                         (Double) record[3]      // rating
                 ))
+                .collect(Collectors.toList());
+
+        // 2. Son 2 maçtaki oyuncuları al
+        List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames();
+
+        // 3. Filtreleme
+        return topRatedList.stream()
+                .filter(player -> recentGamePlayerIds.contains(player.getPlayerId()))
+                .limit(5)  // En iyi 5 oyuncuyu al
                 .collect(Collectors.toList());
     }
 

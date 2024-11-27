@@ -24,7 +24,7 @@ public interface PlayerService {
 
     List<Player> findAllById(List<Integer> playerIds);
 
-    List<TopListsDTO> getTopRatedPlayers();
+    List<TopListsDTO> getTopRatedPlayersWithoutRecentGames();
 
     Map<Integer, PlayerDTO> findPlayersByIds(List<Integer> playerIds);
 }

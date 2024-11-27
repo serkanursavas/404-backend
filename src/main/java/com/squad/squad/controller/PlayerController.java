@@ -59,6 +59,6 @@ public class PlayerController {
 
     @GetMapping("/getTopRatedPlayers")
     public List<TopListsDTO> getTopRatedPlayers() {
-        return playerService.getTopRatedPlayers();
+        return playerService.getTopRatedPlayersWithoutRecentGames();
     }
 }
