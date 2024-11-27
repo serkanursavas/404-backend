@@ -86,7 +86,7 @@ public class PlayerServiceImpl implements PlayerService {
 
         // 2. Son 2 maçtaki oyuncuları al
         List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames();
-
+        System.out.println("Recent2 game players" + recentGamePlayerIds);
         // 3. Filtreleme
         return topRatedList.stream()
                 .filter(player -> recentGamePlayerIds.contains(player.getPlayerId()))
