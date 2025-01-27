@@ -14,6 +14,8 @@ public class LatestGamesDTO {
     private Integer awayTeamScore = 0;
     private boolean isPlayed;
 
+
+
     public LatestGamesDTO() {
     }
 

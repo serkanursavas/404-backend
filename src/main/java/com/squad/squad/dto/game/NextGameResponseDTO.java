@@ -1,5 +1,6 @@
 package com.squad.squad.dto.game;
 
+import com.squad.squad.dto.GameLocationDTO;
 import com.squad.squad.dto.GoalDTO;
 import com.squad.squad.dto.RosterDTO;
 
@@ -16,6 +17,7 @@ public class NextGameResponseDTO {
     private LocalDateTime dateTime;
     private boolean isPlayed;
     private boolean isVoted;
+    private GameLocationDTO gameLocation;
 
     public Integer getId() {
         return id;
@@ -79,5 +81,14 @@ public class NextGameResponseDTO {
 
     public void setVoted(boolean voted) {
         isVoted = voted;
+    }
+
+    // missed getter and setter
+    public GameLocationDTO getGameLocation() {
+        return gameLocation;
+    }
+
+    public void setGameLocation(GameLocationDTO gameLocation) {
+        this.gameLocation = gameLocation;
     }
 }

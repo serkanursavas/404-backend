@@ -10,7 +10,7 @@ import org.mapstruct.factory.Mappers;
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.entity.Game;
 
-@Mapper
+@Mapper(uses = {GameLocationMapper.class})
 public interface GameMapper {
 
     GameMapper INSTANCE = Mappers.getMapper(GameMapper.class);

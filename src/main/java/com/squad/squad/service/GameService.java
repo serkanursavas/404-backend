@@ -45,4 +45,5 @@ public interface GameService {
     Optional<MvpDTO> getMvpPlayer();
 
     void updateWeather(Integer id,String weather);
+
 }
