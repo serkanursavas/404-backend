@@ -16,6 +16,7 @@ public class GameDTO {
     private Integer teamSize;
     private List<RosterDTO> rosters;
     private List<GoalDTO> goals;
+    private GameLocationDTO gameLocation;
     private boolean isPlayed;
     private boolean voteMode;
 
@@ -106,5 +107,14 @@ public class GameDTO {
 
     public void setVoteMode(boolean voteMode) {
         this.voteMode = voteMode;
+    }
+
+    // missed getter and setter
+    public GameLocationDTO getGameLocation() {
+        return gameLocation;
+    }
+
+    public void setGameLocation(GameLocationDTO gameLocation) {
+        this.gameLocation = gameLocation;
     }
 }

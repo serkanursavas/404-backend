@@ -1,11 +1,14 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.GameDTOValidator;
+import com.squad.squad.dto.GameLocationDTO;
 import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import com.squad.squad.dto.game.NextGameResponseDTO;
+import com.squad.squad.mapper.GameLocationMapper;
+import com.squad.squad.repository.GameLocationRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,11 +30,14 @@ import java.util.Optional;
 public class GameController {
 
     private final GameService gameService;
+    private final GameLocationRepository gameLocationRepository;
     private final GameDTOValidator gameDTOValidator;
+    private final GameLocationMapper gameLocationMapper = GameLocationMapper.INSTANCE;
 
-    public GameController(GameService gameService, GameDTOValidator gameDTOValidator) {
+    public GameController(GameService gameService, GameDTOValidator gameDTOValidator, GameLocationRepository gameLocationRepository) {
         this.gameService = gameService;
         this.gameDTOValidator = gameDTOValidator;
+        this.gameLocationRepository = gameLocationRepository;
     }
 
     @GetMapping("/getAllGames")
@@ -104,4 +110,12 @@ public class GameController {
         gameService.updateWeather(id, weather);
         return ResponseEntity.ok("Game updated successfully");
     }
+
+
+    @GetMapping("/getGameLocations")
+    public ResponseEntity<List<GameLocationDTO>> getGameLocations() {
+        return ResponseEntity.ok(GameLocationMapper.INSTANCE.gameLocationListToGameLocationDTOList(gameLocationRepository.findAll()));
+    }
+
+
 }

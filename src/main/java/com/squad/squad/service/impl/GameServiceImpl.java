@@ -14,8 +14,11 @@ import com.squad.squad.dto.goal.GoalResponseDTO;
 import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.dto.roster.RosterUpdateDTO;
+import com.squad.squad.entity.*;
+import com.squad.squad.mapper.GameLocationMapper;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
+import com.squad.squad.repository.GameLocationRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
@@ -25,10 +28,6 @@ import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.entity.Game;
-import com.squad.squad.entity.Goal;
-import com.squad.squad.entity.Player;
-import com.squad.squad.entity.Roster;
 import com.squad.squad.enums.TeamColor;
 import com.squad.squad.exception.GameNotFoundException;
 import com.squad.squad.exception.NotFoundException;
@@ -48,15 +47,18 @@ public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
     private final RosterService rosterService;
     private final PlayerService playerService;
+    private final GameLocationRepository gameLocationRepository;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
     private final GoalMapper goalMapper = GoalMapper.INSTANCE;
     private final GameMapper gameMapper = GameMapper.INSTANCE;
+    private final GameLocationMapper gameLocationMapper = GameLocationMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-                           PlayerService playerService) {
+                           PlayerService playerService, GameLocationRepository gameLocationRepository) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
+        this.gameLocationRepository = gameLocationRepository;
     }
 
     @Override
@@ -91,6 +93,10 @@ public class GameServiceImpl implements GameService {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
+        GameLocation gameLocation = gameLocationRepository.findById(game.getGameLocation().getId())
+                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + game.getGameLocation().getId()));
+
+
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(id);
         List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
 
@@ -113,12 +119,14 @@ public class GameServiceImpl implements GameService {
             goal.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         });
 
+
+
         // GameResponseDTO'yu oluşturun
         GameResponseDTO gameDTO = new GameResponseDTO();
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);
         gameDTO.setGoals(goals);
-
+        gameDTO.setGameLocation(gameLocationMapper.gameLocationToGameLocationDTO(gameLocation));
         return gameDTO;
     }
 
@@ -134,6 +142,12 @@ public class GameServiceImpl implements GameService {
         game.setDateTime(gameDto.getDateTime());
         game.setWeather(gameDto.getWeather());
         game.setLocation(gameDto.getLocation());
+
+
+        GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(gameDto.getLocation()))
+                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + gameDto.getGameLocationId()));
+
+        game.setGameLocation(gameLocation);
 
         List<Roster> rosters = new ArrayList<>();
 
@@ -171,7 +185,10 @@ public class GameServiceImpl implements GameService {
             throw new IllegalArgumentException("Game has already been played. You cannot update game details.");
         }
 
-        updateFieldIfNotNull(updatedGame.getLocation(), game::setLocation);
+        GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(updatedGame.getLocation()))
+                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + updatedGame.getLocation()));
+
+        game.setGameLocation(gameLocation);
         updateFieldIfNotNull(updatedGame.getDateTime(), game::setDateTime);
 
         gameRepository.save(game);
