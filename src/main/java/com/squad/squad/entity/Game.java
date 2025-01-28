@@ -7,12 +7,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 
 @Entity
 public class Game {
@@ -29,6 +24,9 @@ public class Game {
 
     @Column(nullable = false)
     private String location;
+
+    @ManyToOne
+    private GameLocation gameLocation;
 
     @Column(nullable = false)
     private String weather;
@@ -127,5 +125,14 @@ public class Game {
 
     public void setVoted(boolean voted) {
         isVoted = voted;
+    }
+
+    // missed getter and setters
+    public GameLocation getGameLocation() {
+        return gameLocation;
+    }
+
+    public void setGameLocation(GameLocation gameLocation) {
+        this.gameLocation = gameLocation;
     }
 }
