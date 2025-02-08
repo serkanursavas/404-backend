@@ -18,7 +18,7 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 
     Game findByIsPlayedFalse();
 
-    boolean existsByIsPlayedFalse();
+    boolean existsByIsPlayedFalseOrIsVotedFalse();
 
     Page<Game> findAllByOrderByDateTimeDesc(Pageable pageable);
 
