@@ -1,6 +1,5 @@
 package com.squad.squad.service.impl;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
@@ -19,6 +18,7 @@ import com.squad.squad.mapper.GameLocationMapper;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
 import com.squad.squad.repository.GameLocationRepository;
+import com.squad.squad.repository.RatingRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
@@ -48,17 +48,19 @@ public class GameServiceImpl implements GameService {
     private final RosterService rosterService;
     private final PlayerService playerService;
     private final GameLocationRepository gameLocationRepository;
+    private final RatingRepository ratingRepository;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
     private final GoalMapper goalMapper = GoalMapper.INSTANCE;
     private final GameMapper gameMapper = GameMapper.INSTANCE;
     private final GameLocationMapper gameLocationMapper = GameLocationMapper.INSTANCE;
 
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-                           PlayerService playerService, GameLocationRepository gameLocationRepository) {
+                           PlayerService playerService, GameLocationRepository gameLocationRepository, RatingRepository ratingRepository) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
         this.gameLocationRepository = gameLocationRepository;
+        this.ratingRepository = ratingRepository;
     }
 
     @Override
@@ -134,8 +136,8 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public void createGame(GameCreateRequestDTO gameDto) {
 
-        if (gameRepository.existsByIsPlayedFalse()) {
-            throw new IllegalArgumentException("There is already a planned game.");
+        if (gameRepository.existsByIsPlayedFalseOrIsVotedFalse()) {
+            throw new IllegalArgumentException("There is already a planned or not yet voted game.");
         }
 
         Game game = new Game();
@@ -173,6 +175,9 @@ public class GameServiceImpl implements GameService {
 
         rosters.forEach(roster -> roster.setGame(savedGame));
         rosterService.saveAllRosters(rosters);
+
+        // yeni mac olusturuldugu icin son mac icin rating tablosu sifirliyoruz data birikmesin diye
+        ratingRepository.deleteAll();
     }
 
     @Override

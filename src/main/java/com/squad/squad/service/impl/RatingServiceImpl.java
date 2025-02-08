@@ -131,12 +131,12 @@ public class RatingServiceImpl implements RatingService {
 
         if (totalVotesByTeam.equals(expectedVotes)) {
             updateRatingsForGame(gameId, teamColor);
-            rosterService.updatePlayerGeneralRating(gameId);
         }
 
         Integer totalVotes = (int) ratingRepository.count();
 
         if (totalVotes.equals(expectedVotes * 2)) {
+            rosterService.updatePlayerGeneralRating(gameId);
             game.setVoted(true);
             gameService.updateVote(game);
         }
