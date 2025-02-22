@@ -22,6 +22,15 @@ public class Roster {
     @Column(nullable = true)
     private double rating;
 
+    @Column(nullable = true)
+    private Integer persona1;
+
+    @Column(nullable = true)
+    private Integer persona2;
+
+    @Column(nullable = true)
+    private Integer persona3;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
@@ -92,4 +101,30 @@ public class Roster {
     public void setRate(List<Rating> rate) {
         this.rate = rate;
     }
+
+    public Integer getPersona1() {
+        return persona1;
+    }
+
+    public void setPersona1(Integer persona1) {
+        this.persona1 = persona1;
+    }
+
+    public Integer getPersona2() {
+        return persona2;
+    }
+
+    public void setPersona2(Integer persona2) {
+        this.persona2 = persona2;
+    }
+
+    public Integer getPersona3() {
+        return persona3;
+    }
+
+    public void setPersona3(Integer persona3) {
+        this.persona3 = persona3;
+    }
+
+
 }

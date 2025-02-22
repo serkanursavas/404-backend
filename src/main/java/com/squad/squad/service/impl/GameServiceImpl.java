@@ -316,7 +316,6 @@ public class GameServiceImpl implements GameService {
 
         // Fazladan tırnakları kaldır
         String cleanedWeather = weather.replace("\"", "").trim();
-        System.out.println("Cleaned weather: " + cleanedWeather);
 
         if (StringUtils.isNotBlank(game.getWeather())) {
             throw new IllegalArgumentException("Game has already weather info. You cannot update weather.");

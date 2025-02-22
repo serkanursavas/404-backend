@@ -1,38 +1,67 @@
 package com.squad.squad.service.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.squad.squad.dto.MvpDTO;
+import com.squad.squad.dto.PlayerDTO;
+import com.squad.squad.dto.PlayerPersonaDTO;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
+import com.squad.squad.entity.Player;
+import com.squad.squad.exception.PlayerNotFoundException;
+import com.squad.squad.mapper.PlayerMapper;
+import com.squad.squad.repository.PersonaRepository;
+import com.squad.squad.repository.PlayerPersonaRepository;
+import com.squad.squad.repository.PlayerRepository;
+import com.squad.squad.service.PlayerService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.entity.Player;
-import com.squad.squad.exception.PlayerNotFoundException;
-import com.squad.squad.mapper.PlayerMapper;
-import com.squad.squad.repository.PlayerRepository;
-import com.squad.squad.service.PlayerService;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class PlayerServiceImpl implements PlayerService {
 
     private final PlayerRepository playerRepository;
+    private final PlayerPersonaRepository playerPersonaRepository;
+    private final PersonaRepository personaRepository;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
 
-    public PlayerServiceImpl(PlayerRepository playerRepository) {
+    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerPersonaRepository playerPersonaRepository, PersonaRepository personaRepository) {
         this.playerRepository = playerRepository;
+        this.playerPersonaRepository = playerPersonaRepository;
+        this.personaRepository = personaRepository;
     }
 
     @Override
     public List<PlayerDTO> getAllPlayers() {
-        return playerMapper.playersToPlayerDTOs(playerRepository.findAll());
+
+        List<Player> players = playerRepository.findAll(); // Lazy Load
+        return players.stream()
+                .map(player -> {
+                    PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
+
+                    // PlayerPersona verilerini manuel olarak DTO'ya ekle
+                    List<PlayerPersonaDTO> personas = player.getPlayerPersonas().stream()
+                            .sorted((p1, p2) -> Integer.compare(p2.getCount(), p1.getCount())) // count DESC sıralama
+                            .limit(3) // İlk 3 sonucu al
+                            .map(playerPersona -> {
+                                PlayerPersonaDTO dto = new PlayerPersonaDTO();
+                                dto.setPersonaId(playerPersona.getPersona().getId());
+                                dto.setPersonaName(playerPersona.getPersona().getName());
+                                dto.setPersonaDescription(playerPersona.getPersona().getDescription());
+                                dto.setCount(playerPersona.getCount());
+                                dto.setCategory(playerPersona.getPersona().getCategory());
+                                return dto;
+                            })
+                            .toList();
+
+                    playerDTO.setPersonas(personas);
+                    return playerDTO;
+                })
+                .toList();
     }
 
     @Override
@@ -40,7 +69,28 @@ public class PlayerServiceImpl implements PlayerService {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));
 
-        return playerMapper.playerToPlayerDTO(player);
+
+
+        PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
+
+        List<PlayerPersonaDTO> personas = player.getPlayerPersonas().stream()
+                .sorted((p1, p2) -> Integer.compare(p2.getCount(), p1.getCount())) // count DESC sıralama
+                .limit(3) // İlk 3 sonucu al
+                .map(playerPersona -> {
+                    PlayerPersonaDTO dto = new PlayerPersonaDTO();
+                    dto.setPersonaId(playerPersona.getPersona().getId());
+                    dto.setPersonaName(playerPersona.getPersona().getName());
+                    dto.setPersonaDescription(playerPersona.getPersona().getDescription());
+                    dto.setCount(playerPersona.getCount());
+                    dto.setCategory(playerPersona.getPersona().getCategory());
+                    return dto;
+                })
+                .toList();
+
+        playerDTO.setPersonas(personas);
+
+
+        return playerDTO;
     }
 
     @Override
@@ -86,7 +136,7 @@ public class PlayerServiceImpl implements PlayerService {
 
         // 2. Son 2 maçtaki oyuncuları al
         List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames();
-        System.out.println("Recent2 game players" + recentGamePlayerIds);
+
         // 3. Filtreleme
         return topRatedList.stream()
                 .filter(player -> recentGamePlayerIds.contains(player.getPlayerId()))
