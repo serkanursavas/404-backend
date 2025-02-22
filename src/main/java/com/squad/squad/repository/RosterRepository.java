@@ -19,4 +19,6 @@ public interface RosterRepository extends JpaRepository<Roster, Integer> {
     void deleteByGameId(Integer game_id);
 
     Roster findByGameIdAndPlayerId(Integer gameId, Integer playerId);
+
+    List<Roster> findAllByGameId(Integer gameId);
 }

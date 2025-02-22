@@ -1,19 +1,20 @@
 package com.squad.squad.service.impl;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
-import com.squad.squad.entity.Game;
-import com.squad.squad.entity.Rating;
+import com.squad.squad.entity.*;
+import com.squad.squad.repository.RosterPersonaRepository;
+import com.squad.squad.repository.RosterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.entity.Player;
-import com.squad.squad.entity.Roster;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.service.GameService;
@@ -31,12 +32,16 @@ public class RatingServiceImpl implements RatingService {
     private final GameService gameService;
     private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
     private RosterService rosterService;
+    private final RosterRepository rosterRepository;
+    private final RosterPersonaRepository rosterPersonaRepository;
 
     public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
-                             RosterService rosterService, GameService gameService) {
+                             RosterService rosterService, GameService gameService, RosterPersonaRepository rosterPersonaRepository, RosterRepository rosterRepository) {
         this.ratingRepository = ratingRepository;
         this.playerService = playerService;
         this.gameService = gameService;
+        this.rosterPersonaRepository = rosterPersonaRepository;
+        this.rosterRepository = rosterRepository;
     }
 
     @Autowired
@@ -72,8 +77,11 @@ public class RatingServiceImpl implements RatingService {
 
                 Game existingGame = gameService.findGameById(gameId);
 
-                if (!existingGame.isPlayed() || existingGame.isVoted()) {
+                if (!existingGame.isPlayed() || existingGame.isVoted() ) {
                     throw new IllegalStateException("Voting is not allowed for this game. Check game state.");
+                }
+                if ( ((existingGame.getRoster().size() /2 ) - 1) != ratings.size()) {
+                    throw new IllegalStateException("You must vote for all players except yourself.");
                 }
             }
 
@@ -127,7 +135,7 @@ public class RatingServiceImpl implements RatingService {
 
         Integer totalVotesByTeam = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
         Game game = gameService.findGameById(gameId);
-        Integer expectedVotes = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
+        int expectedVotes = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
 
         if (totalVotesByTeam.equals(expectedVotes)) {
             updateRatingsForGame(gameId, teamColor);
@@ -136,6 +144,26 @@ public class RatingServiceImpl implements RatingService {
         Integer totalVotes = (int) ratingRepository.count();
 
         if (totalVotes.equals(expectedVotes * 2)) {
+
+            List<Roster> rosters = rosterRepository.findAllByGameId(gameId);
+
+
+
+            for (Roster roster : rosters) {
+                List<RosterPersona> topRosterPersonas = rosterPersonaRepository.findTop3ByRosterId(roster.getId());
+
+                // Eğer 3 kayıt yoksa null değer atamaktan kaçınmak için:
+                roster.setPersona1(!topRosterPersonas.isEmpty() ? topRosterPersonas.get(0).getPersona().getId() : null);
+                roster.setPersona2(topRosterPersonas.size() > 1 ? topRosterPersonas.get(1).getPersona().getId() : null);
+                roster.setPersona3(topRosterPersonas.size() > 2 ? topRosterPersonas.get(2).getPersona().getId() : null);
+                System.out.println("Roster: " + roster.getId());
+                System.out.println("Persona1: " + roster.getPersona1());
+                System.out.println("Persona2: " + roster.getPersona2());
+                System.out.println("Persona3: " + roster.getPersona3());
+            }
+
+            rosterService.updateAllRosters(rosters);
+
             rosterService.updatePlayerGeneralRating(gameId);
             game.setVoted(true);
             gameService.updateVote(game);

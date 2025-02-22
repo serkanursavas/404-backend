@@ -45,6 +45,17 @@ public class Player {
     @OneToMany(mappedBy = "player")
     private List<Goal> goal;
 
+    @OneToMany(mappedBy = "player", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<PlayerPersona> playerPersonas;
+
+    public List<PlayerPersona> getPlayerPersonas() {
+        return playerPersonas;
+    }
+
+    public void setPlayerPersonas(List<PlayerPersona> playerPersonas) {
+        this.playerPersonas = playerPersonas;
+    }
+
     public Integer getId() {
         return id;
     }
