@@ -10,10 +10,9 @@ import org.mapstruct.factory.Mappers;
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.entity.Game;
 
-@Mapper(uses = {GameLocationMapper.class})
+@Mapper(uses = {GameLocationMapper.class}, componentModel = "spring")
 public interface GameMapper {
 
-    GameMapper INSTANCE = Mappers.getMapper(GameMapper.class);
 
     GameDTO gameToGameDTO(Game game);
 

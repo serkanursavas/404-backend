@@ -28,7 +28,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     @Query(value = "WITH RecentGames AS ( " +
             "    SELECT g.id " +
             "    FROM game g " +
-            "    WHERE g.is_played = 1 " +
+            "    WHERE g.is_played = true " +
             "    ORDER BY g.date_time DESC " +
             "    LIMIT 2 " +
             ") " +

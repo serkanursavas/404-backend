@@ -14,7 +14,6 @@ import com.squad.squad.entity.Player;
 
 @Mapper(componentModel = "spring")
 public interface PlayerMapper {
-    PlayerMapper INSTANCE = Mappers.getMapper(PlayerMapper.class);
 
     PlayerDTO playerToPlayerDTO(Player player);
 

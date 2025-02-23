@@ -15,10 +15,9 @@ import org.mapstruct.factory.Mappers;
 import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.entity.Roster;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface RosterMapper {
 
-    RosterMapper INSTANCE = Mappers.getMapper(RosterMapper.class);
 
     RosterDTO rosterToRosterDTO(Roster roster);
 

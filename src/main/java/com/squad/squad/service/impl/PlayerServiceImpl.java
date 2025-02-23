@@ -14,6 +14,7 @@ import com.squad.squad.repository.PlayerRepository;
 import com.squad.squad.service.PlayerService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -27,12 +28,14 @@ public class PlayerServiceImpl implements PlayerService {
     private final PlayerRepository playerRepository;
     private final PlayerPersonaRepository playerPersonaRepository;
     private final PersonaRepository personaRepository;
-    private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
+    private final PlayerMapper playerMapper;
 
-    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerPersonaRepository playerPersonaRepository, PersonaRepository personaRepository) {
+    @Autowired
+    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerPersonaRepository playerPersonaRepository, PersonaRepository personaRepository, PlayerMapper playerMapper) {
         this.playerRepository = playerRepository;
         this.playerPersonaRepository = playerPersonaRepository;
         this.personaRepository = personaRepository;
+        this.playerMapper = playerMapper;
     }
 
     @Override
@@ -132,7 +135,7 @@ public class PlayerServiceImpl implements PlayerService {
                         (String) record[2],     // surname
                         (Double) record[3]      // rating
                 ))
-                .collect(Collectors.toList());
+                .toList();
 
         // 2. Son 2 maçtaki oyuncuları al
         List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames();

@@ -30,18 +30,19 @@ public class RatingServiceImpl implements RatingService {
     private final RatingRepository ratingRepository;
     private final PlayerService playerService;
     private final GameService gameService;
-    private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
     private RosterService rosterService;
     private final RosterRepository rosterRepository;
     private final RosterPersonaRepository rosterPersonaRepository;
+    private final PlayerMapper playerMapper;
 
-    public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
-                             RosterService rosterService, GameService gameService, RosterPersonaRepository rosterPersonaRepository, RosterRepository rosterRepository) {
+    @Autowired public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
+                                        RosterService rosterService, GameService gameService, RosterPersonaRepository rosterPersonaRepository, RosterRepository rosterRepository, PlayerMapper playerMapper) {
         this.ratingRepository = ratingRepository;
         this.playerService = playerService;
         this.gameService = gameService;
         this.rosterPersonaRepository = rosterPersonaRepository;
         this.rosterRepository = rosterRepository;
+        this.playerMapper = playerMapper;
     }
 
     @Autowired

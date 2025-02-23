@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.GoalDTO;
@@ -25,13 +26,16 @@ public class GoalServiceImpl implements GoalService {
     private final GoalRepository goalRepository;
     private final GameService gameService;
     private final PlayerService playerService;
-    private final GameMapper gameMapper = GameMapper.INSTANCE;
-    private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
+    private final GameMapper gameMapper;
+    private final PlayerMapper playerMapper;
 
-    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService) {
+    @Autowired
+    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService, GameMapper gameMapper, PlayerMapper playerMapper) {
         this.goalRepository = goalRepository;
         this.gameService = gameService;
         this.playerService = playerService;
+        this.gameMapper = gameMapper;
+        this.playerMapper = playerMapper;
     }
 
     @Override

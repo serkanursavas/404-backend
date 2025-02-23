@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.squad.squad.dto.roster.RosterResponseDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.entity.Player;
@@ -23,13 +24,16 @@ public class RosterServiceImpl implements RosterService {
     private final RosterRepository rosterRepository;
 
     private final PlayerService playerService;
-    private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
-    private final RosterMapper rosterMapper = RosterMapper.INSTANCE;
+    private final RosterMapper rosterMapper;
+    private final PlayerMapper playerMapper;
 
+    @Autowired
     public RosterServiceImpl(RosterRepository rosterRepository,
-                             PlayerService playerService) {
+                             PlayerService playerService, RosterMapper rosterMapper, PlayerMapper playerMapper) {
         this.rosterRepository = rosterRepository;
         this.playerService = playerService;
+        this.rosterMapper = rosterMapper;
+        this.playerMapper = playerMapper;
     }
 
     @Override
