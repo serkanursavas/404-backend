@@ -30,6 +30,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "target/squad-0.0.1-SNAPSHOT.jar"  # Path'i düzelttik
           target: "~/deploy/"
+          port: 2222  # PORTU BURAYA EKLEDİK!
 
       - name: Systemd servisini yeniden başlat
         uses: appleboy/ssh-action@v0.1.4
