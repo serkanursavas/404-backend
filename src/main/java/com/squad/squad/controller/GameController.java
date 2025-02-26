@@ -88,6 +88,7 @@ public class GameController {
     @GetMapping("/getNextGame")
     public ResponseEntity<?> getNextGame() {
         GameResponseDTO latestGame = gameService.getLatestGame();
+        System.out.println("DEPLOY TEST");
         if (latestGame != null) {
             return ResponseEntity.ok(latestGame);
         } else {
