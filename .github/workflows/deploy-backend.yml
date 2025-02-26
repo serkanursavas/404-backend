@@ -43,4 +43,4 @@ jobs:
             sudo mv ~/deploy/squad-0.0.1-SNAPSHOT.jar /home/serkanursavas/projects/springboot/my-backend/404-backend/target/squad-0.0.1-SNAPSHOT.jar
             sudo systemctl start springboot.service
             sudo systemctl status springboot.service --no-pager
-          port: 2222 # PORTU B
+          port: 2222 # PORTU Bee
