@@ -3,7 +3,7 @@ name: Deploy Backend (Spring Boot)
 on:
   push:
     branches:
-      - master
+      - master  # Eğer repo main branch kullanıyorsa burayı "main" yap
 
 jobs:
   deploy:
@@ -17,11 +17,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'  # Java sürümünü kontrol et
+          java-version: '17'
 
       - name: Maven ile build et
         run: mvn clean package -DskipTests
-        working-directory: ./projects/springboot/my-backend/404-backend
+        working-directory: ./404-backend  # Eğer hata devam ederse bu satırı tamamen sil!
 
       - name: JAR dosyasını VPS'e gönder
         uses: appleboy/scp-action@v0.1.4
@@ -29,7 +29,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "projects/springboot/my-backend/404-backend/target/squad-0.0.1-SNAPSHOT.jar"
+          source: "404-backend/target/squad-0.0.1-SNAPSHOT.jar"
           target: "~/deploy/"
 
       - name: Systemd servisini yeniden başlat
@@ -42,4 +42,4 @@ jobs:
             sudo systemctl stop springboot.service
             sudo mv ~/deploy/squad-0.0.1-SNAPSHOT.jar /home/serkanursavas/projects/springboot/my-backend/404-backend/target/squad-0.0.1-SNAPSHOT.jar
             sudo systemctl start springboot.service
-            sudo systemctl status springboot.service --no-pager
+            sudo systemctl sta
