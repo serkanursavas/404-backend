@@ -20,8 +20,7 @@ jobs:
           java-version: '17'
 
       - name: Maven ile build et
-        run: mvn clean package -DskipTests
-        working-directory: ./404-backend  # Eğer hata devam ederse bu satırı tamamen sil!
+        run: mvn clean package -DskipTests  # "working-directory" satırını kaldırdık!
 
       - name: JAR dosyasını VPS'e gönder
         uses: appleboy/scp-action@v0.1.4
@@ -29,7 +28,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "404-backend/target/squad-0.0.1-SNAPSHOT.jar"
+          source: "target/squad-0.0.1-SNAPSHOT.jar"  # Path'i düzelttik
           target: "~/deploy/"
 
       - name: Systemd servisini yeniden başlat
@@ -42,4 +41,4 @@ jobs:
             sudo systemctl stop springboot.service
             sudo mv ~/deploy/squad-0.0.1-SNAPSHOT.jar /home/serkanursavas/projects/springboot/my-backend/404-backend/target/squad-0.0.1-SNAPSHOT.jar
             sudo systemctl start springboot.service
-            sudo systemctl sta
+            sudo systemctl status springboot.service --no-pager
