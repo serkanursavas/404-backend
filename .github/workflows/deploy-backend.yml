@@ -3,7 +3,7 @@ name: Deploy Backend (Spring Boot)
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
