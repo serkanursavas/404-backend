@@ -22,5 +22,7 @@ public class SquadApplication {
         SpringApplication.run(SquadApplication.class, args);
         logger.info("🚀 Yeni deploy başarılı! - " + System.currentTimeMillis());
         System.out.println("🚀 Yeni deploy başarılı! sout - " + System.currentTimeMillis());
+        System.out.println("🚀 Yeni deploy başarılı! sout22 - " + System.currentTimeMillis());
+
     }
 }
