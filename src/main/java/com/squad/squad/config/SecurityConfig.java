@@ -70,7 +70,7 @@ public class SecurityConfig {
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                                 .requestMatchers("/api/users/createUser", "/api/users/login").permitAll()
                                 .requestMatchers("/api/games/status").permitAll()
-                                .anyRequest().authenticated()
+
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
