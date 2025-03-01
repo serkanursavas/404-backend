@@ -43,19 +43,15 @@ public class GameController {
         this.gameLocationMapper = gameLocationMapper;
     }
 
-    @GetMapping("/status")
-    public String checkStatus() {
-        return "🚀 Yeni kod deploy edildi! Timestamp: " + System.currentTimeMillis();
-    }
 
-    @GetMapping("/getAllGames")
-    public ResponseEntity<Page<LatestGamesDTO>> getAllGames(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<LatestGamesDTO> gamesPage = gameService.getAllGames(pageable);
-        return ResponseEntity.ok(gamesPage);
-    }
+//    @GetMapping("/getAllGames")
+//    public ResponseEntity<Page<LatestGamesDTO>> getAllGames(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size) {
+//        Pageable pageable = PageRequest.of(page, size);
+//        Page<LatestGamesDTO> gamesPage = gameService.getAllGames(pageable);
+//        return ResponseEntity.ok(gamesPage);
+//    }
 
     @GetMapping("/getGameById/{id}")
     public ResponseEntity<GameResponseDTO> getGameById(@PathVariable Integer id) {
