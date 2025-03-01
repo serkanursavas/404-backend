@@ -43,6 +43,11 @@ public class GameController {
         this.gameLocationMapper = gameLocationMapper;
     }
 
+    @GetMapping("/status")
+    public String checkStatus() {
+        return "🚀 Yeni kod deploy edildi! Timestamp: " + System.currentTimeMillis();
+    }
+
     @GetMapping("/getAllGames")
     public ResponseEntity<Page<LatestGamesDTO>> getAllGames(
             @RequestParam(defaultValue = "0") int page,
