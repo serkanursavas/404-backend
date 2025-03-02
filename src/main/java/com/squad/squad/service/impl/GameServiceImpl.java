@@ -19,6 +19,7 @@ import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
 import com.squad.squad.repository.GameLocationRepository;
 import com.squad.squad.repository.RatingRepository;
+import com.squad.squad.repository.RosterPersonaRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
@@ -54,10 +55,12 @@ public class GameServiceImpl implements GameService {
     private final GameMapper gameMapper;
     private final GameLocationMapper gameLocationMapper ;
     private final PlayerMapper playerMapper;
+    private final RosterPersonaRepository rosterPersonaRepository;
 
     @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-                           PlayerService playerService, GameLocationRepository gameLocationRepository, RatingRepository ratingRepository, GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper, PlayerMapper playerMapper) {
+                           PlayerService playerService, RosterPersonaRepository rosterPersonaRepository
+                           ,GameLocationRepository gameLocationRepository, RatingRepository ratingRepository, GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper, PlayerMapper playerMapper) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
@@ -67,6 +70,7 @@ public class GameServiceImpl implements GameService {
         this.gameMapper = gameMapper;
         this.gameLocationMapper = gameLocationMapper;
         this.playerMapper = playerMapper;
+        this.rosterPersonaRepository = rosterPersonaRepository;
     }
 
     @Override
@@ -184,6 +188,7 @@ public class GameServiceImpl implements GameService {
 
         // yeni mac olusturuldugu icin son mac icin rating tablosu sifirliyoruz data birikmesin diye
         ratingRepository.deleteAll();
+        rosterPersonaRepository.deleteAll();
     }
 
     @Override
