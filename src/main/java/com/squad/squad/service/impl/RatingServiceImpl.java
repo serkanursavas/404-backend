@@ -1,28 +1,26 @@
 package com.squad.squad.service.impl;
 
-import java.awt.print.Pageable;
-import java.util.List;
-
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import com.squad.squad.entity.*;
-import com.squad.squad.repository.RosterPersonaRepository;
-import com.squad.squad.repository.RosterRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.RatingRepository;
+import com.squad.squad.repository.RosterPersonaRepository;
+import com.squad.squad.repository.RosterRepository;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RatingService;
 import com.squad.squad.service.RosterService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.transaction.Transactional;
+import java.util.List;
 
 @Service
 public class RatingServiceImpl implements RatingService {
@@ -51,6 +49,7 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void saveRating(List<AddRatingRequestDTO> ratings) {
         Integer gameId = null;
         String voterTeamColor = null;
@@ -131,7 +130,7 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkIfVotingIsComplete(Integer gameId, String teamColor) {
 
         Integer totalVotesByTeam = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
