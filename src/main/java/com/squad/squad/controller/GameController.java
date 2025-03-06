@@ -9,6 +9,7 @@ import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import com.squad.squad.dto.game.NextGameResponseDTO;
 import com.squad.squad.mapper.GameLocationMapper;
 import com.squad.squad.repository.GameLocationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,13 +33,16 @@ public class GameController {
     private final GameService gameService;
     private final GameLocationRepository gameLocationRepository;
     private final GameDTOValidator gameDTOValidator;
-    private final GameLocationMapper gameLocationMapper = GameLocationMapper.INSTANCE;
+    private final GameLocationMapper gameLocationMapper;
 
-    public GameController(GameService gameService, GameDTOValidator gameDTOValidator, GameLocationRepository gameLocationRepository) {
+    @Autowired
+    public GameController(GameService gameService, GameDTOValidator gameDTOValidator, GameLocationRepository gameLocationRepository, GameLocationMapper gameLocationMapper) {
         this.gameService = gameService;
         this.gameDTOValidator = gameDTOValidator;
         this.gameLocationRepository = gameLocationRepository;
+        this.gameLocationMapper = gameLocationMapper;
     }
+
 
     @GetMapping("/getAllGames")
     public ResponseEntity<Page<LatestGamesDTO>> getAllGames(
@@ -102,11 +106,6 @@ public class GameController {
     @PutMapping("/updateWeather/{id}")
     public ResponseEntity<?> updateWeather(@PathVariable Integer id, @RequestBody String weather) {
 
-        System.out.println("Received weather: " + weather);
-
-
-
-
         gameService.updateWeather(id, weather);
         return ResponseEntity.ok("Game updated successfully");
     }
@@ -114,7 +113,7 @@ public class GameController {
 
     @GetMapping("/getGameLocations")
     public ResponseEntity<List<GameLocationDTO>> getGameLocations() {
-        return ResponseEntity.ok(GameLocationMapper.INSTANCE.gameLocationListToGameLocationDTOList(gameLocationRepository.findAll()));
+        return ResponseEntity.ok(gameLocationMapper.gameLocationListToGameLocationDTOList(gameLocationRepository.findAll()));
     }
 
 

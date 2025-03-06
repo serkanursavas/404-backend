@@ -12,9 +12,8 @@ import org.mapstruct.factory.Mappers;
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.entity.Player;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface PlayerMapper {
-    PlayerMapper INSTANCE = Mappers.getMapper(PlayerMapper.class);
 
     PlayerDTO playerToPlayerDTO(Player player);
 

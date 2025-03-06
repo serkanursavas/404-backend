@@ -8,6 +8,7 @@ import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.mapper.UserMapper;
 import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.security.JwtUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,15 +36,17 @@ public class UserServiceImpl implements UserService {
     private final PlayerService playerService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
-    private final UserMapper userMapper = UserMapper.INSTANCE;
+    private final UserMapper userMapper;
 
+    @Autowired
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                           PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils) {
+                           PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
+        this.userMapper = userMapper;
     }
 
     @Override

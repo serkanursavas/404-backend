@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.squad.squad.dto.TopListsDTO;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -27,7 +28,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     @Query(value = "WITH RecentGames AS ( " +
             "    SELECT g.id " +
             "    FROM game g " +
-            "    WHERE g.is_played = 1 " +
+            "    WHERE g.is_played = true " +
             "    ORDER BY g.date_time DESC " +
             "    LIMIT 2 " +
             ") " +

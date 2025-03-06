@@ -19,9 +19,11 @@ import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
 import com.squad.squad.repository.GameLocationRepository;
 import com.squad.squad.repository.RatingRepository;
+import com.squad.squad.repository.RosterPersonaRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,18 +51,26 @@ public class GameServiceImpl implements GameService {
     private final PlayerService playerService;
     private final GameLocationRepository gameLocationRepository;
     private final RatingRepository ratingRepository;
-    private final PlayerMapper playerMapper = PlayerMapper.INSTANCE;
-    private final GoalMapper goalMapper = GoalMapper.INSTANCE;
-    private final GameMapper gameMapper = GameMapper.INSTANCE;
-    private final GameLocationMapper gameLocationMapper = GameLocationMapper.INSTANCE;
+    private final GoalMapper goalMapper;
+    private final GameMapper gameMapper;
+    private final GameLocationMapper gameLocationMapper ;
+    private final PlayerMapper playerMapper;
+    private final RosterPersonaRepository rosterPersonaRepository;
 
+    @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-                           PlayerService playerService, GameLocationRepository gameLocationRepository, RatingRepository ratingRepository) {
+                           PlayerService playerService, RosterPersonaRepository rosterPersonaRepository
+                           ,GameLocationRepository gameLocationRepository, RatingRepository ratingRepository, GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper, PlayerMapper playerMapper) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
         this.gameLocationRepository = gameLocationRepository;
         this.ratingRepository = ratingRepository;
+        this.goalMapper = goalMapper;
+        this.gameMapper = gameMapper;
+        this.gameLocationMapper = gameLocationMapper;
+        this.playerMapper = playerMapper;
+        this.rosterPersonaRepository = rosterPersonaRepository;
     }
 
     @Override
@@ -178,6 +188,7 @@ public class GameServiceImpl implements GameService {
 
         // yeni mac olusturuldugu icin son mac icin rating tablosu sifirliyoruz data birikmesin diye
         ratingRepository.deleteAll();
+        rosterPersonaRepository.deleteAll();
     }
 
     @Override
@@ -316,7 +327,6 @@ public class GameServiceImpl implements GameService {
 
         // Fazladan tırnakları kaldır
         String cleanedWeather = weather.replace("\"", "").trim();
-        System.out.println("Cleaned weather: " + cleanedWeather);
 
         if (StringUtils.isNotBlank(game.getWeather())) {
             throw new IllegalArgumentException("Game has already weather info. You cannot update weather.");

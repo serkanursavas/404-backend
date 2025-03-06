@@ -2,6 +2,8 @@ package com.squad.squad.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.util.List;
+
 public class PlayerDTO {
 
     private Integer id;
@@ -12,6 +14,7 @@ public class PlayerDTO {
     private double rating;
     private String position;
     private boolean active = true;
+    private List<PlayerPersonaDTO> personas;
 
     public double getRating() {
         return Math.round(rating * 100.0) / 100.0;
@@ -75,5 +78,13 @@ public class PlayerDTO {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public List<PlayerPersonaDTO> getPersonas() {
+        return personas;
+    }
+
+    public void setPersonas(List<PlayerPersonaDTO> personas) {
+        this.personas = personas;
     }
 }
