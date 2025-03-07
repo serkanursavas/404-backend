@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
     public String login(String username, String password) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password));
+                    new UsernamePasswordAuthenticationToken(username.toLowerCase(), password));
 
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             Integer userId = userDetails.getId();
