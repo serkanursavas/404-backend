@@ -5,23 +5,26 @@ public class TopListsDTO {
     private String name;
     private String surname;
     private Long goalCount;  // Goal sayısı isteğe bağlı, bu yüzden Long
+    private Long gameCount;  // Game sayısı isteğe bağlı, bu yüzden Long
     private Double rating;   // Rating isteğe bağlı, bu yüzden Double
 
     // Constructor for top scorer list (goalCount)
-    public TopListsDTO(Integer playerId, String name, String surname, Long goalCount) {
+    public TopListsDTO(Integer playerId, String name, String surname, Long goalCount, Long gameCount) {
         this.playerId = playerId;
         this.name = name;
         this.surname = surname;
         this.goalCount = goalCount;
+        this.gameCount = gameCount; // Game count değeri mevcut değilse null bırak
         this.rating = null; // Rating değeri mevcut değilse null bırak
     }
 
     // Constructor for top rated list (rating)
-    public TopListsDTO(Integer playerId, String name, String surname, Double rating) {
+    public TopListsDTO(Integer playerId, String name, String surname, Double rating,Long gameCount) {
         this.playerId = playerId;
         this.name = name;
         this.surname = surname;
         this.goalCount = null; // Goal count değeri mevcut değilse null bırak
+        this.gameCount = gameCount; // Game count değeri mevcut değilse null bırak
         this.rating = rating;
     }
 
@@ -65,5 +68,13 @@ public class TopListsDTO {
 
     public void setRating(Double rating) {
         this.rating = rating;
+    }
+
+    public Long getGameCount() {
+        return gameCount;
+    }
+
+    public void setGameCount(Long gameCount) {
+        this.gameCount = gameCount;
     }
 }

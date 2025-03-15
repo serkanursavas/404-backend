@@ -1,10 +1,12 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.DTOvalidators.PlayerDTOValidator;
+import com.squad.squad.dto.TopListProjection;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.GetAllPlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
+import com.squad.squad.repository.PlayerRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,10 +26,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class PlayerController {
     private final PlayerService playerService;
     private final PlayerDTOValidator playerDTOValidator;
+    private final PlayerRepository playerRepository;
 
-    public PlayerController(PlayerService playerService, PlayerDTOValidator playerDTOValidator) {
+    public PlayerController(PlayerService playerService, PlayerDTOValidator playerDTOValidator, PlayerRepository playerRepository) {
         this.playerService = playerService;
         this.playerDTOValidator = playerDTOValidator;
+        this.playerRepository = playerRepository;
     }
 
     @GetMapping("/getAllPlayers")
@@ -60,5 +64,20 @@ public class PlayerController {
     @GetMapping("/getTopRatedPlayers")
     public List<TopListsDTO> getTopRatedPlayers() {
         return playerService.getTopRatedPlayersWithoutRecentGames();
+    }
+
+    @GetMapping("/getTopFormPlayers")
+    public List<TopListProjection> getTopFormPlayers() {
+        return playerRepository.getTopFormPlayers();
+    }
+
+    @GetMapping("/getLegendaryDuos")
+    public List<TopListProjection> getLegendaryDuos() {
+        return playerService.getLegendaryDuos();
+    }
+
+    @GetMapping("/getRivalDuos")
+    public List<TopListProjection> getRivalDuos() {
+        return playerService.getRivalDuos();
     }
 }
