@@ -286,6 +286,10 @@ public class GameServiceImpl implements GameService {
         if (unplayedGame != null) {
             LocalDateTime currentTime = LocalDateTime.now();
 
+            System.out.println("Current time: " + currentTime);
+            System.out.println("Game time: " + unplayedGame.getDateTime());
+
+
             if (currentTime.isAfter(unplayedGame.getDateTime())) {
                 unplayedGame.setPlayed(true);
                 gameRepository.save(unplayedGame);
