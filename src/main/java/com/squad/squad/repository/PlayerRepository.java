@@ -55,89 +55,74 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
 
     @Query(value = "select *\n" +
-            "from (WITH Last10WeeksMatches AS (\n" +
-            "    SELECT r.player_id,\n" +
-            "           r.game_id,\n" +
-            "           r.rating,\n" +
-            "           g.date_time\n" +
-            "    FROM roster r\n" +
-            "    JOIN game g ON r.game_id = g.id\n" +
-            "    WHERE g.date_time >= NOW() - INTERVAL '12 weeks' and g.is_played\n" +
-            "),\n" +
+            "from (WITH Last10WeeksMatches AS (SELECT r.player_id,\n" +
+            "                                         r.game_id,\n" +
+            "                                         r.rating,\n" +
+            "                                         g.date_time\n" +
+            "                                  FROM roster r\n" +
+            "                                           JOIN game g ON r.game_id = g.id\n" +
+            "                                  WHERE g.date_time >= NOW() - INTERVAL '12 weeks'\n" +
+            "                                    and g.is_played),\n" +
             "\n" +
-            "-- Son 3 maçı belirle\n" +
-            "Last4Games AS (\n" +
-            "    SELECT id\n" +
-            "    FROM game\n" +
-            "    ORDER BY date_time DESC\n" +
-            "    LIMIT 4\n" +
-            "),\n" +
+            "           -- Son 3 maçı belirle\n" +
+            "           Last4Games AS (SELECT id\n" +
+            "                          FROM game\n" +
+            "                          ORDER BY date_time DESC\n" +
+            "                          LIMIT 4),\n" +
             "\n" +
-            "-- Son 5 maçı sıralıyoruz\n" +
-            "PlayerLast5Matches AS (\n" +
-            "    SELECT r.player_id,\n" +
-            "           r.game_id,\n" +
-            "           r.rating,\n" +
-            "           g.date_time,\n" +
-            "           ROW_NUMBER() OVER (PARTITION BY r.player_id ORDER BY g.date_time DESC) AS match_rank\n" +
-            "    FROM Last10WeeksMatches r\n" +
-            "    JOIN game g ON r.game_id = g.id\n" +
-            "),\n" +
+            "           -- Son 5 maçı sıralıyoruz\n" +
+            "           PlayerLast5Matches AS (SELECT r.player_id,\n" +
+            "                                         r.game_id,\n" +
+            "                                         r.rating,\n" +
+            "                                         g.date_time,\n" +
+            "                                         ROW_NUMBER() OVER (PARTITION BY r.player_id ORDER BY g.date_time DESC) AS match_rank\n" +
+            "                                  FROM Last10WeeksMatches r\n" +
+            "                                           JOIN game g ON r.game_id = g.id),\n" +
             "\n" +
-            "-- En az 5 maç oynamış oyuncular\n" +
-            "EligiblePlayers AS (\n" +
-            "    SELECT player_id\n" +
-            "    FROM PlayerLast5Matches\n" +
-            "    GROUP BY player_id\n" +
-            "    HAVING COUNT(*) >= 5\n" +
-            "),\n" +
+            "           -- En az 5 maç oynamış oyuncular\n" +
+            "           EligiblePlayers AS (SELECT player_id\n" +
+            "                               FROM PlayerLast5Matches\n" +
+            "                               GROUP BY player_id\n" +
+            "                               HAVING COUNT(*) >= 5),\n" +
             "\n" +
-            "-- Son 3 maçtan en az 2’sinde aktif olan oyuncular\n" +
-            "ActivePlayers AS (\n" +
-            "    SELECT player_id\n" +
-            "    FROM roster\n" +
-            "    WHERE game_id IN (SELECT id FROM Last4Games)\n" +
-            "    GROUP BY player_id\n" +
-            "    HAVING COUNT(DISTINCT game_id) >= 2\n" +
-            "),\n" +
+            "           -- Son 3 maçtan en az 2’sinde aktif olan oyuncular\n" +
+            "           ActivePlayers AS (SELECT player_id\n" +
+            "                             FROM roster\n" +
+            "                             WHERE game_id IN (SELECT id FROM Last4Games)\n" +
+            "                             GROUP BY player_id\n" +
+            "                             HAVING COUNT(DISTINCT game_id) >= 2),\n" +
             "\n" +
-            "-- Son maç ve önceki 3 maçın ortalamasını hesaplıyoruz\n" +
-            "RecentStats AS (\n" +
-            "    SELECT\n" +
-            "        player_id,\n" +
-            "        MAX(CASE WHEN match_rank = 1 THEN rating END) AS last_match_rating,\n" +
-            "        AVG(CASE WHEN match_rank BETWEEN 2 AND 4 THEN rating END) AS last3_avg_rating\n" +
-            "    FROM PlayerLast5Matches\n" +
-            "    GROUP BY player_id\n" +
-            "),\n" +
+            "           -- Son maç ve önceki 3 maçın ortalamasını hesaplıyoruz\n" +
+            "           RecentStats AS (SELECT player_id,\n" +
+            "                                  MAX(CASE WHEN match_rank = 1 THEN rating END)             AS last_match_rating,\n" +
+            "                                  AVG(CASE WHEN match_rank BETWEEN 2 AND 4 THEN rating END) AS last3_avg_rating\n" +
+            "                           FROM PlayerLast5Matches\n" +
+            "                           GROUP BY player_id),\n" +
             "\n" +
-            "-- Rating değişimini hesaplıyoruz\n" +
-            "FinalChanges AS (\n" +
-            "    SELECT\n" +
-            "        rs.player_id,\n" +
-            "        rs.last_match_rating,\n" +
-            "        rs.last3_avg_rating,\n" +
-            "        CASE\n" +
-            "            WHEN rs.last3_avg_rating IS NOT NULL AND rs.last3_avg_rating <> 0\n" +
-            "            THEN (rs.last_match_rating - rs.last3_avg_rating) / rs.last3_avg_rating * 100\n" +
-            "            ELSE NULL\n" +
-            "        END AS rating_change\n" +
-            "    FROM RecentStats rs\n" +
-            ")\n" +
-            "SELECT fc.player_id,\n" +
-            "       p.name,\n" +
-            "       p.surname,\n" +
-            "       p.rating,\n" +
-            "       fc.last_match_rating,\n" +
-            "       fc.last3_avg_rating,\n" +
-            "       fc.rating_change\n" +
-            "FROM FinalChanges fc\n" +
-            "JOIN EligiblePlayers ep ON fc.player_id = ep.player_id\n" +
-            "JOIN ActivePlayers ap ON fc.player_id = ap.player_id\n" +
-            "JOIN player p ON p.id = fc.player_id\n" +
-            "WHERE fc.rating_change IS NOT NULL\n" +
-            "ORDER BY fc.rating_change DESC\n" +
-            "LIMIT 5) aa\n" +
+            "           -- Rating değişimini hesaplıyoruz\n" +
+            "           FinalChanges AS (SELECT rs.player_id,\n" +
+            "                                   rs.last_match_rating,\n" +
+            "                                   rs.last3_avg_rating,\n" +
+            "                                   CASE\n" +
+            "                                       WHEN rs.last3_avg_rating IS NOT NULL AND rs.last3_avg_rating <> 0\n" +
+            "                                           THEN (rs.last_match_rating - rs.last3_avg_rating) / rs.last3_avg_rating * 100\n" +
+            "                                       ELSE NULL\n" +
+            "                                       END AS rating_change\n" +
+            "                            FROM RecentStats rs)\n" +
+            "      SELECT fc.player_id,\n" +
+            "             p.name,\n" +
+            "             p.surname,\n" +
+            "             p.rating,\n" +
+            "             fc.last_match_rating,\n" +
+            "             fc.last3_avg_rating,\n" +
+            "             fc.rating_change as avgRatingChange\n" +
+            "      FROM FinalChanges fc\n" +
+            "               JOIN EligiblePlayers ep ON fc.player_id = ep.player_id\n" +
+            "               JOIN ActivePlayers ap ON fc.player_id = ap.player_id\n" +
+            "               JOIN player p ON p.id = fc.player_id\n" +
+            "      WHERE fc.rating_change IS NOT NULL\n" +
+            "      ORDER BY fc.rating_change DESC\n" +
+            "      LIMIT 5) aa\n" +
             "order by aa.rating desc", nativeQuery = true)
     List<TopListProjection> getTopFormPlayers();
 
