@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.squad.squad.dto.PlayerDTO;
+import com.squad.squad.dto.TopListProjection;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
@@ -25,6 +26,10 @@ public interface PlayerService {
     List<Player> findAllById(List<Integer> playerIds);
 
     List<TopListsDTO> getTopRatedPlayersWithoutRecentGames();
+
+    List<TopListProjection> getLegendaryDuos();
+
+    List<TopListProjection> getRivalDuos();
 
     Map<Integer, PlayerDTO> findPlayersByIds(List<Integer> playerIds);
 }
