@@ -288,8 +288,12 @@ public class GameServiceImpl implements GameService {
         System.out.println("Current Time: " + currentTime1);
 
 
+
+
         if (unplayedGame != null) {
             LocalDateTime currentTime = LocalDateTime.now();
+
+            System.out.println("unplayedGame.getDateTime(); " + unplayedGame.getDateTime());
 
             if (currentTime.isAfter(unplayedGame.getDateTime())) {
                 unplayedGame.setPlayed(true);
