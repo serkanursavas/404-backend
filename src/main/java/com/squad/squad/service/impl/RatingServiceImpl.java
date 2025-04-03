@@ -73,6 +73,11 @@ public class RatingServiceImpl implements RatingService {
                     throw new IllegalStateException("Voter player is not in the roster for this game." + getCurrentPlayerId());
                 }
 
+                if (!voterRoster.getHasVote()) {
+                    voterRoster.setHasVote(true);
+                    rosterRepository.save(voterRoster);
+                }
+
                 voterTeamColor = voterRoster.getTeamColor();
 
                 Game existingGame = gameService.findGameById(gameId);
@@ -105,6 +110,8 @@ public class RatingServiceImpl implements RatingService {
 
             ratingRepository.save(rating);
         }
+
+
 
         checkIfVotingIsComplete(gameId, voterTeamColor);
     }

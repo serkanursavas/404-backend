@@ -31,6 +31,9 @@ public class Roster {
     @Column(nullable = true)
     private Integer persona3;
 
+    @Column(name = "has_vote", nullable = true)
+    private Boolean hasVote;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
@@ -52,6 +55,14 @@ public class Roster {
         this.teamColor = teamColor;
         this.game = game;
         this.player = player;
+    }
+
+    public Boolean getHasVote() {
+        return hasVote;
+    }
+
+    public void setHasVote(Boolean hasVote) {
+        this.hasVote = hasVote;
     }
 
     public Integer getId() {

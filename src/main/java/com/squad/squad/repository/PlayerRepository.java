@@ -62,11 +62,12 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "                                  FROM roster r\n" +
             "                                           JOIN game g ON r.game_id = g.id\n" +
             "                                  WHERE g.date_time >= NOW() - INTERVAL '12 weeks'\n" +
-            "                                    and g.is_played),\n" +
+            "                                    and g.is_played and g.is_voted),\n" +
             "\n" +
             "           -- Son 3 maçı belirle\n" +
             "           Last4Games AS (SELECT id\n" +
-            "                          FROM game\n" +
+            "                          FROM game" +
+            "                           where game.is_voted\n" +
             "                          ORDER BY date_time DESC\n" +
             "                          LIMIT 4),\n" +
             "\n" +
@@ -189,15 +190,19 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "ORDER BY r.games_against DESC", nativeQuery = true)
     List<TopListProjection> getRivalDuos();
 
-
-
     @Query(value = "select r.rating as last5GameRating\n" +
             "from roster r\n" +
-            "left join player p on r.player_id = p.id\n" +
-            "where p.id= :playerId and r.rating != 0\n" +
+            "         left join player p on r.player_id = p.id\n" +
+            "         left join game g on r.game_id = g.id\n" +
+            "where p.id = :playerId\n" +
+            "  and r.rating != 0\n" +
+            "and g.is_voted\n" +
             "order by r.id desc\n" +
             "limit 5", nativeQuery = true)
     List<Double> getLast5MatchRatingByPlayerId(Integer playerId);
 
     List<Player> findByIdIn(List<Integer> ids);
+
+
+
 }
