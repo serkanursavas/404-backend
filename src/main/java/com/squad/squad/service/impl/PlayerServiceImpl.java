@@ -17,8 +17,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.text.Collator;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,7 +43,12 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     public List<PlayerDTO> getAllPlayers() {
 
-        List<Player> players = playerRepository.findAll(); // Lazy Load
+        List<Player> players = playerRepository.findAll();
+        Collator trCollator = Collator.getInstance(new Locale("tr", "TR"));
+
+        players.sort(Comparator
+                .comparing(Player::getName, trCollator)
+                .thenComparing(Player::getSurname, trCollator));
         return players.stream()
                 .map(player -> {
                     PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
