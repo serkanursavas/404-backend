@@ -1,11 +1,8 @@
 package com.squad.squad.service.impl;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
+import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.MvpDTO;
+import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
@@ -14,34 +11,32 @@ import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.dto.roster.RosterUpdateDTO;
 import com.squad.squad.entity.*;
+import com.squad.squad.enums.TeamColor;
+import com.squad.squad.exception.GameNotFoundException;
+import com.squad.squad.exception.NotFoundException;
 import com.squad.squad.mapper.GameLocationMapper;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.GoalMapper;
+import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GameLocationRepository;
+import com.squad.squad.repository.GameRepository;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
+import com.squad.squad.service.GameService;
+import com.squad.squad.service.PlayerService;
+import com.squad.squad.service.RosterService;
+import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.squad.squad.dto.LatestGamesDTO;
-import com.squad.squad.dto.PlayerDTO;
-import com.squad.squad.enums.TeamColor;
-import com.squad.squad.exception.GameNotFoundException;
-import com.squad.squad.exception.NotFoundException;
-
-import com.squad.squad.mapper.PlayerMapper;
-import com.squad.squad.repository.GameRepository;
-import com.squad.squad.service.GameService;
-
-import com.squad.squad.service.PlayerService;
-import com.squad.squad.service.RosterService;
-
-import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -321,12 +316,26 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Optional<MvpDTO> getMvpPlayer() {
-        // Son oynanan maçtaki tüm oyuncuları alıyoruz
-        List<MvpDTO> players = gameRepository.findMvpPlayers();
 
-        // Listeden en yüksek rating'e sahip oyuncuyu bulmak için stream kullanıyoruz
-        return players.stream()
-                .max(Comparator.comparingDouble(MvpDTO::getRating));
+        List<Object[]> result = gameRepository.findLatestVotedMvpRaw();
+
+        if (result.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Object[] row = result.get(0);
+
+        MvpDTO dto = new MvpDTO(
+                (Integer) row[0], // id
+                (String) row[1],  // name
+                (String) row[2],  // surname
+                (String) row[3],  // photo
+                (String) row[4],  // position
+                ((Number) row[5]).doubleValue() // rating (cast safe)
+        );
+
+        return Optional.of(dto);
+
     }
 
     @Override

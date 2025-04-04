@@ -150,6 +150,7 @@ public class RatingServiceImpl implements RatingService {
 
         Integer totalVotes = (int) ratingRepository.count();
 
+
         if (totalVotes.equals(expectedVotes * 2)) {
 
             List<Roster> rosters = rosterRepository.findAllByGameId(gameId);
@@ -163,17 +164,19 @@ public class RatingServiceImpl implements RatingService {
                 roster.setPersona1(!topRosterPersonas.isEmpty() ? topRosterPersonas.get(0).getPersona().getId() : null);
                 roster.setPersona2(topRosterPersonas.size() > 1 ? topRosterPersonas.get(1).getPersona().getId() : null);
                 roster.setPersona3(topRosterPersonas.size() > 2 ? topRosterPersonas.get(2).getPersona().getId() : null);
-                System.out.println("Roster: " + roster.getId());
-                System.out.println("Persona1: " + roster.getPersona1());
-                System.out.println("Persona2: " + roster.getPersona2());
-                System.out.println("Persona3: " + roster.getPersona3());
             }
 
             rosterService.updateAllRosters(rosters);
 
             rosterService.updatePlayerGeneralRating(gameId);
             game.setVoted(true);
+
+            Integer mvpId = rosterPersonaRepository.findMvp();
+
+            game.setMvpId(mvpId);
+
             gameService.updateVote(game);
+
         }
     }
 
