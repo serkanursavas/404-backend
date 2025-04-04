@@ -11,11 +11,10 @@ import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.service.PersonaService;
 import com.squad.squad.service.RosterService;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class PersonaServiceImpl implements PersonaService {
@@ -38,8 +37,12 @@ public class PersonaServiceImpl implements PersonaService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void savePersonas(List<AddPersonaRequestDTO> personas) {
+
+
+
         for (AddPersonaRequestDTO dto : personas) {
             Roster existingRoster = rosterService.getRosterById(dto.getRosterId());
+
 
 
             if (dto.getPersonaIds().size() > 3) {
@@ -63,7 +66,10 @@ public class PersonaServiceImpl implements PersonaService {
 
                 // Persona sayısını artır
                 playerPersona.setCount(playerPersona.getCount() + 1);
-                playerPersonaRepository.save(playerPersona);
+                if (personaId != 68){
+                    System.out.println("TEST 68 degilse");
+                    playerPersonaRepository.save(playerPersona);
+                }
                 playerPersonaRepository.flush();
 
 

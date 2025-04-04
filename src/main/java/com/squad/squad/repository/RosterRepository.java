@@ -1,11 +1,10 @@
 package com.squad.squad.repository;
 
-import java.util.List;
-
+import com.squad.squad.entity.Roster;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.squad.squad.entity.Roster;
+import java.util.List;
 
 @Repository
 public interface RosterRepository extends JpaRepository<Roster, Integer> {
@@ -21,4 +20,6 @@ public interface RosterRepository extends JpaRepository<Roster, Integer> {
     Roster findByGameIdAndPlayerId(Integer gameId, Integer playerId);
 
     List<Roster> findAllByGameId(Integer gameId);
+
+
 }

@@ -1,13 +1,12 @@
 package com.squad.squad.entity;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 public class Game {
@@ -24,6 +23,9 @@ public class Game {
 
     @Column(nullable = false)
     private String location;
+
+    @Column(nullable = true)
+    private Integer mvpId;
 
     @ManyToOne
     private GameLocation gameLocation;
@@ -46,6 +48,7 @@ public class Game {
     @OneToMany(mappedBy = "game")
     @JsonIgnore
     private List<Goal> goal;
+
 
     public Integer getId() {
         return id;
@@ -135,4 +138,14 @@ public class Game {
     public void setGameLocation(GameLocation gameLocation) {
         this.gameLocation = gameLocation;
     }
+
+    public Integer getMvpId() {
+        return mvpId;
+    }
+
+    public void setMvpId(Integer mvpId) {
+        this.mvpId = mvpId;
+    }
+
+
 }
