@@ -85,8 +85,9 @@ public class GoalServiceImpl implements GoalService {
             String name = (String) result[1];
             String surname = (String) result[2];
             Long goalCount = ((Number) result[3]).longValue(); // Long'a dönüştürüyoruz
+            Long gameCount = ((Number) result[4]).longValue(); // Long'a dönüştürüyoruz
 
-            TopListsDTO dto = new TopListsDTO(playerId, name, surname, goalCount);
+            TopListsDTO dto = new TopListsDTO(playerId, name, surname, goalCount, gameCount);
             topScorers.add(dto);
         }
 

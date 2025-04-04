@@ -13,6 +13,7 @@ public class RosterResponseDTO {
     private Integer persona1;
     private Integer persona2;
     private Integer persona3;
+    private Boolean hasVote;
 
     // Default constructor
     public RosterResponseDTO() {
@@ -82,5 +83,13 @@ public class RosterResponseDTO {
 
     public void setPersona3(Integer persona3) {
         this.persona3 = persona3;
+    }
+
+    public Boolean getHasVote() {
+        return hasVote;
+    }
+
+    public void setHasVote(Boolean hasVote) {
+        this.hasVote = hasVote;
     }
 }

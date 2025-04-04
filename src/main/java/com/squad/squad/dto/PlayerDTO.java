@@ -15,6 +15,7 @@ public class PlayerDTO {
     private String position;
     private boolean active = true;
     private List<PlayerPersonaDTO> personas;
+    private List<Double> last5GameRating;
 
     public double getRating() {
         return Math.round(rating * 100.0) / 100.0;
@@ -87,4 +88,13 @@ public class PlayerDTO {
     public void setPersonas(List<PlayerPersonaDTO> personas) {
         this.personas = personas;
     }
+
+    public List<Double> getLast5GameRating() {
+        return last5GameRating;
+    }
+
+    public void setLast5GameRating(List<Double> last5GameRating) {
+        this.last5GameRating = last5GameRating;
+    }
+
 }

@@ -2,6 +2,7 @@ package com.squad.squad.service.impl;
 
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.PlayerPersonaDTO;
+import com.squad.squad.dto.TopListProjection;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
@@ -16,10 +17,11 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import java.text.Collator;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +43,12 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     public List<PlayerDTO> getAllPlayers() {
 
-        List<Player> players = playerRepository.findAll(); // Lazy Load
+        List<Player> players = playerRepository.findAll();
+        Collator trCollator = Collator.getInstance(new Locale("tr", "TR"));
+
+        players.sort(Comparator
+                .comparing(Player::getName, trCollator)
+                .thenComparing(Player::getSurname, trCollator));
         return players.stream()
                 .map(player -> {
                     PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
@@ -62,6 +69,11 @@ public class PlayerServiceImpl implements PlayerService {
                             .toList();
 
                     playerDTO.setPersonas(personas);
+
+                    List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId());
+                    playerDTO.setLast5GameRating(last5GameRating);
+
+
                     return playerDTO;
                 })
                 .toList();
@@ -91,6 +103,10 @@ public class PlayerServiceImpl implements PlayerService {
                 .toList();
 
         playerDTO.setPersonas(personas);
+
+        List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId());
+
+        playerDTO.setLast5GameRating(last5GameRating);
 
 
         return playerDTO;
@@ -133,7 +149,8 @@ public class PlayerServiceImpl implements PlayerService {
                         (Integer) record[0],    // playerId
                         (String) record[1],     // name
                         (String) record[2],     // surname
-                        (Double) record[3]      // rating
+                        (Double) record[3],      // rating
+                        (Long) record[4]      // rating
                 ))
                 .toList();
 
@@ -143,9 +160,90 @@ public class PlayerServiceImpl implements PlayerService {
         // 3. Filtreleme
         return topRatedList.stream()
                 .filter(player -> recentGamePlayerIds.contains(player.getPlayerId()))
-                .limit(5)  // En iyi 5 oyuncuyu al
+                .limit(10)  // En iyi 5 oyuncuyu al
                 .collect(Collectors.toList());
     }
+
+    public List<TopListProjection> getLegendaryDuos() {
+        List<TopListProjection> rawDataLegendaryDuos = playerRepository.getLegendaryDuos();
+
+        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos();
+
+        Set<Integer> usedPlayers = new HashSet<>();
+        List<TopListProjection> filteredResults = new ArrayList<>();
+
+        for (TopListProjection duo : rawDataLegendaryDuos) {
+            Integer player1 = duo.getPlayer1Id();
+            Integer player2 = duo.getPlayer2Id();
+
+            // Eğer oyunculardan biri daha önce listede varsa, atla
+            if (usedPlayers.contains(player1) || usedPlayers.contains(player2)) {
+                continue;
+            }
+
+            // Çifti listeye ekle ve oyuncuları işaretle
+            filteredResults.add(duo);
+            usedPlayers.add(player1);
+            usedPlayers.add(player2);
+
+            // İlk 5 sonucu aldıktan sonra döngüyü durdur
+            if (filteredResults.size() >= 5) {
+                break;
+            }
+        }
+
+        return filteredResults;
+    }
+
+    public List<TopListProjection> getRivalDuos() {
+        // 1️⃣ "Legendary Duos" verisini servis üzerinden al
+        List<TopListProjection> legendaryDuos = getLegendaryDuos();
+
+        // 2️⃣ "Rival Duos" verisini repodan al
+        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos();
+
+        // 3️⃣ "Legendary Duos" içindeki oyuncu çiftlerini sakla
+        Set<Set<Integer>> legendaryPairs = new HashSet<>();
+
+        for (TopListProjection duo : legendaryDuos) {
+            Set<Integer> pair = new HashSet<>(Arrays.asList(duo.getPlayer1Id(), duo.getPlayer2Id()));
+            legendaryPairs.add(pair);
+        }
+
+        // 4️⃣ "Rival Duos" listesinden "Legendary Duos" içindeki çiftleri çıkar
+        List<TopListProjection> filteredResults = new ArrayList<>();
+
+        // 5️⃣ Daha önce listeye eklenmiş oyuncuları takip etmek için bir set oluşturuyoruz
+        Set<Integer> usedPlayers = new HashSet<>();
+
+        for (TopListProjection duo : rawDataRivalDuos) {
+            Set<Integer> pair = new HashSet<>(Arrays.asList(duo.getPlayer1Id(), duo.getPlayer2Id()));
+
+            // Eğer bu çift "Legendary Duos" içinde varsa, listeye ekleme
+            if (legendaryPairs.contains(pair)) {
+                continue;
+            }
+
+            // Eğer bu oyunculardan biri zaten başka bir çiftte listede varsa, ekleme
+            if (usedPlayers.contains(duo.getPlayer1Id()) || usedPlayers.contains(duo.getPlayer2Id())) {
+                continue;
+            }
+
+            // Çifti listeye ekle ve oyuncuları işaretle
+            filteredResults.add(duo);
+            usedPlayers.add(duo.getPlayer1Id());
+            usedPlayers.add(duo.getPlayer2Id());
+
+            // İlk 5 sonucu aldıktan sonra döngüyü durdur
+            if (filteredResults.size() >= 5) {
+                break;
+            }
+        }
+
+        return filteredResults;
+    }
+
+
 
     @Cacheable(value = "playerCache")
     @Transactional
