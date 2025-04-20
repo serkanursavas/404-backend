@@ -32,7 +32,7 @@ public class Roster {
     private Integer persona3;
 
     @Column(name = "has_vote", nullable = true)
-    private Boolean hasVote;
+    private Boolean hasVote = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
