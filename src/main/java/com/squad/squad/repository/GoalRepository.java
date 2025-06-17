@@ -52,4 +52,6 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "ORDER BY \n" +
             "    ts.goalCount DESC;", nativeQuery = true)
     List<Object[]> findTopScorersNative();
+
+    long countByPlayerId(Integer playerId);
 }
