@@ -92,7 +92,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<GetAllUsersDTO> getAllUsers() {
-        return userMapper.usersToGetAllUsersDTOs(userRepository.findAll());
+
+        // sessiondan groupid al
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Integer groupId = ((CustomUserDetails) authentication.getPrincipal()).getGroupId();
+
+        return userMapper.usersToGetAllUsersDTOs(userRepository.findAllByGroupId(groupId));
     }
 
     @Override

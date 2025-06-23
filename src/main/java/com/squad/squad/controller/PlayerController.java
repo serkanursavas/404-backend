@@ -4,7 +4,6 @@ import com.squad.squad.dto.DTOvalidators.PlayerDTOValidator;
 import com.squad.squad.dto.TopListProjection;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
-import com.squad.squad.dto.player.GetAllPlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import com.squad.squad.repository.PlayerRepository;
 import org.springframework.http.HttpStatus;

@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "\"user\"") // Çift tırnak içinde yazın
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class User {
+public class User extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

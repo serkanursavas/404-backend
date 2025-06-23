@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "player_persona", uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "persona_id"}))
-public class PlayerPersona {
+public class PlayerPersona extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
