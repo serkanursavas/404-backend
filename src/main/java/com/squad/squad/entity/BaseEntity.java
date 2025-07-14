@@ -22,10 +22,12 @@ public abstract class BaseEntity {
     public void prePersist() {
         if (this.groupId == null) {
             Integer currentTenantId = TenantContext.getTenantId();
-            if (currentTenantId != null) {
+            if (currentTenantId != null && currentTenantId > 0) {
+                // Authenticated user varsa, onun tenant'ını kullan
                 this.groupId = currentTenantId;
             } else {
-                throw new IllegalStateException("No tenant context found when creating entity: " + this.getClass().getSimpleName());
+                // Authentication yoksa (user registration gibi), pending group kullan
+                this.groupId = 0; // Group 0 = Pending/Unassigned
             }
         }
     }

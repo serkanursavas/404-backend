@@ -24,4 +24,6 @@ public interface UserService {
     String login(String username, String password);
 
     void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO);
+
+    boolean isGroupAdmin(Integer userId);
 }

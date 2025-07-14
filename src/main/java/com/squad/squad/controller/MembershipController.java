@@ -1,0 +1,95 @@
+package com.squad.squad.controller;
+
+import com.squad.squad.dto.admin.AdminDecisionDTO;
+import com.squad.squad.dto.membership.MembershipRequestDTO;
+import com.squad.squad.dto.membership.MembershipResponseDTO;
+import com.squad.squad.security.CustomUserDetails;
+import com.squad.squad.service.MembershipService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/memberships")
+public class MembershipController {
+
+    private final MembershipService membershipService;
+
+    @Autowired
+    public MembershipController(MembershipService membershipService) {
+        this.membershipService = membershipService;
+    }
+
+    /**
+     * Grup üyelik başvurusu gönder
+     */
+    @PostMapping("/request")
+    public ResponseEntity<?> requestMembership(@RequestBody MembershipRequestDTO request) {
+        try {
+            String result = membershipService.requestMembership(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Üyelik başvurusu gönderilirken bir hata oluştu.");
+        }
+    }
+
+    /**
+     * Bekleyen üyelik taleplerini getir (Group Admin için)
+     */
+    @GetMapping("/pending")
+    public ResponseEntity<?> getPendingMemberships() {
+        try {
+            List<MembershipResponseDTO> memberships = membershipService.getPendingMemberships();
+            return ResponseEntity.ok(memberships);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Üyelik talebini onayla/reddet (Group Admin için)
+     */
+    @PutMapping("/{membershipId}/process")
+    public ResponseEntity<?> processMembershipRequest(@PathVariable Integer membershipId,
+                                                      @RequestBody AdminDecisionDTO decision) {
+        try {
+            String result = membershipService.processMembershipRequest(membershipId, decision);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Kullanıcının üyeliklerini getir
+     */
+    @GetMapping("/my-memberships")
+    public ResponseEntity<List<MembershipResponseDTO>> getUserMemberships() {
+        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        List<MembershipResponseDTO> memberships = membershipService.getUserMemberships(currentUser.getId());
+        return ResponseEntity.ok(memberships);
+    }
+
+    /**
+     * Grup üyelerini getir (Group Admin için)
+     */
+    @GetMapping("/group/{groupId}/members")
+    public ResponseEntity<?> getGroupMembers(@PathVariable Integer groupId) {
+        try {
+            List<MembershipResponseDTO> members = membershipService.getGroupMembers(groupId);
+            return ResponseEntity.ok(members);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+}

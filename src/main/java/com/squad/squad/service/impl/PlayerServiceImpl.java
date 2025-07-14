@@ -7,17 +7,22 @@ import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import com.squad.squad.entity.Player;
+import com.squad.squad.entity.User;
 import com.squad.squad.exception.PlayerNotFoundException;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.PersonaRepository;
 import com.squad.squad.repository.PlayerPersonaRepository;
 import com.squad.squad.repository.PlayerRepository;
+import com.squad.squad.repository.UserRepository;
+import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.service.PlayerService;
+import com.squad.squad.service.TenantContextService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.text.Collator;
@@ -28,27 +33,55 @@ import java.util.stream.Collectors;
 public class PlayerServiceImpl implements PlayerService {
 
     private final PlayerRepository playerRepository;
-    private final PlayerPersonaRepository playerPersonaRepository;
-    private final PersonaRepository personaRepository;
     private final PlayerMapper playerMapper;
+    private final TenantContextService tenantContextService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerPersonaRepository playerPersonaRepository, PersonaRepository personaRepository, PlayerMapper playerMapper) {
+    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerMapper playerMapper,  TenantContextService tenantContextService, UserRepository userRepository) {
         this.playerRepository = playerRepository;
-        this.playerPersonaRepository = playerPersonaRepository;
-        this.personaRepository = personaRepository;
         this.playerMapper = playerMapper;
+        this.tenantContextService = tenantContextService;
+        this.userRepository = userRepository;
     }
 
     @Override
     public List<PlayerDTO> getAllPlayers() {
+        CustomUserDetails currentUser = getCurrentUser();
 
-        List<Player> players = playerRepository.findAll();
+        List<Player> players;
+
+        // Super Admin ise tüm player'ları göster
+        if ("ROLE_ADMIN".equals(currentUser.getRole())) {
+            players = playerRepository.findAll();
+        } else {
+            // Normal kullanıcı ise sadece kendi grubundaki player'ları göster
+            User user = userRepository.findById(currentUser.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
+
+            Integer userGroupId = user.getGroupId();
+
+            if (userGroupId == 0) {
+                // Kullanıcı henüz onay bekliyor, sadece kendi player'ını göster
+                if (user.getPlayer().getId() != null) {
+                    players = playerRepository.findByPlayerId(user.getPlayer().getId());
+                } else {
+                    players = new ArrayList<>(); // Player'ı yoksa boş liste
+                }
+                System.out.println("User in pending state, showing only own player: " + players.size());
+            } else {
+                // Onaylanmış kullanıcı, grubundaki tüm player'ları göster
+                players = playerRepository.findByGroupId(userGroupId);
+                System.out.println("User in approved group " + userGroupId + ", showing " + players.size() + " players");
+            }
+        }
+
         Collator trCollator = Collator.getInstance(new Locale("tr", "TR"));
 
         players.sort(Comparator
                 .comparing(Player::getName, trCollator)
                 .thenComparing(Player::getSurname, trCollator));
+
         return players.stream()
                 .map(player -> {
                     PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
@@ -73,15 +106,23 @@ public class PlayerServiceImpl implements PlayerService {
                     List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId());
                     playerDTO.setLast5GameRating(last5GameRating);
 
-
                     return playerDTO;
                 })
                 .toList();
     }
 
+    // Helper method
+    private CustomUserDetails getCurrentUser() {
+        return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
     @Override
     public PlayerDTO getPlayerById(Integer id) {
-        Player player = playerRepository.findById(id)
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new PlayerNotFoundException("User not found with id: " + id));
+
+        Player player = playerRepository.findById(user.getPlayer().getId())
                 .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));
 
 

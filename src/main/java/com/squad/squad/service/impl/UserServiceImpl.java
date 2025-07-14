@@ -1,13 +1,17 @@
 package com.squad.squad.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.squad.squad.dto.user.*;
+import com.squad.squad.entity.GroupMembership;
 import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.mapper.UserMapper;
+import com.squad.squad.repository.GroupMembershipRepository;
 import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.security.JwtUtils;
+import com.squad.squad.service.TenantContextService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,16 +41,20 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
+    private final GroupMembershipRepository membershipRepository;
+    private final TenantContextService tenantContextService;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                           PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserMapper userMapper) {
+                           PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserMapper userMapper, GroupMembershipRepository membershipRepository, TenantContextService tenantContextService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userMapper = userMapper;
+        this.membershipRepository = membershipRepository;
+        this.tenantContextService = tenantContextService;
     }
 
     @Override
@@ -68,19 +76,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public String createUser(UserCreateRequestDTO user) {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User savedUser = new User();
         savedUser.setUsername(user.getUsername().toLowerCase());
         savedUser.setPassword(encodedPassword);
+        savedUser.setGroupId(0); // Pending group
 
         Player player = new Player();
         player.setName(user.getPlayerCreateDTO().getName());
         player.setSurname(user.getPlayerCreateDTO().getSurname());
         player.setPosition(user.getPlayerCreateDTO().getPosition());
         player.setFoot(user.getPlayerCreateDTO().getFoot());
+        player.setGroupId(0); // Pending group
 
         player.setUser(savedUser);
         savedUser.setPlayer(player);
@@ -92,12 +101,37 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<GetAllUsersDTO> getAllUsers() {
+        CustomUserDetails currentUser = getCurrentUser();
+        Integer userGroupId = currentUser.getGroupId();
 
-        // sessiondan groupid al
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer groupId = ((CustomUserDetails) authentication.getPrincipal()).getGroupId();
+        System.out.println("Group ID from session: " + userGroupId);
 
-        return userMapper.usersToGetAllUsersDTOs(userRepository.findAllByGroupId(groupId));
+        if ("ROLE_ADMIN".equals(currentUser.getRole())) {
+            // Super Admin tüm kullanıcıları görür
+            return userMapper.usersToGetAllUsersDTOs(userRepository.findAll());
+        } else {
+            if (userGroupId == 0) {
+                // Kullanıcı henüz onay bekliyor, sadece kendini görür
+                User currentUserEntity = userRepository.findById(currentUser.getId()).orElse(null);
+                if (currentUserEntity != null) {
+                    return userMapper.usersToGetAllUsersDTOs(List.of(currentUserEntity));
+                }
+                return new ArrayList<>();
+            } else {
+                // Sadece aynı gruptaki kullanıcıları getir ve manuel filtrele
+                List<User> allUsers = userRepository.findAll();
+                List<User> filteredUsers = allUsers.stream()
+                        .filter(user -> userGroupId.equals(user.getGroupId()))
+                        .collect(Collectors.toList());
+
+                System.out.println("Found " + filteredUsers.size() + " users in group " + userGroupId);
+                return userMapper.usersToGetAllUsersDTOs(filteredUsers);
+            }
+        }
+    }
+
+    private CustomUserDetails getCurrentUser() {
+        return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
     @Override
@@ -167,5 +201,14 @@ public class UserServiceImpl implements UserService {
         user.setRole(roleDTO.getRole().toUpperCase());
 
         userRepository.save(user);
+    }
+
+    @Override
+    public boolean isGroupAdmin(Integer userId) {
+        return membershipRepository.existsByUserIdAndStatusAndRole(
+                userId,
+                GroupMembership.MembershipStatus.APPROVED,
+                GroupMembership.MembershipRole.GROUP_ADMIN
+        );
     }
 }

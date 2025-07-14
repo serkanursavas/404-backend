@@ -9,6 +9,7 @@ import com.squad.squad.dto.TopListsDTO;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.squad.squad.entity.Player;
@@ -19,6 +20,12 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     List<Player> findByActive(boolean active);
 
     Optional<Player> findByIdAndActive(Integer id, boolean active);
+
+    @Query("SELECT p FROM Player p WHERE p.groupId = :groupId AND p.groupId != 0")
+    List<Player> findByGroupId(@Param("groupId") Integer groupId);
+
+    @Query("SELECT p FROM Player p WHERE p.id = :playerId")
+    List<Player> findByPlayerId(@Param("playerId") Integer playerId);
 
     @Query(value = "with TopRated as (SELECT p.id AS playerId, p.name, p.surname, p.rating\n" +
             "                  FROM player p\n" +

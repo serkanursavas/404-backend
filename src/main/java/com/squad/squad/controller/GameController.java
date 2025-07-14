@@ -93,15 +93,17 @@ public class GameController {
         if (latestGame != null) {
             return ResponseEntity.ok(latestGame);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No upcoming matches available");
+            return ResponseEntity.ok("No upcoming matches available");
         }
     }
 
     @GetMapping("/getMvp")
-    public ResponseEntity<MvpDTO> getMvpPlayer() {
+    public ResponseEntity<Object> getMvpPlayer() {
         Optional<MvpDTO> mvpPlayer = gameService.getMvpPlayer();
-        return mvpPlayer.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.noContent().build());
+
+        return mvpPlayer
+                .map(player -> ResponseEntity.ok((Object) player))
+                .orElseGet(() -> ResponseEntity.ok("No MVP player found"));
     }
 
     @PutMapping("/updateWeather/{id}")

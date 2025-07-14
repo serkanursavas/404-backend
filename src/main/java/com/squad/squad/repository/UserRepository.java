@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.squad.squad.entity.User;
@@ -19,5 +20,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByUsername(String name);
 
-    List<User>findAllByGroupId(Integer groupId);
+
+    // Eğer RLS problemi varsa, explicit filtering yapın
+    @Query(value = "SELECT * FROM public.\"user\" WHERE group_id = :groupId AND group_id != 0", nativeQuery = true)
+    List<User> findAllByGroupId(Integer groupId);
 }

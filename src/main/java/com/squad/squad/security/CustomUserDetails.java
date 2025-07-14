@@ -63,4 +63,13 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public String getRole() {
+        // Authorities'den role'u çıkar
+        return getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse("USER"); // Default role
+    }
+
 }

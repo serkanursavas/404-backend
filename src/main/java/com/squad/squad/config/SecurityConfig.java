@@ -69,6 +69,8 @@ public class SecurityConfig {
                                 .requestMatchers("/error").permitAll()
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                                 .requestMatchers("/api/users/createUser", "/api/users/login").permitAll()
+                                .requestMatchers("/api/groups/public/**").permitAll()
+                                .requestMatchers("/api/groups/approved").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling

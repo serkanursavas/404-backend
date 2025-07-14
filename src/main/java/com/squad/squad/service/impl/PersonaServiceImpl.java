@@ -67,7 +67,6 @@ public class PersonaServiceImpl implements PersonaService {
                 // Persona sayısını artır
                 playerPersona.setCount(playerPersona.getCount() + 1);
                 if (personaId != 68){
-                    System.out.println("TEST 68 degilse");
                     playerPersonaRepository.save(playerPersona);
                 }
                 playerPersonaRepository.flush();

@@ -1,6 +1,14 @@
 package com.squad.squad.controller;
 
+import com.squad.squad.config.RLSHelper;
+import com.squad.squad.context.TenantContext;
 import com.squad.squad.dto.user.*;
+import com.squad.squad.entity.GroupMembership;
+import com.squad.squad.repository.GroupMembershipRepository;
+import com.squad.squad.security.CustomUserDetails;
+import com.squad.squad.util.RLSContextManager;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
@@ -17,10 +25,16 @@ public class UserController {
 
     private final UserService userService;
     private final UserDTOValidator userDTOValidator;
+    private final RLSHelper rlsHelper;
+    private final RLSContextManager rlsContextManager;
+    private final GroupMembershipRepository groupMembershipRepository;
 
-    public UserController(UserService userService, UserDTOValidator userDTOValidator) {
+    public UserController(UserService userService, UserDTOValidator userDTOValidator, RLSHelper rlsHelper, RLSContextManager rlsContextManager, GroupMembershipRepository groupMembershipRepository) {
         this.userService = userService;
         this.userDTOValidator = userDTOValidator;
+        this.rlsHelper = rlsHelper;
+        this.rlsContextManager = rlsContextManager;
+        this.groupMembershipRepository = groupMembershipRepository;
     }
 
     @GetMapping("/admin/getAllUsers")
@@ -30,22 +44,42 @@ public class UserController {
     }
 
     @PostMapping("/createUser")
+    @Transactional
     public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDTO user) {
-        List<String> errors = userDTOValidator.validate(user);
-        if (!errors.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errors);
-        }
+        try {
 
-        boolean userExists = userService.existsByUsername(user.getUsername());
-        if (userExists) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Username already exists. Please choose a different username.");
-        }
+            // Context'i Group 0 için set et (pending users)
+            TenantContext.setTenantId(0);
+            rlsContextManager.setTenantContext(0);
 
-        String token = userService.createUser(user);
-        AuthResponseDTO response = new AuthResponseDTO();
-        response.setToken(token);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            List<String> errors = userDTOValidator.validate(user);
+            if (!errors.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errors);
+            }
+
+            boolean userExists = userService.existsByUsername(user.getUsername());
+            if (userExists) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Username already exists. Please choose a different username.");
+            }
+
+            String token = userService.createUser(user);
+            AuthResponseDTO response = new AuthResponseDTO();
+            response.setToken(token);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("User creation failed: " + e.getMessage());
+        } finally {
+            // Context temizle
+            try {
+                TenantContext.clear();
+                rlsContextManager.clearContext();
+            } catch (Exception e) {
+            }
+        }
     }
 
     @PostMapping("/login")
@@ -106,5 +140,21 @@ public class UserController {
     public ResponseEntity<String> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
         return ResponseEntity.ok("User deleted successfully with username: " + username.toLowerCase());
+    }
+
+    @GetMapping("/is-group-admin")
+    public ResponseEntity<Boolean> isGroupAdmin() {
+        try {
+            CustomUserDetails currentUser = getCurrentUser();
+            boolean isGroupAdmin = userService.isGroupAdmin(currentUser.getId());
+            return ResponseEntity.ok(isGroupAdmin);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+        }
+    }
+
+    // Helper method
+    private CustomUserDetails getCurrentUser() {
+        return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }
