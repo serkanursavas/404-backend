@@ -7,6 +7,7 @@ import com.squad.squad.dto.user.UserRoleUpdateRequestDTO;
 import com.squad.squad.dto.user.UserUpdateRequestDTO;
 import com.squad.squad.enums.Role;
 import com.squad.squad.enums.TeamColor;
+import com.squad.squad.entity.GroupMembership;
 import org.springframework.stereotype.Component;
 
 import com.squad.squad.dto.user.UserCreateRequestDTO;
@@ -65,7 +66,8 @@ public class UserDTOValidator {
             errors.add("Password must be at least 6 characters long and include uppercase, lowercase, and a number.");
         }
 
-        // Password confirmation validation (Check if passwords match only if both fields are provided)
+        // Password confirmation validation (Check if passwords match only if both
+        // fields are provided)
         if (user.getPassword() != null && user.getPasswordAgain() != null &&
                 !user.getPassword().equals(user.getPasswordAgain())) {
             errors.add("Passwords must match.");
@@ -81,8 +83,8 @@ public class UserDTOValidator {
             errors.add("Role cannot be empty.");
         } else {
             try {
-                Role.fromString(user.getRole());
-            } catch (RuntimeException e) {
+                GroupMembership.MembershipRole.valueOf(user.getRole().toUpperCase());
+            } catch (IllegalArgumentException e) {
                 errors.add("Invalid role: " + user.getRole());
             }
         }
