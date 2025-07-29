@@ -18,6 +18,7 @@ import java.util.ArrayList;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,9 +31,9 @@ public class MembershipServiceImpl implements MembershipService {
 
     @Autowired
     public MembershipServiceImpl(GroupMembershipRepository membershipRepository,
-                                 GroupRepository groupRepository,
-                                 UserRepository userRepository,
-                                 TenantContextService tenantContextService) {
+            GroupRepository groupRepository,
+            UserRepository userRepository,
+            TenantContextService tenantContextService) {
         this.membershipRepository = membershipRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
@@ -98,12 +99,11 @@ public class MembershipServiceImpl implements MembershipService {
         // Super Admin için RLS bypass - tenant context'i null yap
         Integer originalTenant = tenantContextService.getCurrentTenantId();
         try {
-//            tenantContextService.clearTenantContext();
+            // tenantContextService.clearTenantContext();
             tenantContextService.setSuperAdminContext(); // Super Admin context'i set et
 
             // Tüm bekleyen üyelik taleplerini getir
-            List<GroupMembership> allPendingMemberships =
-                    membershipRepository.findByStatusNative("PENDING");
+            List<GroupMembership> allPendingMemberships = membershipRepository.findByStatusNative("PENDING");
 
             return allPendingMemberships.stream()
                     .map(this::convertToMembershipResponseDTO)
@@ -117,23 +117,25 @@ public class MembershipServiceImpl implements MembershipService {
      * Group Admin için kendi gruplarındaki bekleyen üyelik taleplerini getir
      */
     private List<MembershipResponseDTO> getPendingMembershipsForGroupAdmin(CustomUserDetails currentUser) {
-        // Kullanıcının admin olduğu grupları bul
-        List<Group> adminGroups = groupRepository.findByGroupAdmin(currentUser.getId());
+        // Kullanıcının GROUP_ADMIN rolüne sahip olduğu grupları bul
+        List<GroupMembership> groupAdminMemberships = membershipRepository.findByUserIdAndRoleAndStatus(
+                currentUser.getId(), GroupMembership.MembershipRole.GROUP_ADMIN,
+                GroupMembership.MembershipStatus.APPROVED);
 
-        if (adminGroups.isEmpty()) {
+        if (groupAdminMemberships.isEmpty()) {
             throw new InvalidCredentialsException("Hiçbir grubun admini değilsiniz.");
         }
 
         List<MembershipResponseDTO> allPendingMemberships = new ArrayList<>();
 
         // Her grup için ayrı ayrı context değiştirerek sorgula
-        for (Group group : adminGroups) {
+        for (GroupMembership adminMembership : groupAdminMemberships) {
             Integer originalTenant = tenantContextService.getCurrentTenantId();
             try {
-                tenantContextService.setTenantContext(group.getId());
+                tenantContextService.setTenantContext(adminMembership.getGroupId());
 
-                List<GroupMembership> groupPendingMemberships =
-                        membershipRepository.findPendingMembershipsByGroupId(group.getId());
+                List<GroupMembership> groupPendingMemberships = membershipRepository
+                        .findPendingMembershipsByGroupId(adminMembership.getGroupId());
 
                 List<MembershipResponseDTO> groupMemberships = groupPendingMemberships.stream()
                         .map(this::convertToMembershipResponseDTO)
@@ -166,10 +168,11 @@ public class MembershipServiceImpl implements MembershipService {
     /**
      * Super Admin için üyelik talebini işle
      */
-    private String processMembershipForSuperAdmin(Integer membershipId, AdminDecisionDTO decision, CustomUserDetails currentUser) {
+    private String processMembershipForSuperAdmin(Integer membershipId, AdminDecisionDTO decision,
+            CustomUserDetails currentUser) {
         Integer originalTenant = tenantContextService.getCurrentTenantId();
         try {
-//            tenantContextService.clearTenantContext(); // RLS bypass
+            // tenantContextService.clearTenantContext(); // RLS bypass
             tenantContextService.setSuperAdminContext(); // Super Admin context'i set et
 
             GroupMembership membership = membershipRepository.findById(membershipId)
@@ -189,7 +192,8 @@ public class MembershipServiceImpl implements MembershipService {
     /**
      * Group Admin için üyelik talebini işle
      */
-    private String processMembershipForGroupAdmin(Integer membershipId, AdminDecisionDTO decision, CustomUserDetails currentUser) {
+    private String processMembershipForGroupAdmin(Integer membershipId, AdminDecisionDTO decision,
+            CustomUserDetails currentUser) {
         // Önce membership'i bul
         GroupMembership membership = null;
         Integer targetGroupId = null;
@@ -240,7 +244,8 @@ public class MembershipServiceImpl implements MembershipService {
     /**
      * Membership kararını işle (ortak method)
      */
-    private String processMembershipDecision(GroupMembership membership, AdminDecisionDTO decision, CustomUserDetails currentUser) {
+    private String processMembershipDecision(GroupMembership membership, AdminDecisionDTO decision,
+            CustomUserDetails currentUser) {
         if ("APPROVE".equalsIgnoreCase(decision.getDecision())) {
             membership.setStatus(GroupMembership.MembershipStatus.APPROVED);
             membership.setApprovedAt(LocalDateTime.now());
@@ -269,7 +274,6 @@ public class MembershipServiceImpl implements MembershipService {
             throw new IllegalArgumentException("Geçersiz karar. 'APPROVE' veya 'REJECT' olmalı.");
         }
     }
-
 
     /**
      * Kullanıcıyı yeni gruba transfer et
@@ -367,6 +371,7 @@ public class MembershipServiceImpl implements MembershipService {
         dto.setUserId(membership.getUserId());
         dto.setGroupId(membership.getGroupId());
         dto.setStatus(membership.getStatus().toString());
+        dto.setRole(membership.getRole().toString());
         dto.setRequestedAt(membership.getRequestedAt());
         dto.setApprovedAt(membership.getApprovedAt());
 
