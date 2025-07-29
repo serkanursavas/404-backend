@@ -1,5 +1,6 @@
 package com.squad.squad.controller;
 
+import com.squad.squad.dto.admin.AdminDecisionDTO;
 import com.squad.squad.dto.membership.MembershipResponseDTO;
 import com.squad.squad.service.MembershipService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,22 @@ public class GroupAdminController {
         try {
             List<MembershipResponseDTO> members = membershipService.getGroupMembers(groupId);
             return ResponseEntity.ok(members);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Üyelik talebini onayla/reddet (Group Admin için)
+     */
+    @PutMapping("/{membershipId}/process")
+    public ResponseEntity<?> processMembershipRequest(@PathVariable Integer membershipId,
+            @RequestBody AdminDecisionDTO decision) {
+        try {
+            String result = membershipService.processMembershipRequest(membershipId, decision);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
