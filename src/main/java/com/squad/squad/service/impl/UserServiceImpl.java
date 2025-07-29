@@ -46,7 +46,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                           PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserMapper userMapper, GroupMembershipRepository membershipRepository, TenantContextService tenantContextService) {
+            PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils,
+            UserMapper userMapper, GroupMembershipRepository membershipRepository,
+            TenantContextService tenantContextService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
@@ -65,6 +67,21 @@ public class UserServiceImpl implements UserService {
 
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             Integer userId = userDetails.getId();
+            String userRole = userDetails.getRole();
+
+            // Kullanıcının grup ID'sini al ve TenantContext'i ayarla
+            Integer userGroupId = userDetails.getGroupId();
+            if ("ROLE_ADMIN".equals(userRole)) {
+                // Süper admin ise, RLS'yi atlamak için 0'ı kullan (PostgreSQL'de 'SUPER_ADMIN'
+                // olarak ayarlanacak)
+                tenantContextService.setSuperAdminContext(); // setSuperAdminContext çağrıldı
+            } else if (userGroupId != null) {
+                // Normal kullanıcı veya grup yöneticisi ise, kendi grup ID'sini kullan
+                tenantContextService.setTenantContext(userGroupId); // setTenantContext çağrıldı
+            } else {
+                // Grup ID'si null ise (veya pending durumdaysa), varsayılan olarak 0'ı kullan
+                tenantContextService.setTenantContext(0); // Varsayılan veya pending grubu için 0
+            }
 
             return jwtUtils.generateToken(userId, username,
                     authentication.getAuthorities().stream()
@@ -102,32 +119,63 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<GetAllUsersDTO> getAllUsers() {
         CustomUserDetails currentUser = getCurrentUser();
-        Integer userGroupId = currentUser.getGroupId();
+        Integer currentUserGroupId = currentUser.getGroupId();
 
-        System.out.println("Group ID from session: " + userGroupId);
-
+        List<User> users;
         if ("ROLE_ADMIN".equals(currentUser.getRole())) {
-            // Super Admin tüm kullanıcıları görür
-            return userMapper.usersToGetAllUsersDTOs(userRepository.findAll());
+            // Super Admin tüm kullanıcıları görür.
+            users = userRepository.findAll();
         } else {
-            if (userGroupId == 0) {
+            if (currentUserGroupId == 0) {
                 // Kullanıcı henüz onay bekliyor, sadece kendini görür
                 User currentUserEntity = userRepository.findById(currentUser.getId()).orElse(null);
                 if (currentUserEntity != null) {
-                    return userMapper.usersToGetAllUsersDTOs(List.of(currentUserEntity));
+                    users = List.of(currentUserEntity);
+                } else {
+                    users = new ArrayList<>();
                 }
-                return new ArrayList<>();
             } else {
-                // Sadece aynı gruptaki kullanıcıları getir ve manuel filtrele
-                List<User> allUsers = userRepository.findAll();
-                List<User> filteredUsers = allUsers.stream()
-                        .filter(user -> userGroupId.equals(user.getGroupId()))
-                        .collect(Collectors.toList());
-
-                System.out.println("Found " + filteredUsers.size() + " users in group " + userGroupId);
-                return userMapper.usersToGetAllUsersDTOs(filteredUsers);
+                // Grup yöneticisi veya normal kullanıcı ise, sadece kendi grubundaki
+                // kullanıcıları getir
+                users = userRepository.findAllByGroupId(currentUserGroupId);
             }
         }
+
+        List<GetAllUsersDTO> userDTOs = userMapper.usersToGetAllUsersDTOs(users);
+
+        // Her bir DTO için groupRole ve groupId değerlerini doldur
+        for (GetAllUsersDTO dto : userDTOs) {
+            // Kullanıcının kendi grubundaki üyeliğini bul (adminGroupId yerine dto'nun
+            // kendi groupId'si)
+            // Eğer süper admin ise ve RLS'yi atlıyorsak, o kullanıcının ana grubunu
+            // kullanırız.
+            Integer targetUserGroupId = dto.getGroupId();
+
+            // Süper admin durumu: Kendi grubunda olmayan kullanıcılar için groupRole boş
+            // bırakılabilir
+            // veya sistemdeki ilgili group_membership bilgisi çekilebilir.
+            // Şimdilik, eğer current user admin ise ve target user'ın kendi group_id'si
+            // varsa o group_id ile sorgula.
+            // Değilse, current user'ın group_id'si ile sorgula.
+            Integer effectiveGroupIdForMembership = ("ROLE_ADMIN".equals(currentUser.getRole())
+                    && targetUserGroupId != null)
+                            ? targetUserGroupId
+                            : currentUserGroupId;
+
+            if (effectiveGroupIdForMembership != null && effectiveGroupIdForMembership != 0) { // Grup ID 0 ise pending
+                                                                                               // user veya super admin
+                                                                                               // context'i
+                membershipRepository.findByUserIdAndGroupIdAndStatus(
+                        dto.getId(),
+                        effectiveGroupIdForMembership,
+                        GroupMembership.MembershipStatus.APPROVED)
+                        .ifPresent(membership -> dto.setGroupRole(membership.getRole().name()));
+            } else if (effectiveGroupIdForMembership == 0) {
+                // Eğer kullanıcı pending ise (groupId == 0), grup rolü yoktur, boş bırak
+                dto.setGroupRole(null);
+            }
+        }
+        return userDTOs;
     }
 
     private CustomUserDetails getCurrentUser() {
@@ -197,10 +245,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO) {
-        User user = getUserByUsername(username);
-        user.setRole(roleDTO.getRole().toUpperCase());
+        // Hedef kullanıcıyı bul
+        User targetUser = getUserByUsername(username);
 
-        userRepository.save(user);
+        // Mevcut kullanıcının (isteği yapan adminin) group_id'sini al
+        // Bu group_id, RLS tarafından filtrelenen verinin scope'unu belirler.
+        // Bu nedenle, adminin sadece kendi grubundaki kullanıcıların rollerini
+        // değiştirebilmesi gerekir.
+        CustomUserDetails currentUser = getCurrentUser();
+        Integer adminGroupId = currentUser.getGroupId();
+
+        // Hedef kullanıcının kendi grubundaki GroupMembership kaydını bul
+        GroupMembership groupMembership = membershipRepository
+                .findByUserIdAndGroupIdAndStatus(targetUser.getId(), adminGroupId,
+                        GroupMembership.MembershipStatus.APPROVED)
+                .orElseThrow(() -> new RuntimeException(
+                        "Group membership not found or not approved for user in current group."));
+
+        // group_memberships.role alanını güncelle
+        groupMembership.setRole(GroupMembership.MembershipRole.valueOf(roleDTO.getRole().toUpperCase()));
+        membershipRepository.save(groupMembership);
+
+        // user.role alanını bu UI üzerinden güncellemiyoruz.
+        // user.setRole(roleDTO.getRole().toUpperCase()); // Bu satır
+        // kaldırıldı/yorumlandı
+        // userRepository.save(targetUser); // Sadece groupMembership güncellendiği için
+        // bu kaydetme işlemi de gerekli değil
     }
 
     @Override
@@ -208,7 +278,6 @@ public class UserServiceImpl implements UserService {
         return membershipRepository.existsByUserIdAndStatusAndRole(
                 userId,
                 GroupMembership.MembershipStatus.APPROVED,
-                GroupMembership.MembershipRole.GROUP_ADMIN
-        );
+                GroupMembership.MembershipRole.GROUP_ADMIN);
     }
 }

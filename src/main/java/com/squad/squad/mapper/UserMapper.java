@@ -15,7 +15,9 @@ public interface UserMapper {
     @Mapping(source = "player", target = "player")
     @Mapping(source = "createdAt", target = "createdAt")
     UserResponseDTO userToUserResponseDTO(User user);
-    
+
     @Mapping(source = "createdAt", target = "createdAt")
+    @Mapping(source = "role", target = "systemRole") // user.role -> systemRole
+    @Mapping(source = "groupId", target = "groupId") // user.groupId -> groupId
     List<GetAllUsersDTO> usersToGetAllUsersDTOs(List<User> user);
 }
