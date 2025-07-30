@@ -53,4 +53,12 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
 
         boolean existsByUserIdAndStatusAndRole(Integer userId, GroupMembership.MembershipStatus status,
                         GroupMembership.MembershipRole role);
+
+        // Security check için: Belirli bir kullanıcının belirli bir rol ve statüdeki üyeliklerini getir
+        List<GroupMembership> findByUserIdAndStatusAndRole(Integer userId, GroupMembership.MembershipStatus status,
+                        GroupMembership.MembershipRole role);
+
+        // Security check için: Kullanıcının belirli grubta belirli rol ve statüde üyeliği var mı?
+        boolean existsByUserIdAndGroupIdAndStatusAndRole(Integer userId, Integer groupId,
+                        GroupMembership.MembershipStatus status, GroupMembership.MembershipRole role);
 }
