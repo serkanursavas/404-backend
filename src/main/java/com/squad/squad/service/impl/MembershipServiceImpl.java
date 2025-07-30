@@ -408,4 +408,97 @@ public class MembershipServiceImpl implements MembershipService {
 
         return dto;
     }
+
+    // Security check methods for PreAuthorize annotations
+    @Override
+    public boolean isUserGroupAdmin(Object userPrincipal) {
+        if (!(userPrincipal instanceof CustomUserDetails)) {
+            return false;
+        }
+
+        CustomUserDetails user = (CustomUserDetails) userPrincipal;
+
+        // Super Admin her zaman erişebilir
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            return true;
+        }
+
+        // Kullanıcının GROUP_ADMIN rolüne sahip olduğu grupları kontrol et
+        List<GroupMembership> adminMemberships = membershipRepository.findByUserIdAndStatusAndRole(
+                user.getId(), GroupMembership.MembershipStatus.APPROVED, GroupMembership.MembershipRole.GROUP_ADMIN);
+
+        return !adminMemberships.isEmpty();
+    }
+
+    @Override
+    public boolean isUserAdminOfGroup(Object userPrincipal, Integer groupId) {
+        if (!(userPrincipal instanceof CustomUserDetails)) {
+            return false;
+        }
+
+        CustomUserDetails user = (CustomUserDetails) userPrincipal;
+
+        // Super Admin her zaman erişebilir
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            return true;
+        }
+
+        // Belirli grubun adminliğini kontrol et
+        Integer originalTenant = tenantContextService.getCurrentTenantId();
+        try {
+            tenantContextService.setTenantContext(groupId);
+
+            // Grup admin kontrolü - groups tablosundan
+            Group group = groupRepository.findById(groupId).orElse(null);
+            if (group != null && group.getGroupAdmin().equals(user.getId())) {
+                return true;
+            }
+
+            // Membership üzerinden admin kontrolü
+            return membershipRepository.existsByUserIdAndGroupIdAndStatusAndRole(
+                    user.getId(), groupId, GroupMembership.MembershipStatus.APPROVED, 
+                    GroupMembership.MembershipRole.GROUP_ADMIN);
+
+        } finally {
+            tenantContextService.setTenantContext(originalTenant);
+        }
+    }
+
+    @Override
+    public boolean canUserProcessMembership(Object userPrincipal, Integer membershipId) {
+        if (!(userPrincipal instanceof CustomUserDetails)) {
+            return false;
+        }
+
+        CustomUserDetails user = (CustomUserDetails) userPrincipal;
+
+        // Super Admin her zaman erişebilir
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            return true;
+        }
+
+        // Membership'i bulup hangi gruba ait olduğunu kontrol et
+        Integer originalTenant = tenantContextService.getCurrentTenantId();
+        try {
+            // Önce kullanıcının admin olduğu grupları bul
+            List<GroupMembership> adminMemberships = membershipRepository.findByUserIdAndStatusAndRole(
+                    user.getId(), GroupMembership.MembershipStatus.APPROVED, GroupMembership.MembershipRole.GROUP_ADMIN);
+
+            // Her admin grubunda membership'i ara
+            for (GroupMembership adminMembership : adminMemberships) {
+                tenantContextService.setTenantContext(adminMembership.getGroupId());
+
+                GroupMembership targetMembership = membershipRepository.findById(membershipId).orElse(null);
+                if (targetMembership != null && 
+                    targetMembership.getGroupId().equals(adminMembership.getGroupId())) {
+                    return true;
+                }
+            }
+
+            return false;
+
+        } finally {
+            tenantContextService.setTenantContext(originalTenant);
+        }
+    }
 }

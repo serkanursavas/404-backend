@@ -26,4 +26,7 @@ public interface UserService {
     void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO);
 
     boolean isGroupAdmin(Integer userId);
+
+    // Security check methods
+    boolean canUserAccessUserData(Object userPrincipal, String targetUsername);
 }

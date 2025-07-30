@@ -280,4 +280,36 @@ public class UserServiceImpl implements UserService {
                 GroupMembership.MembershipStatus.APPROVED,
                 GroupMembership.MembershipRole.GROUP_ADMIN);
     }
+
+    @Override
+    public boolean canUserAccessUserData(Object userPrincipal, String targetUsername) {
+        if (!(userPrincipal instanceof CustomUserDetails)) {
+            return false;
+        }
+
+        CustomUserDetails currentUser = (CustomUserDetails) userPrincipal;
+
+        // Super Admin her zaman erişebilir
+        if ("ROLE_ADMIN".equals(currentUser.getRole())) {
+            return true;
+        }
+
+        // Kendi verilerine erişim
+        if (currentUser.getUsername().equals(targetUsername)) {
+            return true;
+        }
+
+        // Aynı grup üyelerine erişim kontrolü (Grup adminleri için)
+        if (isGroupAdmin(currentUser.getId())) {
+            try {
+                User targetUser = getUserByUsername(targetUsername);
+                return currentUser.getGroupId().equals(targetUser.getGroupId());
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
 }
