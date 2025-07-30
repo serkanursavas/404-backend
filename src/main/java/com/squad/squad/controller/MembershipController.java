@@ -8,6 +8,7 @@ import com.squad.squad.service.MembershipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/memberships")
+@PreAuthorize("isAuthenticated()")
 public class MembershipController {
 
     private final MembershipService membershipService;
@@ -26,8 +28,10 @@ public class MembershipController {
 
     /**
      * Grup üyelik başvurusu gönder
+     * Sadece authenticated kullanıcılar grup başvurusu yapabilir
      */
     @PostMapping("/request")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> requestMembership(@RequestBody MembershipRequestDTO request) {
         try {
             String result = membershipService.requestMembership(request);
@@ -42,8 +46,10 @@ public class MembershipController {
 
     /**
      * Bekleyen üyelik taleplerini getir (Group Admin için)
+     * Sadece grup adminleri veya super adminler erişebilir
      */
     @GetMapping("/pending")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @membershipService.isUserGroupAdmin(authentication.principal)")
     public ResponseEntity<?> getPendingMemberships() {
         try {
             List<MembershipResponseDTO> memberships = membershipService.getPendingMemberships();
@@ -55,8 +61,10 @@ public class MembershipController {
 
     /**
      * Üyelik talebini onayla/reddet (Group Admin için)
+     * Sadece ilgili grubun adminleri veya super adminler erişebilir
      */
     @PutMapping("/{membershipId}/process")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @membershipService.canUserProcessMembership(authentication.principal, #membershipId)")
     public ResponseEntity<?> processMembershipRequest(@PathVariable Integer membershipId,
                                                       @RequestBody AdminDecisionDTO decision) {
         try {
@@ -71,8 +79,10 @@ public class MembershipController {
 
     /**
      * Kullanıcının üyeliklerini getir
+     * Sadece authenticated kullanıcılar kendi üyeliklerini görebilir
      */
     @GetMapping("/my-memberships")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<MembershipResponseDTO>> getUserMemberships() {
         CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
@@ -82,8 +92,10 @@ public class MembershipController {
 
     /**
      * Grup üyelerini getir (Group Admin için)
+     * Sadece o grubun adminleri veya super adminler erişebilir
      */
     @GetMapping("/group/{groupId}/members")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @membershipService.isUserAdminOfGroup(authentication.principal, #groupId)")
     public ResponseEntity<?> getGroupMembers(@PathVariable Integer groupId) {
         try {
             List<MembershipResponseDTO> members = membershipService.getGroupMembers(groupId);

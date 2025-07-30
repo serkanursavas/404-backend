@@ -7,6 +7,7 @@ import com.squad.squad.entity.GroupMembership;
 import com.squad.squad.repository.GroupMembershipRepository;
 import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.util.RLSContextManager;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/admin/getAllUsers")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<List<GetAllUsersDTO>> getAllUsers() {
         List<GetAllUsersDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
@@ -91,12 +93,14 @@ public class UserController {
     }
 
     @PostMapping("/admin/resetPassword/{username}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> resetPassword(@PathVariable String username) {
         String result = userService.resetPassword(username);
         return ResponseEntity.ok(result);
     }
 
     @PutMapping("/updateProfile/{username}")
+    @PreAuthorize("isAuthenticated() and @userService.canUserAccessUserData(authentication.principal, #username)")
     public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserUpdateRequestDTO updatedUser) {
         List<String> errors = userDTOValidator.validateUpdate(updatedUser);
         if (!errors.isEmpty()) {
@@ -120,6 +124,7 @@ public class UserController {
     }
 
     @PutMapping("/admin/updateUserRole/{username}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserRoleUpdateRequestDTO updatedRole) {
         List<String> errors = userDTOValidator.validateRoleUpdate(updatedRole);
         if (!errors.isEmpty()) {
@@ -137,12 +142,14 @@ public class UserController {
     }
 
     @DeleteMapping("/admin/deleteUser/{username}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
         return ResponseEntity.ok("User deleted successfully with username: " + username.toLowerCase());
     }
 
     @GetMapping("/is-group-admin")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Boolean> isGroupAdmin() {
         try {
             CustomUserDetails currentUser = getCurrentUser();
