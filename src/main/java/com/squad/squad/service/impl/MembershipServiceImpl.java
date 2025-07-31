@@ -198,23 +198,24 @@ public class MembershipServiceImpl implements MembershipService {
         GroupMembership membership = null;
         Integer targetGroupId = null;
 
-        // Kullanıcının admin olduğu grupları bul
-        List<Group> adminGroups = groupRepository.findByGroupAdmin(currentUser.getId());
+        // Kullanıcının GROUP_ADMIN rolüne sahip olduğu grupları bul
+        List<GroupMembership> adminMemberships = membershipRepository.findByUserIdAndStatusAndRole(
+                currentUser.getId(), GroupMembership.MembershipStatus.APPROVED, GroupMembership.MembershipRole.GROUP_ADMIN);
 
-        if (adminGroups.isEmpty()) {
+        if (adminMemberships.isEmpty()) {
             throw new InvalidCredentialsException("Hiçbir grubun admini değilsiniz.");
         }
 
-        // Membership'i adminlik yaptığı gruplar arasında ara
-        for (Group group : adminGroups) {
+        // Membership'i admin olduğu gruplar arasında ara
+        for (GroupMembership adminMembership : adminMemberships) {
             Integer originalTenant = tenantContextService.getCurrentTenantId();
             try {
-                tenantContextService.setTenantContext(group.getId());
+                tenantContextService.setTenantContext(adminMembership.getGroupId());
 
                 GroupMembership tempMembership = membershipRepository.findById(membershipId).orElse(null);
-                if (tempMembership != null && tempMembership.getGroupId().equals(group.getId())) {
+                if (tempMembership != null && tempMembership.getGroupId().equals(adminMembership.getGroupId())) {
                     membership = tempMembership;
-                    targetGroupId = group.getId();
+                    targetGroupId = adminMembership.getGroupId();
                     break;
                 }
 
