@@ -1,12 +1,13 @@
 package com.squad.squad.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.squad.squad.dto.GameDTO;
-import com.squad.squad.dto.LatestGamesDTO;
+import com.squad.squad.dto.GameLocationDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import com.squad.squad.dto.game.NextGameResponseDTO;
 import com.squad.squad.entity.Game;
-import org.springframework.stereotype.Component;
 
 @Component
 public class GameMapper {
@@ -39,6 +40,20 @@ public class GameMapper {
         gameResponseDTO.setAwayTeamScore(game.getAwayTeamScore());
         gameResponseDTO.setPlayed(game.isPlayed());
         gameResponseDTO.setVoted(game.isVoted());
+        gameResponseDTO.setLocation(game.getLocation());
+        gameResponseDTO.setWeather(game.getWeather());
+        gameResponseDTO.setMvpId(game.getMvpId());
+
+        // GameLocation mapping
+        if (game.getGameLocation() != null) {
+            GameLocationDTO gameLocationDTO = new GameLocationDTO();
+            gameLocationDTO.setId(game.getGameLocation().getId());
+            gameLocationDTO.setLocation(game.getGameLocation().getLocation());
+            gameLocationDTO.setAddress(game.getGameLocation().getAddress());
+            gameLocationDTO.setLatitude(game.getGameLocation().getLatitude());
+            gameLocationDTO.setLongitude(game.getGameLocation().getLongitude());
+            gameResponseDTO.setGameLocation(gameLocationDTO);
+        }
 
         return gameResponseDTO;
     }
