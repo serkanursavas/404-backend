@@ -35,7 +35,6 @@ public class RatingServiceImpl implements RatingService {
     private final PlayerMapper playerMapper;
     private final JwtGroupContextService jwtGroupContextService;
 
-    @Autowired
     public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
             RosterService rosterService, GameService gameService, RosterPersonaRepository rosterPersonaRepository,
             RosterRepository rosterRepository, PlayerMapper playerMapper,
@@ -61,7 +60,7 @@ public class RatingServiceImpl implements RatingService {
         String voterTeamColor = null;
 
         if (ratings == null || ratings.isEmpty()) {
-            throw new IllegalArgumentException("Ratings list cannot be null or empty");
+            throw new IllegalArgumentException("Rating listesi boş olamaz");
         }
 
         for (AddRatingRequestDTO ratingDto : ratings) {
@@ -77,7 +76,7 @@ public class RatingServiceImpl implements RatingService {
 
                 if (voterRoster == null) {
                     throw new IllegalStateException(
-                            "Voter player is not in the roster for this game." + getCurrentPlayerId());
+                            "Oy veren oyuncu bu maç için roster'da bulunmuyor. Player ID: " + getCurrentPlayerId());
                 }
 
                 if (!voterRoster.getHasVote()) {
@@ -90,25 +89,25 @@ public class RatingServiceImpl implements RatingService {
                 Game existingGame = gameService.findGameById(gameId);
 
                 if (!existingGame.isPlayed() || existingGame.isVoted()) {
-                    throw new IllegalStateException("Voting is not allowed for this game. Check game state.");
+                    throw new IllegalStateException("Bu maç için oylama yapılamaz. Maç durumunu kontrol edin.");
                 }
                 if (((existingGame.getRoster().size() / 2) - 1) != ratings.size()) {
-                    throw new IllegalStateException("You must vote for all players except yourself.");
+                    throw new IllegalStateException("Kendiniz hariç tüm oyuncular için oy vermelisiniz.");
                 }
             }
 
             if (ratingDto.getPlayerId().equals(existingRoster.getPlayer().getId())) {
-                throw new IllegalArgumentException("Players cannot vote for themselves.");
+                throw new IllegalArgumentException("Oyuncular kendilerine oy veremez.");
             }
 
-            if (!voterTeamColor.equalsIgnoreCase(existingRoster.getTeamColor())) {
-                throw new IllegalArgumentException("Players can only vote for their teammates.");
+            if (voterTeamColor == null || !voterTeamColor.equalsIgnoreCase(existingRoster.getTeamColor())) {
+                throw new IllegalArgumentException("Oyuncular sadece takım arkadaşlarına oy verebilir.");
             }
 
             boolean hasAlreadyVoted = ratingRepository.existsByPlayerIdAndRosterId(existingPlayer.getId(),
                     ratingDto.getRosterId());
             if (hasAlreadyVoted) {
-                throw new IllegalArgumentException("You have already voted for this player.");
+                throw new IllegalArgumentException("Bu oyuncu için zaten oy verdiniz.");
             }
 
             Rating rating = new Rating();
@@ -154,7 +153,7 @@ public class RatingServiceImpl implements RatingService {
             updateRatingsForGame(gameId, teamColor);
         }
 
-        Integer totalVotes = (int) ratingRepository.count();
+        Integer totalVotes = (int) ratingRepository.countByGroupId(jwtGroupContextService.getCurrentApprovedGroupId());
 
         if (totalVotes.equals(expectedVotes * 2)) {
 
@@ -188,7 +187,7 @@ public class RatingServiceImpl implements RatingService {
     @Override
     @Transactional
     public void clearAllRatings() {
-        ratingRepository.deleteAll();
+        ratingRepository.deleteAllByGroupId(jwtGroupContextService.getCurrentApprovedGroupId());
     }
 
     public Integer getCurrentPlayerId() {
@@ -196,7 +195,7 @@ public class RatingServiceImpl implements RatingService {
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
             return Integer.valueOf(userDetails.getUsername());
         }
-        throw new IllegalStateException("Current user not found");
+        throw new IllegalStateException("Mevcut kullanıcı bulunamadı");
     }
 
     @Override

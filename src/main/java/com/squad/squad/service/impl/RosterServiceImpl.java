@@ -1,21 +1,17 @@
 package com.squad.squad.service.impl;
 
 import java.util.List;
-import java.util.function.Consumer;
 
-import com.squad.squad.dto.roster.RosterResponseDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.exception.RosterNotFoundException;
-import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.mapper.RosterMapper;
 import com.squad.squad.repository.RosterRepository;
-import com.squad.squad.service.PlayerService;
-import com.squad.squad.service.RosterService;
 import com.squad.squad.security.JwtGroupContextService;
+import com.squad.squad.service.RosterService;
 
 import jakarta.transaction.Transactional;
 
@@ -24,25 +20,20 @@ public class RosterServiceImpl implements RosterService {
 
     private final RosterRepository rosterRepository;
 
-    // private final PlayerService playerService; // Circular dependency removed
     private final RosterMapper rosterMapper;
-    private final PlayerMapper playerMapper;
     private final JwtGroupContextService jwtGroupContextService;
 
-    @Autowired
     public RosterServiceImpl(RosterRepository rosterRepository,
-            RosterMapper rosterMapper, PlayerMapper playerMapper,
+            RosterMapper rosterMapper,
             JwtGroupContextService jwtGroupContextService) {
         this.rosterRepository = rosterRepository;
-        // this.playerService = playerService; // Circular dependency removed
         this.rosterMapper = rosterMapper;
-        this.playerMapper = playerMapper;
         this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @Override
     public Roster getRosterById(Integer id) {
-        return rosterRepository.findById(id)
+        return rosterRepository.findByIdAndGroupId(id, jwtGroupContextService.getCurrentApprovedGroupId())
                 .orElseThrow(() -> new RosterNotFoundException("Roster not found with id: " + id));
     }
 
@@ -104,7 +95,7 @@ public class RosterServiceImpl implements RosterService {
 
     @Override
     public List<Roster> findAllById(List<Integer> rosterIds) {
-        return rosterRepository.findAllById(rosterIds);
+        return rosterRepository.findAllByIdAndGroupId(rosterIds, jwtGroupContextService.getCurrentApprovedGroupId());
     }
 
     @Override
@@ -112,14 +103,9 @@ public class RosterServiceImpl implements RosterService {
         List<Roster> rosters = rosterRepository.findByGameIdAndPlayerId(gameId, playerId,
                 jwtGroupContextService.getCurrentApprovedGroupId());
         if (rosters.isEmpty()) {
-            throw new RosterNotFoundException("Roster not found for gameId: " + gameId + " and playerId: " + playerId);
+            throw new RosterNotFoundException("Roster bulunamadı. GameId: " + gameId + " ve PlayerId: " + playerId);
         }
         return rosters.get(0); // İlk elemanı döndür
     }
 
-    private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {
-        if (value != null) {
-            setter.accept(value);
-        }
-    }
 }

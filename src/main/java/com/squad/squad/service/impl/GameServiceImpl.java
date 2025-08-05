@@ -1,5 +1,16 @@
 package com.squad.squad.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.PlayerDTO;
@@ -26,18 +37,8 @@ import com.squad.squad.security.JwtGroupContextService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
-import jakarta.transaction.Transactional;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import jakarta.transaction.Transactional;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -54,7 +55,6 @@ public class GameServiceImpl implements GameService {
     private final RosterPersonaRepository rosterPersonaRepository;
     private final JwtGroupContextService jwtGroupContextService;
 
-    @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
             PlayerService playerService, RosterPersonaRepository rosterPersonaRepository,
             GameLocationRepository gameLocationRepository, RatingRepository ratingRepository, GoalMapper goalMapper,
@@ -111,7 +111,8 @@ public class GameServiceImpl implements GameService {
                         jwtGroupContextService.getCurrentUserId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
-        GameLocation gameLocation = gameLocationRepository.findById(game.getGameLocation().getId())
+        GameLocation gameLocation = gameLocationRepository.findByIdAndGroupId(game.getGameLocation().getId(),
+                jwtGroupContextService.getCurrentApprovedGroupId())
                 .orElseThrow(() -> new NotFoundException(
                         "Game location not found with id: " + game.getGameLocation().getId()));
 
@@ -151,17 +152,20 @@ public class GameServiceImpl implements GameService {
     public void createGame(GameCreateRequestDTO gameDto) {
 
         if (gameRepository.existsByIsPlayedFalseOrIsVotedFalse()) {
-            throw new IllegalArgumentException("There is already a planned or not yet voted game.");
+            throw new IllegalArgumentException(
+                    "Zaten planlanmış veya henüz oylanmamış bir maç bulunmaktadır. Yeni maç oluşturmadan önce mevcut maçı tamamlayın.");
         }
 
         Game game = new Game();
         game.setDateTime(gameDto.getDateTime());
         game.setWeather(gameDto.getWeather());
         game.setLocation(gameDto.getLocation());
+        game.setGroupId(jwtGroupContextService.getCurrentApprovedGroupId());
 
-        GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(gameDto.getLocation()))
+        GameLocation gameLocation = gameLocationRepository.findByIdAndGroupId(Integer.parseInt(gameDto.getLocation()),
+                jwtGroupContextService.getCurrentApprovedGroupId())
                 .orElseThrow(
-                        () -> new NotFoundException("Game location not found with id: " + gameDto.getGameLocationId()));
+                        () -> new NotFoundException("Maç konumu bulunamadı. ID: " + gameDto.getGameLocationId()));
 
         game.setGameLocation(gameLocation);
 
@@ -171,11 +175,12 @@ public class GameServiceImpl implements GameService {
             Roster roster = new Roster();
             roster.setGame(game);
             roster.setTeamColor(rosterDTO.getTeamColor().toUpperCase());
+            roster.setGroupId(jwtGroupContextService.getCurrentApprovedGroupId());
 
             Player player = playerMapper.playerDTOToPlayer(playerService.getPlayerById(rosterDTO.getPlayerId()));
 
             if (player == null) {
-                throw new RuntimeException("Player not found with id: " + rosterDTO.getPlayerId());
+                throw new RuntimeException("Oyuncu bulunamadı. ID: " + rosterDTO.getPlayerId());
             }
 
             roster.setPlayer(player);
@@ -192,21 +197,22 @@ public class GameServiceImpl implements GameService {
 
         // yeni mac olusturuldugu icin son mac icin rating tablosu sifirliyoruz data
         // birikmesin diye
-        ratingRepository.deleteAll();
-        rosterPersonaRepository.deleteAll();
+        ratingRepository.deleteAllByGroupId(jwtGroupContextService.getCurrentApprovedGroupId());
     }
 
     @Override
     @Transactional
     public void updateGame(Integer id, GameUpdateRequestDTO updatedGame) {
-        Game game = gameRepository.findById(id)
+        Game game = gameRepository.findByIdAndGroupId(id, jwtGroupContextService.getCurrentApprovedGroupId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
         if (game.isPlayed()) {
-            throw new IllegalArgumentException("Game has already been played. You cannot update game details.");
+            throw new IllegalArgumentException("Bu maç zaten oynanmış. Maç detaylarını güncelleyemezsiniz.");
         }
 
-        GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(updatedGame.getLocation()))
+        GameLocation gameLocation = gameLocationRepository
+                .findByIdAndGroupId(Integer.parseInt(updatedGame.getLocation()),
+                        jwtGroupContextService.getCurrentApprovedGroupId())
                 .orElseThrow(
                         () -> new NotFoundException("Game location not found with id: " + updatedGame.getLocation()));
 
@@ -254,7 +260,8 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public void updateScoreWithGoal(Goal goal) {
 
-        Game existingGame = gameRepository.findById(goal.getGame().getId())
+        Game existingGame = gameRepository.findByIdAndGroupId(goal.getGame().getId(),
+                jwtGroupContextService.getCurrentApprovedGroupId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + goal.getGame().getId()));
 
         TeamColor teamColor = TeamColor.fromString(goal.getTeamColor());
@@ -274,9 +281,9 @@ public class GameServiceImpl implements GameService {
     public void deleteGame(Integer id) {
         try {
             rosterService.deleteRosterByGameId(id);
-            gameRepository.deleteById(id);
+            gameRepository.deleteByIdAndGroupId(id, jwtGroupContextService.getCurrentApprovedGroupId());
         } catch (Exception e) {
-            throw new NotFoundException("Game or roster not found with game id: " + id);
+            throw new NotFoundException("Maç veya roster bulunamadı. Game ID: " + id);
         }
     }
 
@@ -304,7 +311,7 @@ public class GameServiceImpl implements GameService {
     }
 
     public List<Roster> getRostersByGameId(Integer gameId) {
-        return gameRepository.findById(gameId)
+        return gameRepository.findByIdAndGroupId(gameId, jwtGroupContextService.getCurrentApprovedGroupId())
                 .map(Game::getRoster)
                 .orElse(new ArrayList<>());
     }
@@ -344,14 +351,15 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public void updateWeather(Integer id, String weather) {
-        Game game = gameRepository.findById(id)
+        Game game = gameRepository.findByIdAndGroupId(id, jwtGroupContextService.getCurrentApprovedGroupId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
         // Fazladan tırnakları kaldır
         String cleanedWeather = weather.replace("\"", "").trim();
 
         if (StringUtils.isNotBlank(game.getWeather())) {
-            throw new IllegalArgumentException("Game has already weather info. You cannot update weather.");
+            throw new IllegalArgumentException(
+                    "Bu maçın zaten hava durumu bilgisi var. Hava durumunu güncelleyemezsiniz.");
         }
 
         updateFieldIfNotNull(cleanedWeather, game::setWeather);

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -58,6 +57,7 @@ public class UserServiceImpl implements UserService {
         this.userMapper = userMapper;
         this.membershipRepository = membershipRepository;
         this.groupService = groupService;
+
     }
 
     @Override
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
                             .collect(Collectors.joining(",")),
                     approvedGroupId); // Sadece onaylanmış group_id'yi JWT'ye ekle
         } catch (AuthenticationException e) {
-            throw new InvalidCredentialsException("Invalid username or password");
+            throw new InvalidCredentialsException("Geçersiz kullanıcı adı veya şifre");
         }
     }
 
@@ -232,7 +232,7 @@ public class UserServiceImpl implements UserService {
         String currentUsername = authentication.getName(); // Token içinden kullanıcı adını alır
 
         if (!currentUsername.equals(username.toLowerCase())) {
-            throw new InvalidCredentialsException("You can only update your own profile.");
+            throw new InvalidCredentialsException("Sadece kendi profilinizi güncelleyebilirsiniz.");
         }
 
         User existingUser = getUserByUsername(username);
@@ -259,7 +259,7 @@ public class UserServiceImpl implements UserService {
             playerService.softDelete(player);
             userRepository.deleteByUsername(username);
         } else {
-            throw new IllegalArgumentException("Userame must be provided.");
+            throw new IllegalArgumentException("Kullanıcı adı belirtilmelidir.");
         }
     }
 

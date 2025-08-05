@@ -10,8 +10,6 @@ import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
 import com.squad.squad.exception.PlayerNotFoundException;
 import com.squad.squad.mapper.PlayerMapper;
-import com.squad.squad.repository.PersonaRepository;
-import com.squad.squad.repository.PlayerPersonaRepository;
 import com.squad.squad.repository.PlayerRepository;
 import com.squad.squad.repository.UserRepository;
 import com.squad.squad.security.CustomUserDetails;
@@ -19,9 +17,7 @@ import com.squad.squad.service.PlayerService;
 import com.squad.squad.security.JwtGroupContextService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +33,6 @@ public class PlayerServiceImpl implements PlayerService {
     private final UserRepository userRepository;
     private final JwtGroupContextService jwtGroupContextService;
 
-    @Autowired
     public PlayerServiceImpl(PlayerRepository playerRepository, PlayerMapper playerMapper,
             UserRepository userRepository, JwtGroupContextService jwtGroupContextService) {
         this.playerRepository = playerRepository;
@@ -201,8 +196,6 @@ public class PlayerServiceImpl implements PlayerService {
     public List<TopListProjection> getLegendaryDuos() {
         Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
         List<TopListProjection> rawDataLegendaryDuos = playerRepository.getLegendaryDuos(currentGroupId);
-
-        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos(currentGroupId);
 
         Set<Integer> usedPlayers = new HashSet<>();
         List<TopListProjection> filteredResults = new ArrayList<>();

@@ -8,7 +8,6 @@ import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.repository.*;
 import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.service.MembershipService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +25,6 @@ public class MembershipServiceImpl implements MembershipService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
 
-    @Autowired
     public MembershipServiceImpl(GroupMembershipRepository membershipRepository,
             GroupRepository groupRepository,
             UserRepository userRepository) {

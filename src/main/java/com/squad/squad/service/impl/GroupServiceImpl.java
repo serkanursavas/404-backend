@@ -8,10 +8,8 @@ import com.squad.squad.entity.*;
 import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.repository.*;
 import com.squad.squad.security.CustomUserDetails;
-import com.squad.squad.security.JwtGroupContextService;
 import com.squad.squad.service.GroupService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,19 +25,16 @@ public class GroupServiceImpl implements GroupService {
     private final GroupRequestRepository groupRequestRepository;
     private final UserRepository userRepository;
     private final GroupMembershipRepository membershipRepository;
-    private final JwtGroupContextService jwtGroupContextService;
 
-    @Autowired
     public GroupServiceImpl(GroupRepository groupRepository,
             GroupRequestRepository groupRequestRepository,
             UserRepository userRepository,
-            GroupMembershipRepository membershipRepository,
-            JwtGroupContextService jwtGroupContextService) {
+            GroupMembershipRepository membershipRepository) {
         this.groupRepository = groupRepository;
         this.groupRequestRepository = groupRequestRepository;
         this.userRepository = userRepository;
         this.membershipRepository = membershipRepository;
-        this.jwtGroupContextService = jwtGroupContextService;
+
     }
 
     @Override

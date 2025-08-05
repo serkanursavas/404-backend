@@ -46,14 +46,16 @@ public class PersonaServiceImpl implements PersonaService {
             Roster existingRoster = rosterService.getRosterById(dto.getRosterId());
 
             if (dto.getPersonaIds().size() > 3) {
-                throw new IllegalArgumentException("Roster ID " + dto.getRosterId() + " has less than to 3 personas.");
+                throw new IllegalArgumentException(
+                        "Roster ID " + dto.getRosterId() + " için 3'ten az persona bulunmaktadır.");
             }
 
             for (Integer personaId : dto.getPersonaIds()) {
 
                 // SecureJpaRepository zaten güvenlik kontrolü yapıyor
-                Persona persona = personaRepository.findById(personaId)
-                        .orElseThrow(() -> new IllegalArgumentException("Persona not found with ID: " + personaId));
+                Persona persona = personaRepository
+                        .findByIdAndGroupId(personaId, jwtGroupContextService.getCurrentApprovedGroupId())
+                        .orElseThrow(() -> new IllegalArgumentException("Persona bulunamadı. ID: " + personaId));
 
                 PlayerPersona playerPersona = playerPersonaRepository.findByPlayerIdAndPersonaId(
                         existingRoster.getPlayer().getId(), persona.getId(),

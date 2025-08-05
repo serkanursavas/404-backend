@@ -8,14 +8,12 @@ import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.TopScorerProjection;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.GoalDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Goal;
 import com.squad.squad.entity.Player;
-import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.service.GameService;
@@ -28,24 +26,23 @@ public class GoalServiceImpl implements GoalService {
     private final GoalRepository goalRepository;
     private final GameService gameService;
     private final PlayerService playerService;
-    private final GameMapper gameMapper;
+
     private final PlayerMapper playerMapper;
     private final JwtGroupContextService jwtGroupContextService;
 
-    @Autowired
     public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService,
-            GameMapper gameMapper, PlayerMapper playerMapper, JwtGroupContextService jwtGroupContextService) {
+            PlayerMapper playerMapper, JwtGroupContextService jwtGroupContextService) {
         this.goalRepository = goalRepository;
         this.gameService = gameService;
         this.playerService = playerService;
-        this.gameMapper = gameMapper;
+
         this.playerMapper = playerMapper;
         this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @Override
     public List<GoalDTO> getAllGoals() {
-        return goalRepository.findAll().stream().map(
+        return goalRepository.findAllByGroupId(jwtGroupContextService.getCurrentApprovedGroupId()).stream().map(
                 goal -> new GoalDTO(goal.getGame().getId(), goal.getPlayer().getId(), goal.getPlayer().getName(),
                         goal.getTeamColor()))
                 .collect(Collectors.toList());
