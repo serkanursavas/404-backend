@@ -44,7 +44,7 @@ public class GroupContext {
     public static void validateGroupId() {
         Integer groupId = getCurrentGroupId();
         if (groupId == null || groupId <= 0) {
-            throw new IllegalStateException("No valid groupId found in context");
+            throw new IllegalStateException("Context'te geçerli groupId bulunamadı");
         }
     }
 

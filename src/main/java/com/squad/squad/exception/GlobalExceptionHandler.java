@@ -1,8 +1,6 @@
 package com.squad.squad.exception;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +28,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ExceptionResponse> handleInvalidCredentialsException(InvalidCredentialsException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handleInvalidCredentialsException(InvalidCredentialsException ex,
+            WebRequest request) {
         ExceptionResponse response = new ExceptionResponse(
                 LocalDateTime.now(),
                 ex.getMessage(),
@@ -43,9 +42,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(GroupAccessException.class)
     public ResponseEntity<ExceptionResponse> handleGroupAccessException(GroupAccessException ex, WebRequest request) {
-        logger.warn("Group access violation: {} - User Group: {}, Requested Group: {}", 
+        logger.warn("Group access violation: {} - User Group: {}, Requested Group: {}",
                 ex.getMessage(), ex.getUserGroupId(), ex.getRequestedGroupId());
-        
+
         ExceptionResponse response = new ExceptionResponse(
                 LocalDateTime.now(),
                 "Erişim reddedildi: Bu grup verilerine erişim yetkiniz yok.",
@@ -57,10 +56,11 @@ public class GlobalExceptionHandler {
      * Handle tenant context issues
      */
     @ExceptionHandler(TenantContextException.class)
-    public ResponseEntity<ExceptionResponse> handleTenantContextException(TenantContextException ex, WebRequest request) {
-        logger.error("Tenant context error: {} - Expected: {}, Actual: {}", 
+    public ResponseEntity<ExceptionResponse> handleTenantContextException(TenantContextException ex,
+            WebRequest request) {
+        logger.error("Tenant context error: {} - Expected: {}, Actual: {}",
                 ex.getMessage(), ex.getExpectedTenantId(), ex.getActualTenantId());
-        
+
         ExceptionResponse response = new ExceptionResponse(
                 LocalDateTime.now(),
                 "Sistem hatası: Grup bağlamı sorunu. Lütfen tekrar giriş yapın.",
@@ -74,11 +74,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ExceptionResponse> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
         logger.warn("Access denied: {} for request: {}", ex.getMessage(), request.getDescription(false));
-        
+
         // Check if it's a group-related access denial
         String message = ex.getMessage();
         String userFriendlyMessage;
-        
+
         if (message != null && message.contains("Group")) {
             if (message.contains("Group membership required")) {
                 userFriendlyMessage = "Bu işlem için grup üyeliği gereklidir.";
@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
         } else {
             userFriendlyMessage = "Bu işlemi gerçekleştirme yetkiniz yok.";
         }
-        
+
         ExceptionResponse response = new ExceptionResponse(
                 LocalDateTime.now(),
                 userFriendlyMessage,
@@ -102,7 +102,8 @@ public class GlobalExceptionHandler {
 
     // Path variable hatası olduğunda 400 Bad Request döndüren hata yöneticisi
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ExceptionResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex,
+            WebRequest request) {
         ExceptionResponse response = new ExceptionResponse(
                 LocalDateTime.now(),
                 "Invalid path variable type: " + ex.getMessage(),
@@ -112,7 +113,8 @@ public class GlobalExceptionHandler {
 
     // Endpoint bulunamadığında 404 Not Found döndüren hata yöneticisi
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleNoHandlerFoundException(NoHandlerFoundException ex, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> handleNoHandlerFoundException(NoHandlerFoundException ex,
+            WebRequest request) {
         ExceptionResponse response = new ExceptionResponse(
                 LocalDateTime.now(),
                 "Endpoint not found: " + ex.getMessage(),
