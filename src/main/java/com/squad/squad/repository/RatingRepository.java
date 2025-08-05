@@ -1,13 +1,13 @@
 package com.squad.squad.repository;
 
-import com.squad.squad.entity.Rating;
-import com.squad.squad.entity.Roster;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.squad.squad.entity.Rating;
+import com.squad.squad.entity.Roster;
 
 @Repository
 public interface RatingRepository extends SecureJpaRepository<Rating, Integer> {

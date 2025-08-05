@@ -3,14 +3,11 @@ package com.squad.squad.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.squad.squad.dto.PlayerProjection;
-import com.squad.squad.dto.TopListProjection;
-import com.squad.squad.dto.TopListsDTO;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.squad.squad.dto.TopListProjection;
 import com.squad.squad.entity.Player;
 
 @Repository

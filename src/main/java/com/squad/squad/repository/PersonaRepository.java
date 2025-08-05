@@ -1,8 +1,8 @@
 package com.squad.squad.repository;
 
-import com.squad.squad.entity.Persona;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.squad.squad.entity.Persona;
 
 @Repository
 public interface PersonaRepository extends SecureJpaRepository<Persona, Integer> {

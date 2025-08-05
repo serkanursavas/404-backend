@@ -1,16 +1,17 @@
 package com.squad.squad.repository;
 
-import com.squad.squad.entity.RosterPersona;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.squad.squad.entity.RosterPersona;
 
 @Repository
-public interface RosterPersonaRepository extends SecureJpaRepository<RosterPersona, Integer> {
+public interface RosterPersonaRepository extends JpaRepository<RosterPersona, Integer> {
 
     Optional<RosterPersona> findByRosterIdAndPersonaId(Integer rosterId, Integer personaId);
 
