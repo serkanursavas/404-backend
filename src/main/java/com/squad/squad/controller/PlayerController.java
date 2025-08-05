@@ -8,10 +8,12 @@ import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import com.squad.squad.repository.PlayerRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.service.PlayerService;
+import com.squad.squad.security.JwtGroupContextService;
 
 import java.util.List;
 
@@ -26,11 +28,14 @@ public class PlayerController {
     private final PlayerService playerService;
     private final PlayerDTOValidator playerDTOValidator;
     private final PlayerRepository playerRepository;
+    private final JwtGroupContextService jwtGroupContextService;
 
-    public PlayerController(PlayerService playerService, PlayerDTOValidator playerDTOValidator, PlayerRepository playerRepository) {
+    public PlayerController(PlayerService playerService, PlayerDTOValidator playerDTOValidator,
+            PlayerRepository playerRepository, JwtGroupContextService jwtGroupContextService) {
         this.playerService = playerService;
         this.playerDTOValidator = playerDTOValidator;
         this.playerRepository = playerRepository;
+        this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @GetMapping("/getAllPlayers")
@@ -44,6 +49,7 @@ public class PlayerController {
     }
 
     @PutMapping("/admin/updatePlayer")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> updatePlayer(@RequestBody PlayerUpdateRequestDTO updatedPlayer) {
         List<String> errors = playerDTOValidator.validateUpdate(updatedPlayer);
 
@@ -56,6 +62,7 @@ public class PlayerController {
     }
 
     @GetMapping("/admin/getAllActivePlayers")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<GetAllActivePlayersDTO> getAllActivePlayers() {
         return playerService.getAllActivePlayers();
     }
@@ -67,7 +74,7 @@ public class PlayerController {
 
     @GetMapping("/getTopFormPlayers")
     public List<TopListProjection> getTopFormPlayers() {
-        return playerRepository.getTopFormPlayers();
+        return playerRepository.getTopFormPlayers(jwtGroupContextService.getCurrentApprovedGroupId());
     }
 
     @GetMapping("/getLegendaryDuos")

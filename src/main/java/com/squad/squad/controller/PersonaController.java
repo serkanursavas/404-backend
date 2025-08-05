@@ -24,6 +24,7 @@ public class PersonaController {
 
     @GetMapping("/all")
     public List<Persona> getAllPersonas() {
+        // SecureJpaRepository zaten güvenlik kontrolü yapıyor
         return personaRepository.findAll();
     }
 
@@ -36,7 +37,5 @@ public class PersonaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-
-
 
 }
