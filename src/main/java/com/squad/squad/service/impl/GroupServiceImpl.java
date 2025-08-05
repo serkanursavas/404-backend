@@ -155,7 +155,7 @@ public class GroupServiceImpl implements GroupService {
         // DOĞRUDAN KAYDET - processMembershipDecision çağırma
         membershipRepository.save(membership);
 
-        System.out.println("Intended admin saved with role: " + membership.getRole());
+
 
         // 2. User'ın groupId'sini güncelle
         transferUserToGroup(intendedAdminId, newGroupId);

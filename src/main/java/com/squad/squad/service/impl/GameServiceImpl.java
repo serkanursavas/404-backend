@@ -75,19 +75,10 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public GameResponseDTO getLatestGame() {
-        System.out.println("=== NEXT GAME DEBUG ===");
-        System.out.println("Current JWT GroupContext: " + jwtGroupContextService.getCurrentApprovedGroupId());
-
         checkAndUpdateUnplayedGame();
 
         Game latestGame = gameRepository
                 .findTopByOrderByDateTimeDesc(jwtGroupContextService.getCurrentApprovedGroupId());
-        if (latestGame != null) {
-            System.out.println("Next game found: ID=" + latestGame.getId() + ", Date=" + latestGame.getDateTime());
-        } else {
-            System.out.println("No next game found for current group");
-        }
-        System.out.println("=== END NEXT GAME DEBUG ===");
 
         return gameMapper.gameToGameResponseDTO(latestGame);
     }
@@ -331,23 +322,14 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Optional<MvpDTO> getMvpPlayer() {
-        System.out.println("=== MVP DEBUG ===");
-        System.out.println("Current GroupContext: " + com.squad.squad.context.GroupContext.getCurrentApprovedGroupId());
-
         List<Object[]> result = gameRepository
                 .findLatestVotedMvpRaw(jwtGroupContextService.getCurrentApprovedGroupId());
-        System.out.println("MVP query result count: " + result.size());
 
         if (result.isEmpty()) {
-            System.out.println("No MVP found for current group");
-            System.out.println("=== END MVP DEBUG ===");
             return Optional.empty();
         }
 
         Object[] row = result.get(0);
-        System.out.println("MVP found: " + row[1] + " " + row[2] + " (ID: " + row[0] + ")");
-        System.out.println("=== END MVP DEBUG ===");
-
         MvpDTO dto = new MvpDTO(
                 (Integer) row[0], // id
                 (String) row[1], // name
@@ -358,7 +340,6 @@ public class GameServiceImpl implements GameService {
         );
 
         return Optional.of(dto);
-
     }
 
     @Override

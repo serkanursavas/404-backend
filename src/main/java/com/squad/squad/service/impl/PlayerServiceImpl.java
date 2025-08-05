@@ -49,9 +49,7 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     public List<PlayerDTO> getAllPlayers() {
         CustomUserDetails currentUser = getCurrentUser();
-        System.out.println("=== PLAYERS DEBUG ===");
-        System.out.println("User: " + currentUser.getUsername() + ", Role: " + currentUser.getRole());
-        System.out.println("Current JWT GroupContext: " + jwtGroupContextService.getCurrentApprovedGroupId());
+
 
         List<Player> players;
 
@@ -59,16 +57,13 @@ public class PlayerServiceImpl implements PlayerService {
         if ("ROLE_ADMIN".equals(currentUser.getRole())) {
             // Super admin için tüm player'ları göster (güvenlik kontrolü bypass)
             players = playerRepository.findByActiveTrue(); // Güvenli method kullan
-            System.out.println("Admin: Loading all players, count: " + players.size());
         } else {
             // Normal kullanıcı ise SecureJpaRepository otomatik filtreleme yapar
             Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
             Integer currentUserId = jwtGroupContextService.getCurrentUserId();
             players = playerRepository.findAllByCurrentGroup(currentGroupId, currentUserId); // Current group
                                                                                              // context'ten alır
-            System.out.println("Normal user: Loading players for current group, count: " + players.size());
         }
-        System.out.println("=== END PLAYERS DEBUG ===");
 
         Collator trCollator = Collator.getInstance(new Locale("tr", "TR"));
 
