@@ -2,7 +2,8 @@ package com.squad.squad.repository;
 
 import com.squad.squad.entity.Persona;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface PersonaRepository extends JpaRepository<Persona, Integer> {
-    Persona findByName(String name);
+@Repository
+public interface PersonaRepository extends SecureJpaRepository<Persona, Integer> {
 }

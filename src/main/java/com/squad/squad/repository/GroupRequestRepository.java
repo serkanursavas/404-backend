@@ -13,7 +13,8 @@ import java.util.Optional;
 public interface GroupRequestRepository extends JpaRepository<GroupRequest, Integer> {
 
     // Bekleyen grup taleplerini getir (Super Admin için)
-    List<GroupRequest> findByStatus(GroupRequest.RequestStatus status);
+    @Query(value = "SELECT id, group_name, group_description, requested_by, intended_admin, status, requested_at, processed_at, processed_by, rejection_reason FROM group_requests WHERE status = :status", nativeQuery = true)
+    List<GroupRequest> findByStatus(@Param("status") String status);
 
     // Belirli bir kullanıcının grup taleplerini getir
     List<GroupRequest> findByRequestedBy(Integer userId);
@@ -21,7 +22,8 @@ public interface GroupRequestRepository extends JpaRepository<GroupRequest, Inte
     // Aynı isimde bekleyen grup talebi var mı kontrol et
     boolean existsByGroupNameAndStatus(String groupName, GroupRequest.RequestStatus status);
 
-    // Son 30 gün içinde belirli bir kullanıcının kaç tane grup talebi oluşturduğunu say
+    // Son 30 gün içinde belirli bir kullanıcının kaç tane grup talebi oluşturduğunu
+    // say
     @Query(value = "SELECT COUNT(*) FROM group_requests WHERE requested_by = :userId AND requested_at >= CURRENT_DATE - INTERVAL '30 days'", nativeQuery = true)
     Long countRecentRequestsByUser(@Param("userId") Integer userId);
 
