@@ -14,6 +14,7 @@ public class MembershipResponseDTO {
     private String role;
     private LocalDateTime requestedAt;
     private LocalDateTime approvedAt;
+    private Integer approvedBy;
 
     // Constructors
     public MembershipResponseDTO() {
@@ -98,5 +99,13 @@ public class MembershipResponseDTO {
 
     public void setApprovedAt(LocalDateTime approvedAt) {
         this.approvedAt = approvedAt;
+    }
+
+    public Integer getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(Integer approvedBy) {
+        this.approvedBy = approvedBy;
     }
 }

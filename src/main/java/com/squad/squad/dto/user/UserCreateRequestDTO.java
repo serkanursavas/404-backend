@@ -8,6 +8,11 @@ public class UserCreateRequestDTO {
     private String passwordAgain;
     private PlayerCreateDTO playerCreateDTO;
 
+    // Group creation fields
+    private String groupName;
+    private String groupDescription;
+    private Boolean createGroup;
+
     public UserCreateRequestDTO() {
     }
 
@@ -45,5 +50,29 @@ public class UserCreateRequestDTO {
 
     public void setPlayerCreateDTO(PlayerCreateDTO playerCreateDTO) {
         this.playerCreateDTO = playerCreateDTO;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    public String getGroupDescription() {
+        return groupDescription;
+    }
+
+    public void setGroupDescription(String groupDescription) {
+        this.groupDescription = groupDescription;
+    }
+
+    public Boolean getCreateGroup() {
+        return createGroup;
+    }
+
+    public void setCreateGroup(Boolean createGroup) {
+        this.createGroup = createGroup;
     }
 }
