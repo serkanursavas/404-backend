@@ -5,6 +5,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.lang.NonNull;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -14,7 +15,7 @@ import java.util.List;
 public class WebConfig implements WebMvcConfigurer {
 
     @Override
-    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+    public void configureMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
         MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
 
         // Support both "application/json" and "application/json;charset=UTF-8"

@@ -1,18 +1,10 @@
 package com.squad.squad.filter;
 
-import com.squad.squad.context.GroupContext;
-import com.squad.squad.security.CustomUserDetails;
-import com.squad.squad.security.JwtUtils;
-import com.squad.squad.repository.GroupMembershipRepository;
-import com.squad.squad.entity.GroupMembership;
+import java.io.IOException;
 import java.util.List;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,8 +13,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 
-import java.io.IOException;
+import com.squad.squad.context.GroupContext;
+import com.squad.squad.entity.GroupMembership;
+import com.squad.squad.repository.GroupMembershipRepository;
+import com.squad.squad.security.CustomUserDetails;
+import com.squad.squad.security.JwtUtils;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -33,7 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService customUserDetailsService;
     private final GroupMembershipRepository groupMembershipRepository;
 
-    @Autowired
     public JwtAuthenticationFilter(@Lazy JwtUtils jwtUtils,
             @Lazy UserDetailsService customUserDetailsService,
             @Lazy GroupMembershipRepository groupMembershipRepository) {
@@ -43,7 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String authorizationHeader = request.getHeader("Authorization");
@@ -179,7 +181,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Public endpoint'leri kontrol et (group context gerektirmeyen)
      */
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
 
         // Public endpoint'ler
