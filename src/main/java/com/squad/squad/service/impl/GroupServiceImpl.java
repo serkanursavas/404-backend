@@ -155,8 +155,6 @@ public class GroupServiceImpl implements GroupService {
         // DOĞRUDAN KAYDET - processMembershipDecision çağırma
         membershipRepository.save(membership);
 
-
-
         // 2. User'ın groupId'sini güncelle
         transferUserToGroup(intendedAdminId, newGroupId);
     }

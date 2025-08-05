@@ -50,7 +50,6 @@ public class PlayerServiceImpl implements PlayerService {
     public List<PlayerDTO> getAllPlayers() {
         CustomUserDetails currentUser = getCurrentUser();
 
-
         List<Player> players;
 
         // Super Admin ise tüm player'ları göster
