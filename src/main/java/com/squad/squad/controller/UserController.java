@@ -1,12 +1,9 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.user.*;
-import com.squad.squad.entity.GroupMembership;
-import com.squad.squad.repository.GroupMembershipRepository;
 import com.squad.squad.security.CustomUserDetails;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
@@ -23,13 +20,10 @@ public class UserController {
 
     private final UserService userService;
     private final UserDTOValidator userDTOValidator;
-    private final GroupMembershipRepository groupMembershipRepository;
 
-    public UserController(UserService userService, UserDTOValidator userDTOValidator,
-            GroupMembershipRepository groupMembershipRepository) {
+    public UserController(UserService userService, UserDTOValidator userDTOValidator) {
         this.userService = userService;
         this.userDTOValidator = userDTOValidator;
-        this.groupMembershipRepository = groupMembershipRepository;
     }
 
     @GetMapping("/admin/getAllUsers")

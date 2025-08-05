@@ -3,11 +3,9 @@ package com.squad.squad.controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +20,7 @@ import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import com.squad.squad.mapper.GameLocationMapper;
 import com.squad.squad.repository.GameLocationRepository;
 import com.squad.squad.service.GameService;
+import com.squad.squad.security.JwtGroupContextService;
 
 @RestController
 @RequestMapping("/api/games")
@@ -31,14 +30,16 @@ public class GameController {
     private final GameLocationRepository gameLocationRepository;
     private final GameDTOValidator gameDTOValidator;
     private final GameLocationMapper gameLocationMapper;
+    private final JwtGroupContextService jwtGroupContextService;
 
-    @Autowired
     public GameController(GameService gameService, GameDTOValidator gameDTOValidator,
-            GameLocationRepository gameLocationRepository, GameLocationMapper gameLocationMapper) {
+            GameLocationRepository gameLocationRepository, GameLocationMapper gameLocationMapper,
+            JwtGroupContextService jwtGroupContextService) {
         this.gameService = gameService;
         this.gameDTOValidator = gameDTOValidator;
         this.gameLocationRepository = gameLocationRepository;
         this.gameLocationMapper = gameLocationMapper;
+        this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @GetMapping("/getAllGames")
@@ -64,7 +65,7 @@ public class GameController {
         }
 
         gameService.createGame(gameDto);
-        return ResponseEntity.ok("Game created successfully");
+        return ResponseEntity.ok("Maç başarıyla oluşturuldu");
     }
 
     @PutMapping("/admin/updateGame/{id}")
@@ -76,7 +77,7 @@ public class GameController {
         }
 
         gameService.updateGame(id, updatedGame);
-        return ResponseEntity.ok("Game updated successfully");
+        return ResponseEntity.ok("Maç başarıyla güncellendi");
     }
 
     @DeleteMapping("/admin/deleteGame/{id}")
@@ -92,7 +93,7 @@ public class GameController {
         if (latestGame != null) {
             return ResponseEntity.ok(latestGame);
         } else {
-            return ResponseEntity.ok("No upcoming matches available");
+            return ResponseEntity.ok("Yaklaşan maç bulunmuyor");
         }
     }
 
@@ -102,21 +103,23 @@ public class GameController {
 
         return mvpPlayer
                 .map(player -> ResponseEntity.ok((Object) player))
-                .orElseGet(() -> ResponseEntity.ok("No MVP player found"));
+                .orElseGet(() -> ResponseEntity.ok("MVP oyuncu bulunamadı"));
     }
 
     @PutMapping("/updateWeather/{id}")
     public ResponseEntity<?> updateWeather(@PathVariable Integer id, @RequestBody String weather) {
 
         gameService.updateWeather(id, weather);
-        return ResponseEntity.ok("Game updated successfully");
+        return ResponseEntity.ok("Hava durumu başarıyla güncellendi");
     }
 
     @GetMapping("/getGameLocations")
     public ResponseEntity<List<GameLocationDTO>> getGameLocations() {
-        Sort sort = Sort.by(Sort.Direction.ASC, "location");
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
         return ResponseEntity
-                .ok(gameLocationMapper.gameLocationListToGameLocationDTOList(gameLocationRepository.findAll(sort)));
+                .ok(gameLocationMapper
+                        .gameLocationListToGameLocationDTOList(
+                                gameLocationRepository.findAllByGroupId(currentGroupId)));
     }
 
 }
