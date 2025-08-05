@@ -1,12 +1,5 @@
 package com.squad.squad.dto.player;
 
-import com.squad.squad.entity.Goal;
-import com.squad.squad.entity.Roster;
-import com.squad.squad.entity.User;
-import jakarta.persistence.*;
-
-import java.util.List;
-
 public class GetAllPlayersDTO {
 
     private Integer id;

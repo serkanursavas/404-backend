@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.squad.squad.dto.user.UserRoleUpdateRequestDTO;
 import com.squad.squad.dto.user.UserUpdateRequestDTO;
-import com.squad.squad.enums.Role;
-import com.squad.squad.enums.TeamColor;
 import com.squad.squad.entity.GroupMembership;
 import org.springframework.stereotype.Component;
 

@@ -8,8 +8,6 @@ import java.util.Set;
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import org.springframework.stereotype.Component;
 
-import com.squad.squad.dto.RatingDTO;
-
 @Component
 public class RatingDTOValidator {
 

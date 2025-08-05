@@ -1,7 +1,5 @@
 package com.squad.squad.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.util.List;
 
 public class PlayerDTO {

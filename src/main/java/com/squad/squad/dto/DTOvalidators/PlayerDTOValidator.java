@@ -7,8 +7,6 @@ import com.squad.squad.dto.PlayerCreateDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import org.springframework.stereotype.Component;
 
-import com.squad.squad.dto.PlayerDTO;
-
 @Component
 public class PlayerDTOValidator {
 

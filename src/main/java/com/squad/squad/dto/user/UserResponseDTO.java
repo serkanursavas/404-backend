@@ -1,9 +1,8 @@
 package com.squad.squad.dto.user;
 
-import com.squad.squad.dto.PlayerDTO;
-
 import java.time.LocalDateTime;
-import java.util.Date;
+
+import com.squad.squad.dto.PlayerDTO;
 
 public class UserResponseDTO {
     private Integer id;

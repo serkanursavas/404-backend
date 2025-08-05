@@ -1,9 +1,6 @@
 package com.squad.squad.dto.game;
 
 import com.squad.squad.dto.GameLocationDTO;
-import com.squad.squad.dto.GoalDTO;
-import com.squad.squad.dto.RosterDTO;
-import com.squad.squad.dto.roster.RosterCreateDTO;
 import com.squad.squad.dto.roster.RosterUpdateDTO;
 
 import java.time.LocalDateTime;
@@ -57,6 +54,7 @@ public class GameUpdateRequestDTO {
     public void setTeamSize(Integer teamSize) {
         this.teamSize = teamSize;
     }
+
     // missed getter and setter
     public GameLocationDTO getGameLocation() {
         return gameLocation;

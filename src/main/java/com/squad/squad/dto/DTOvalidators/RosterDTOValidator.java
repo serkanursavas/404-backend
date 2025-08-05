@@ -10,8 +10,6 @@ import com.squad.squad.dto.roster.RosterUpdateDTO;
 import com.squad.squad.enums.TeamColor;
 import org.springframework.stereotype.Component;
 
-import com.squad.squad.dto.RosterDTO;
-
 @Component
 public class RosterDTOValidator {
 
@@ -38,7 +36,8 @@ public class RosterDTOValidator {
                         blackTeamCount++;
                     }
                 } catch (RuntimeException e) {
-                    errors.add("Invalid team color for player ID " + roster.getPlayerId() + ": " + roster.getTeamColor());
+                    errors.add(
+                            "Invalid team color for player ID " + roster.getPlayerId() + ": " + roster.getTeamColor());
                 }
             } else {
                 errors.add("Team color cannot be null for player ID " + roster.getPlayerId());
@@ -77,7 +76,8 @@ public class RosterDTOValidator {
                         blackTeamCount++;
                     }
                 } catch (RuntimeException e) {
-                    errors.add("Invalid team color for player ID " + roster.getPlayerId() + ": " + roster.getTeamColor());
+                    errors.add(
+                            "Invalid team color for player ID " + roster.getPlayerId() + ": " + roster.getTeamColor());
                 }
             } else {
                 errors.add("Team color cannot be null for player ID " + roster.getPlayerId());

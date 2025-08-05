@@ -1,11 +1,8 @@
 package com.squad.squad.dto.game;
 
-import com.squad.squad.dto.GameLocationDTO;
-import com.squad.squad.dto.GoalDTO;
-import com.squad.squad.dto.RosterDTO;
-
 import java.time.LocalDateTime;
-import java.util.List;
+
+import com.squad.squad.dto.GameLocationDTO;
 
 public class NextGameResponseDTO {
 

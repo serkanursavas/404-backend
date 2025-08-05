@@ -8,8 +8,6 @@ import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
 import org.springframework.stereotype.Component;
 
-import com.squad.squad.dto.GameDTO;
-
 @Component
 public class GameDTOValidator {
 

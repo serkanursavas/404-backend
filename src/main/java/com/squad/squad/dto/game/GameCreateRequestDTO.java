@@ -1,7 +1,5 @@
 package com.squad.squad.dto.game;
 
-import com.squad.squad.dto.GameLocationDTO;
-import com.squad.squad.dto.RosterDTO;
 import com.squad.squad.dto.roster.RosterCreateDTO;
 
 import java.time.LocalDateTime;

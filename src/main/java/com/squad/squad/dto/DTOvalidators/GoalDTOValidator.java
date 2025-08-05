@@ -9,7 +9,6 @@ import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import com.squad.squad.entity.Roster;
 import org.springframework.stereotype.Component;
 
-import com.squad.squad.dto.GoalDTO;
 import com.squad.squad.enums.TeamColor;
 
 @Component
