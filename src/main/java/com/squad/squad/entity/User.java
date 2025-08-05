@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "\"user\"") // Çift tırnak içinde yazın
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class User extends BaseEntity{
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +27,9 @@ public class User extends BaseEntity{
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "group_id", nullable = true)
+    private Integer groupId;
 
     @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "player_id", referencedColumnName = "id")
@@ -78,5 +81,13 @@ public class User extends BaseEntity{
 
     public void setPlayer(Player player) {
         this.player = player;
+    }
+
+    public Integer getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
     }
 }

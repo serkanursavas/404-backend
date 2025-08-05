@@ -40,7 +40,8 @@ public class GroupRequest {
     private String rejectionReason;
 
     // Constructors
-    public GroupRequest() {}
+    public GroupRequest() {
+    }
 
     public GroupRequest(String groupName, String groupDescription, Integer requestedBy, Integer intendedAdmin) {
         this.groupName = groupName;
@@ -50,35 +51,85 @@ public class GroupRequest {
     }
 
     // Getters and Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public String getGroupName() { return groupName; }
-    public void setGroupName(String groupName) { this.groupName = groupName; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public String getGroupDescription() { return groupDescription; }
-    public void setGroupDescription(String groupDescription) { this.groupDescription = groupDescription; }
+    public String getGroupName() {
+        return groupName;
+    }
 
-    public Integer getRequestedBy() { return requestedBy; }
-    public void setRequestedBy(Integer requestedBy) { this.requestedBy = requestedBy; }
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
 
-    public Integer getIntendedAdmin() { return intendedAdmin; }
-    public void setIntendedAdmin(Integer intendedAdmin) { this.intendedAdmin = intendedAdmin; }
+    public String getGroupDescription() {
+        return groupDescription;
+    }
 
-    public RequestStatus getStatus() { return status; }
-    public void setStatus(RequestStatus status) { this.status = status; }
+    public void setGroupDescription(String groupDescription) {
+        this.groupDescription = groupDescription;
+    }
 
-    public LocalDateTime getRequestedAt() { return requestedAt; }
-    public void setRequestedAt(LocalDateTime requestedAt) { this.requestedAt = requestedAt; }
+    public Integer getRequestedBy() {
+        return requestedBy;
+    }
 
-    public LocalDateTime getProcessedAt() { return processedAt; }
-    public void setProcessedAt(LocalDateTime processedAt) { this.processedAt = processedAt; }
+    public void setRequestedBy(Integer requestedBy) {
+        this.requestedBy = requestedBy;
+    }
 
-    public Integer getProcessedBy() { return processedBy; }
-    public void setProcessedBy(Integer processedBy) { this.processedBy = processedBy; }
+    public Integer getIntendedAdmin() {
+        return intendedAdmin;
+    }
 
-    public String getRejectionReason() { return rejectionReason; }
-    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+    public void setIntendedAdmin(Integer intendedAdmin) {
+        this.intendedAdmin = intendedAdmin;
+    }
+
+    public RequestStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(RequestStatus status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getRequestedAt() {
+        return requestedAt;
+    }
+
+    public void setRequestedAt(LocalDateTime requestedAt) {
+        this.requestedAt = requestedAt;
+    }
+
+    public LocalDateTime getProcessedAt() {
+        return processedAt;
+    }
+
+    public void setProcessedAt(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
+    }
+
+    public Integer getProcessedBy() {
+        return processedBy;
+    }
+
+    public void setProcessedBy(Integer processedBy) {
+        this.processedBy = processedBy;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
 
     public enum RequestStatus {
         PENDING, APPROVED, REJECTED

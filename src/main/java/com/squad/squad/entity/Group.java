@@ -37,7 +37,8 @@ public class Group {
     private Integer approvedBy;
 
     // Constructors
-    public Group() {}
+    public Group() {
+    }
 
     public Group(String name, String description, Integer createdBy, Integer groupAdmin) {
         this.name = name;
@@ -47,32 +48,77 @@ public class Group {
     }
 
     // Getters and Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getName() {
+        return name;
+    }
 
-    public Integer getCreatedBy() { return createdBy; }
-    public void setCreatedBy(Integer createdBy) { this.createdBy = createdBy; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Integer getGroupAdmin() { return groupAdmin; }
-    public void setGroupAdmin(Integer groupAdmin) { this.groupAdmin = groupAdmin; }
+    public String getDescription() {
+        return description;
+    }
 
-    public GroupStatus getStatus() { return status; }
-    public void setStatus(GroupStatus status) { this.status = status; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Integer getCreatedBy() {
+        return createdBy;
+    }
 
-    public LocalDateTime getApprovedAt() { return approvedAt; }
-    public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+    public void setCreatedBy(Integer createdBy) {
+        this.createdBy = createdBy;
+    }
 
-    public Integer getApprovedBy() { return approvedBy; }
-    public void setApprovedBy(Integer approvedBy) { this.approvedBy = approvedBy; }
+    public Integer getGroupAdmin() {
+        return groupAdmin;
+    }
+
+    public void setGroupAdmin(Integer groupAdmin) {
+        this.groupAdmin = groupAdmin;
+    }
+
+    public GroupStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(GroupStatus status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public Integer getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(Integer approvedBy) {
+        this.approvedBy = approvedBy;
+    }
 
     public enum GroupStatus {
         PENDING, APPROVED, REJECTED

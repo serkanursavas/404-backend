@@ -1,12 +1,15 @@
 package com.squad.squad.entity;
 
-import com.squad.squad.context.TenantContext;
 import jakarta.persistence.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @MappedSuperclass
 public abstract class BaseEntity {
 
-    @Column(name = "group_id", nullable = false)
+    private static final Logger logger = LoggerFactory.getLogger(BaseEntity.class);
+
+    @Column(name = "group_id", nullable = true)
     private Integer groupId;
 
     public Integer getGroupId() {
@@ -17,28 +20,16 @@ public abstract class BaseEntity {
         this.groupId = groupId;
     }
 
-    // Yeni entity oluşturulurken otomatik olarak mevcut tenant'ı set et
+    // Yeni entity oluşturulurken otomatik olarak null group'ı set et
     @PrePersist
     public void prePersist() {
         if (this.groupId == null) {
-            Integer currentTenantId = TenantContext.getTenantId();
-            if (currentTenantId != null && currentTenantId > 0) {
-                // Authenticated user varsa, onun tenant'ını kullan
-                this.groupId = currentTenantId;
-            } else {
-                // Authentication yoksa (user registration gibi), pending group kullan
-                this.groupId = 0; // Group 0 = Pending/Unassigned
-            }
+            // Authentication yoksa (user registration gibi), null group kullan
+            this.groupId = null; // Group null = Pending/Unassigned
+            logger.debug("Set groupId to null (pending) for entity {}", this.getClass().getSimpleName());
         }
     }
 
-    // Update sırasında tenant değişikliğini engelle
-    @PreUpdate
-    public void preUpdate() {
-        Integer currentTenantId = TenantContext.getTenantId();
-        if (currentTenantId != null && !currentTenantId.equals(this.groupId)) {
-            throw new IllegalStateException("Cannot modify entity belonging to different tenant. Entity tenant: " +
-                    this.groupId + ", Current tenant: " + currentTenantId);
-        }
-    }
+    // Not: @PreUpdate kaldırıldı - SecureJpaRepository seviyesinde güvenlik
+    // sağlanıyor
 }
