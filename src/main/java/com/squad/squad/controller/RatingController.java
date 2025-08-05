@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.squad.squad.dto.RatingDTO;
 import com.squad.squad.service.RatingService;
 
 import jakarta.transaction.Transactional;

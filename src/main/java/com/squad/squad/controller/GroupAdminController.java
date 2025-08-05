@@ -3,7 +3,6 @@ package com.squad.squad.controller;
 import com.squad.squad.dto.admin.AdminDecisionDTO;
 import com.squad.squad.dto.membership.MembershipResponseDTO;
 import com.squad.squad.service.MembershipService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +17,6 @@ public class GroupAdminController {
 
     private final MembershipService membershipService;
 
-    @Autowired
     public GroupAdminController(MembershipService membershipService) {
         this.membershipService = membershipService;
     }

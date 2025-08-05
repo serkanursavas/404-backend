@@ -5,7 +5,6 @@ import com.squad.squad.dto.membership.MembershipRequestDTO;
 import com.squad.squad.dto.membership.MembershipResponseDTO;
 import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.service.MembershipService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +20,6 @@ public class MembershipController {
 
     private final MembershipService membershipService;
 
-    @Autowired
     public MembershipController(MembershipService membershipService) {
         this.membershipService = membershipService;
     }
@@ -66,7 +64,7 @@ public class MembershipController {
     @PutMapping("/{membershipId}/process")
     @PreAuthorize("hasRole('ROLE_ADMIN') or @membershipService.canUserProcessMembership(authentication.principal, #membershipId)")
     public ResponseEntity<?> processMembershipRequest(@PathVariable Integer membershipId,
-                                                      @RequestBody AdminDecisionDTO decision) {
+            @RequestBody AdminDecisionDTO decision) {
         try {
             String result = membershipService.processMembershipRequest(membershipId, decision);
             return ResponseEntity.ok(result);
