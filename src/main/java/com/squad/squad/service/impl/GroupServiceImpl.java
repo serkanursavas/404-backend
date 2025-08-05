@@ -8,8 +8,9 @@ import com.squad.squad.entity.*;
 import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.repository.*;
 import com.squad.squad.security.CustomUserDetails;
+import com.squad.squad.security.JwtGroupContextService;
 import com.squad.squad.service.GroupService;
-import com.squad.squad.service.TenantContextService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,29 +27,27 @@ public class GroupServiceImpl implements GroupService {
     private final GroupRequestRepository groupRequestRepository;
     private final UserRepository userRepository;
     private final GroupMembershipRepository membershipRepository;
-    private final TenantContextService tenantContextService;
+    private final JwtGroupContextService jwtGroupContextService;
 
     @Autowired
     public GroupServiceImpl(GroupRepository groupRepository,
-                            GroupRequestRepository groupRequestRepository,
-                            UserRepository userRepository,
-                            GroupMembershipRepository membershipRepository,
-                            TenantContextService tenantContextService) {
+            GroupRequestRepository groupRequestRepository,
+            UserRepository userRepository,
+            GroupMembershipRepository membershipRepository,
+            JwtGroupContextService jwtGroupContextService) {
         this.groupRepository = groupRepository;
         this.groupRequestRepository = groupRequestRepository;
         this.userRepository = userRepository;
         this.membershipRepository = membershipRepository;
-        this.tenantContextService = tenantContextService;
+        this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @Override
     @Transactional
     public String createGroupRequest(GroupCreateRequestDTO request) {
-        // Mevcut kullanıcı bilgisini al
-        CustomUserDetails currentUser = getCurrentUser();
-
         // Validasyonlar
-        if (groupRequestRepository.existsByGroupNameAndStatus(request.getGroupName(), GroupRequest.RequestStatus.PENDING)) {
+        if (groupRequestRepository.existsByGroupNameAndStatus(request.getGroupName(),
+                GroupRequest.RequestStatus.PENDING)) {
             throw new IllegalArgumentException("Bu isimde bekleyen bir grup talebi zaten mevcut.");
         }
 
@@ -56,24 +55,17 @@ public class GroupServiceImpl implements GroupService {
             throw new IllegalArgumentException("Bu isimde bir grup zaten mevcut.");
         }
 
-        // Kullanıcının son 30 günde çok fazla talep oluşturup oluşturmadığını kontrol et
-        Long recentRequests = groupRequestRepository.countRecentRequestsByUser(currentUser.getId());
-        if (recentRequests >= 3) { // Maximum 3 talep per 30 gün
-            throw new IllegalArgumentException("Son 30 gün içinde çok fazla grup talebi oluşturdunuz. Lütfen bekleyin.");
-        }
-
         // Intended admin kullanıcısının var olup olmadığını kontrol et
         if (!userRepository.existsById(request.getIntendedAdminUserId())) {
             throw new IllegalArgumentException("Belirtilen grup admin kullanıcısı bulunamadı.");
         }
 
-        // Grup talebini oluştur
+        // Grup talebini oluştur - intendedAdminUserId'yi requestedBy olarak kullan
         GroupRequest groupRequest = new GroupRequest(
                 request.getGroupName(),
                 request.getGroupDescription(),
-                currentUser.getId(),
-                request.getIntendedAdminUserId()
-        );
+                request.getIntendedAdminUserId(), // requestedBy olarak intended admin'i kullan
+                request.getIntendedAdminUserId());
 
         groupRequestRepository.save(groupRequest);
 
@@ -82,20 +74,14 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupRequestResponseDTO> getPendingGroupRequests() {
-        // Sadece ADMIN yetkisi kontrolü
+        // Sadece user id 1 olan kullanıcı görebilsin
         CustomUserDetails currentUser = getCurrentUser();
 
-        System.out.println("=== ROLE DEBUG ===");
-        System.out.println("Current user: " + currentUser.getUsername());
-        System.out.println("User role: " + currentUser.getRole());
-        System.out.println("Authorities: " + currentUser.getAuthorities());
-        System.out.println("================");
-
-        if (!"ROLE_ADMIN".equals(currentUser.getRole())) {
+        if (currentUser.getId() != 1) {
             throw new InvalidCredentialsException("Bu işlem için admin yetkisi gerekli.");
         }
 
-        List<GroupRequest> pendingRequests = groupRequestRepository.findByStatus(GroupRequest.RequestStatus.PENDING);
+        List<GroupRequest> pendingRequests = groupRequestRepository.findByStatus("PENDING");
 
         return pendingRequests.stream().map(this::convertToGroupRequestResponseDTO).collect(Collectors.toList());
     }
@@ -103,9 +89,9 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional
     public String processGroupRequest(Integer requestId, AdminDecisionDTO decision) {
-        // Sadece ADMIN yetkisi kontrolü
+        // Sadece user id 1 olan kullanıcı görebilsin
         CustomUserDetails currentUser = getCurrentUser();
-        if (!"ROLE_ADMIN".equals(currentUser.getRole())) {
+        if (currentUser.getId() != 1) {
             throw new InvalidCredentialsException("Bu işlem için admin yetkisi gerekli.");
         }
 
@@ -126,9 +112,8 @@ public class GroupServiceImpl implements GroupService {
             Group newGroup = new Group(
                     request.getGroupName(),
                     request.getGroupDescription(),
-                    request.getRequestedBy(),
-                    request.getIntendedAdmin()
-            );
+                    request.getIntendedAdmin(), // createdBy = intended admin
+                    request.getIntendedAdmin()); // groupAdmin = intended admin
             newGroup.setStatus(Group.GroupStatus.APPROVED);
             newGroup.setApprovedAt(LocalDateTime.now());
             newGroup.setApprovedBy(currentUser.getId());
@@ -160,69 +145,40 @@ public class GroupServiceImpl implements GroupService {
      * Intended admin'i yeni oluşturulan gruba otomatik olarak ekle
      */
     private void addIntendedAdminToGroup(Integer intendedAdminId, Integer newGroupId) {
-        Integer originalTenant = tenantContextService.getCurrentTenantId();
-        try {
-            // Yeni grubun context'ine geç
-            tenantContextService.setTenantContext(newGroupId);
+        // 1. GroupMembership oluştur (APPROVED ve GROUP_ADMIN olarak)
+        GroupMembership membership = new GroupMembership(intendedAdminId, newGroupId);
+        membership.setStatus(GroupMembership.MembershipStatus.APPROVED);
+        membership.setRole(GroupMembership.MembershipRole.GROUP_ADMIN); // KRİTİK: GROUP_ADMIN
+        membership.setApprovedAt(LocalDateTime.now());
+        membership.setApprovedBy(1); // System tarafından onaylandı
 
-            // 1. GroupMembership oluştur (APPROVED ve GROUP_ADMIN olarak)
-            GroupMembership membership = new GroupMembership(intendedAdminId, newGroupId);
-            membership.setStatus(GroupMembership.MembershipStatus.APPROVED);
-            membership.setRole(GroupMembership.MembershipRole.GROUP_ADMIN); // KRİTİK: GROUP_ADMIN
-            membership.setApprovedAt(LocalDateTime.now());
-            membership.setApprovedBy(1); // System tarafından onaylandı
+        // DOĞRUDAN KAYDET - processMembershipDecision çağırma
+        membershipRepository.save(membership);
 
-            // DOĞRUDAN KAYDET - processMembershipDecision çağırma
-            membershipRepository.save(membership);
+        System.out.println("Intended admin saved with role: " + membership.getRole());
 
-            System.out.println("Intended admin saved with role: " + membership.getRole());
-
-            // 2. User'ın groupId'sini güncelle
-            transferUserToGroup(intendedAdminId, newGroupId);
-
-        } finally {
-            tenantContextService.setTenantContext(originalTenant);
-        }
+        // 2. User'ın groupId'sini güncelle
+        transferUserToGroup(intendedAdminId, newGroupId);
     }
 
     /**
      * Kullanıcıyı yeni gruba transfer et
      */
     private void transferUserToGroup(Integer userId, Integer newGroupId) {
-        // Önce kullanıcıyı mevcut context'de bul
-        User user = userRepository.findById(userId).orElse(null);
-
-        if (user == null) {
-            // Farklı context'lerde ara
-            Integer originalTenant = tenantContextService.getCurrentTenantId();
-            try {
-                // Super admin context'inde ara
-                tenantContextService.setSuperAdminContext();
-                user = userRepository.findById(userId)
-                        .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
-            } finally {
-                tenantContextService.setTenantContext(originalTenant);
-            }
-        }
+        // Kullanıcıyı bul
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
 
         Integer oldGroupId = user.getGroupId();
 
         // Kullanıcının grup ID'sini güncelle
-        if (!oldGroupId.equals(newGroupId)) {
-            Integer originalTenant = tenantContextService.getCurrentTenantId();
-            try {
-                // Eski context'de güncelle
-                tenantContextService.setTenantContext(oldGroupId);
-                user.setGroupId(newGroupId);
-                userRepository.save(user);
+        if (oldGroupId == null || !oldGroupId.equals(newGroupId)) {
+            user.setGroupId(newGroupId);
+            userRepository.save(user);
 
-                // Player'ı da transfer et
-                if (user.getPlayer() != null) {
-                    user.getPlayer().setGroupId(newGroupId);
-                }
-
-            } finally {
-                tenantContextService.setTenantContext(originalTenant);
+            // Player'ı da transfer et
+            if (user.getPlayer() != null) {
+                user.getPlayer().setGroupId(newGroupId);
             }
         } else {
             // Aynı context'de güncelle

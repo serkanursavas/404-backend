@@ -9,7 +9,6 @@ import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import com.squad.squad.entity.Player;
-import jakarta.persistence.Cacheable;
 
 public interface PlayerService {
 

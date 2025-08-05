@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.squad.squad.dto.TopListsDTO;
+import com.squad.squad.dto.TopScorerProjection;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.GoalService;
 import com.squad.squad.service.PlayerService;
+import com.squad.squad.security.JwtGroupContextService;
 
 @Service
 public class GoalServiceImpl implements GoalService {
@@ -28,28 +30,31 @@ public class GoalServiceImpl implements GoalService {
     private final PlayerService playerService;
     private final GameMapper gameMapper;
     private final PlayerMapper playerMapper;
+    private final JwtGroupContextService jwtGroupContextService;
 
     @Autowired
-    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService, GameMapper gameMapper, PlayerMapper playerMapper) {
+    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService,
+            GameMapper gameMapper, PlayerMapper playerMapper, JwtGroupContextService jwtGroupContextService) {
         this.goalRepository = goalRepository;
         this.gameService = gameService;
         this.playerService = playerService;
         this.gameMapper = gameMapper;
         this.playerMapper = playerMapper;
+        this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @Override
     public List<GoalDTO> getAllGoals() {
         return goalRepository.findAll().stream().map(
-                        goal -> new GoalDTO(goal.getGame().getId(), goal.getPlayer().getId(), goal.getPlayer().getName(),
-                                goal.getTeamColor()))
+                goal -> new GoalDTO(goal.getGame().getId(), goal.getPlayer().getId(), goal.getPlayer().getName(),
+                        goal.getTeamColor()))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<GoalDTO> getGoalsByGameId(Integer gameId) {
         return goalRepository.findGoalsByGameId(gameId).stream().map(
-                        goal -> new GoalDTO(gameId, goal.getPlayer().getId(), goal.getPlayer().getName(), goal.getTeamColor()))
+                goal -> new GoalDTO(gameId, goal.getPlayer().getId(), goal.getPlayer().getName(), goal.getTeamColor()))
                 .collect(Collectors.toList());
     }
 
@@ -77,15 +82,16 @@ public class GoalServiceImpl implements GoalService {
     }
 
     public List<TopListsDTO> getTopScorers() {
-        List<Object[]> results = goalRepository.findTopScorersNative();
+        List<TopScorerProjection> results = goalRepository
+                .findTopScorersNative(jwtGroupContextService.getCurrentApprovedGroupId());
         List<TopListsDTO> topScorers = new ArrayList<>();
 
-        for (Object[] result : results) {
-            Integer playerId = (Integer) result[0];
-            String name = (String) result[1];
-            String surname = (String) result[2];
-            Long goalCount = ((Number) result[3]).longValue(); // Long'a dönüştürüyoruz
-            Long gameCount = ((Number) result[4]).longValue(); // Long'a dönüştürüyoruz
+        for (TopScorerProjection result : results) {
+            Integer playerId = result.getPlayerId();
+            String name = result.getName();
+            String surname = result.getSurname();
+            Long goalCount = result.getGoalCount();
+            Long gameCount = result.getRosterCount();
 
             TopListsDTO dto = new TopListsDTO(playerId, name, surname, goalCount, gameCount);
             topScorers.add(dto);

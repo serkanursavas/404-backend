@@ -29,4 +29,7 @@ public interface UserService {
 
     // Security check methods
     boolean canUserAccessUserData(Object userPrincipal, String targetUsername);
+
+    // Combined user and group creation
+    String createUserWithGroup(UserCreateRequestDTO user);
 }

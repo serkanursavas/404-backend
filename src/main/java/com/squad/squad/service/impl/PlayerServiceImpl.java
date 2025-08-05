@@ -16,7 +16,7 @@ import com.squad.squad.repository.PlayerRepository;
 import com.squad.squad.repository.UserRepository;
 import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.service.PlayerService;
-import com.squad.squad.service.TenantContextService;
+import com.squad.squad.security.JwtGroupContextService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,47 +34,41 @@ public class PlayerServiceImpl implements PlayerService {
 
     private final PlayerRepository playerRepository;
     private final PlayerMapper playerMapper;
-    private final TenantContextService tenantContextService;
     private final UserRepository userRepository;
+    private final JwtGroupContextService jwtGroupContextService;
 
     @Autowired
-    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerMapper playerMapper,  TenantContextService tenantContextService, UserRepository userRepository) {
+    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerMapper playerMapper,
+            UserRepository userRepository, JwtGroupContextService jwtGroupContextService) {
         this.playerRepository = playerRepository;
         this.playerMapper = playerMapper;
-        this.tenantContextService = tenantContextService;
         this.userRepository = userRepository;
+        this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @Override
     public List<PlayerDTO> getAllPlayers() {
         CustomUserDetails currentUser = getCurrentUser();
+        System.out.println("=== PLAYERS DEBUG ===");
+        System.out.println("User: " + currentUser.getUsername() + ", Role: " + currentUser.getRole());
+        System.out.println("Current JWT GroupContext: " + jwtGroupContextService.getCurrentApprovedGroupId());
 
         List<Player> players;
 
         // Super Admin ise tüm player'ları göster
         if ("ROLE_ADMIN".equals(currentUser.getRole())) {
-            players = playerRepository.findAll();
+            // Super admin için tüm player'ları göster (güvenlik kontrolü bypass)
+            players = playerRepository.findByActiveTrue(); // Güvenli method kullan
+            System.out.println("Admin: Loading all players, count: " + players.size());
         } else {
-            // Normal kullanıcı ise sadece kendi grubundaki player'ları göster
-            User user = userRepository.findById(currentUser.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
-
-            Integer userGroupId = user.getGroupId();
-
-            if (userGroupId == 0) {
-                // Kullanıcı henüz onay bekliyor, sadece kendi player'ını göster
-                if (user.getPlayer().getId() != null) {
-                    players = playerRepository.findByPlayerId(user.getPlayer().getId());
-                } else {
-                    players = new ArrayList<>(); // Player'ı yoksa boş liste
-                }
-                System.out.println("User in pending state, showing only own player: " + players.size());
-            } else {
-                // Onaylanmış kullanıcı, grubundaki tüm player'ları göster
-                players = playerRepository.findByGroupId(userGroupId);
-                System.out.println("User in approved group " + userGroupId + ", showing " + players.size() + " players");
-            }
+            // Normal kullanıcı ise SecureJpaRepository otomatik filtreleme yapar
+            Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+            Integer currentUserId = jwtGroupContextService.getCurrentUserId();
+            players = playerRepository.findAllByCurrentGroup(currentGroupId, currentUserId); // Current group
+                                                                                             // context'ten alır
+            System.out.println("Normal user: Loading players for current group, count: " + players.size());
         }
+        System.out.println("=== END PLAYERS DEBUG ===");
 
         Collator trCollator = Collator.getInstance(new Locale("tr", "TR"));
 
@@ -99,16 +93,12 @@ public class PlayerServiceImpl implements PlayerService {
                                 dto.setCategory(playerPersona.getPersona().getCategory());
                                 return dto;
                             })
-                            .toList();
+                            .collect(Collectors.toList());
 
                     playerDTO.setPersonas(personas);
-
-                    List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId());
-                    playerDTO.setLast5GameRating(last5GameRating);
-
                     return playerDTO;
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
 
     // Helper method
@@ -122,10 +112,11 @@ public class PlayerServiceImpl implements PlayerService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException("User not found with id: " + id));
 
-        Player player = playerRepository.findById(user.getPlayer().getId())
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+        Integer currentUserId = jwtGroupContextService.getCurrentUserId();
+        Player player = playerRepository
+                .findByIdAndCurrentGroup(user.getPlayer().getId(), currentGroupId, currentUserId)
                 .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));
-
-
 
         PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
 
@@ -145,17 +136,19 @@ public class PlayerServiceImpl implements PlayerService {
 
         playerDTO.setPersonas(personas);
 
-        List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId());
+        List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId(), currentGroupId);
 
         playerDTO.setLast5GameRating(last5GameRating);
-
 
         return playerDTO;
     }
 
     @Override
     public void updatePlayer(PlayerUpdateRequestDTO updatedPlayer) {
-        Player existingPlayer = playerRepository.findById(updatedPlayer.getId())
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+        Integer currentUserId = jwtGroupContextService.getCurrentUserId();
+        Player existingPlayer = playerRepository
+                .findByIdAndCurrentGroup(updatedPlayer.getId(), currentGroupId, currentUserId)
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + updatedPlayer.getId()));
 
         BeanUtils.copyProperties(updatedPlayer, existingPlayer);
@@ -165,8 +158,11 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public void softDelete(PlayerDTO deletedPlayer) {
-        Player existingPlayer = playerRepository.findById(deletedPlayer.getId())
-                .orElseThrow(() -> new RuntimeException("Player not foundasasdas with id: " + deletedPlayer.getId()));
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+        Integer currentUserId = jwtGroupContextService.getCurrentUserId();
+        Player existingPlayer = playerRepository
+                .findByIdAndCurrentGroup(deletedPlayer.getId(), currentGroupId, currentUserId)
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + deletedPlayer.getId()));
 
         existingPlayer.setActive(false);
         playerRepository.save(existingPlayer);
@@ -174,41 +170,45 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public List<GetAllActivePlayersDTO> getAllActivePlayers() {
-        return playerMapper.playersToGetAllActivePlayersDTOs(playerRepository.findByActive(true));
+        return playerMapper.playersToGetAllActivePlayersDTOs(playerRepository.findByActiveTrue());
     }
 
     @Override
     public List<Player> findAllById(List<Integer> playerIds) {
-        return playerRepository.findAllById(playerIds);
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+        Integer currentUserId = jwtGroupContextService.getCurrentUserId();
+        return playerRepository.findAllByIdAndCurrentGroup(playerIds, currentGroupId, currentUserId);
     }
 
     public List<TopListsDTO> getTopRatedPlayersWithoutRecentGames() {
         // 1. Top Rated oyuncuları al
-        List<Object[]> topRatedPlayers = playerRepository.findTopRatedPlayers();
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+        List<Object[]> topRatedPlayers = playerRepository.findTopRatedPlayers(currentGroupId);
         List<TopListsDTO> topRatedList = topRatedPlayers.stream()
                 .map(record -> new TopListsDTO(
-                        (Integer) record[0],    // playerId
-                        (String) record[1],     // name
-                        (String) record[2],     // surname
-                        (Double) record[3],      // rating
-                        (Long) record[4]      // rating
+                        (Integer) record[0], // playerId
+                        (String) record[1], // name
+                        (String) record[2], // surname
+                        (Double) record[3], // rating
+                        (Long) record[4] // rating
                 ))
                 .toList();
 
         // 2. Son 2 maçtaki oyuncuları al
-        List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames();
+        List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames(currentGroupId);
 
         // 3. Filtreleme
         return topRatedList.stream()
                 .filter(player -> recentGamePlayerIds.contains(player.getPlayerId()))
-                .limit(10)  // En iyi 5 oyuncuyu al
+                .limit(10) // En iyi 5 oyuncuyu al
                 .collect(Collectors.toList());
     }
 
     public List<TopListProjection> getLegendaryDuos() {
-        List<TopListProjection> rawDataLegendaryDuos = playerRepository.getLegendaryDuos();
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+        List<TopListProjection> rawDataLegendaryDuos = playerRepository.getLegendaryDuos(currentGroupId);
 
-        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos();
+        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos(currentGroupId);
 
         Set<Integer> usedPlayers = new HashSet<>();
         List<TopListProjection> filteredResults = new ArrayList<>();
@@ -241,7 +241,8 @@ public class PlayerServiceImpl implements PlayerService {
         List<TopListProjection> legendaryDuos = getLegendaryDuos();
 
         // 2️⃣ "Rival Duos" verisini repodan al
-        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos();
+        Integer currentGroupId = jwtGroupContextService.getCurrentApprovedGroupId();
+        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos(currentGroupId);
 
         // 3️⃣ "Legendary Duos" içindeki oyuncu çiftlerini sakla
         Set<Set<Integer>> legendaryPairs = new HashSet<>();
@@ -254,7 +255,8 @@ public class PlayerServiceImpl implements PlayerService {
         // 4️⃣ "Rival Duos" listesinden "Legendary Duos" içindeki çiftleri çıkar
         List<TopListProjection> filteredResults = new ArrayList<>();
 
-        // 5️⃣ Daha önce listeye eklenmiş oyuncuları takip etmek için bir set oluşturuyoruz
+        // 5️⃣ Daha önce listeye eklenmiş oyuncuları takip etmek için bir set
+        // oluşturuyoruz
         Set<Integer> usedPlayers = new HashSet<>();
 
         for (TopListProjection duo : rawDataRivalDuos) {
@@ -283,8 +285,6 @@ public class PlayerServiceImpl implements PlayerService {
 
         return filteredResults;
     }
-
-
 
     @Cacheable(value = "playerCache")
     @Transactional

@@ -4,14 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.squad.squad.dto.user.*;
-import com.squad.squad.entity.GroupMembership;
-import com.squad.squad.exception.InvalidCredentialsException;
-import com.squad.squad.mapper.UserMapper;
-import com.squad.squad.repository.GroupMembershipRepository;
-import com.squad.squad.security.CustomUserDetails;
-import com.squad.squad.security.JwtUtils;
-import com.squad.squad.service.TenantContextService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,10 +15,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.squad.squad.dto.PlayerDTO;
+import com.squad.squad.dto.user.GetAllUsersDTO;
+import com.squad.squad.dto.user.UserCreateRequestDTO;
+import com.squad.squad.dto.user.UserRoleUpdateRequestDTO;
+import com.squad.squad.dto.user.UserUpdateRequestDTO;
+import com.squad.squad.entity.GroupMembership;
 import com.squad.squad.entity.Player;
 import com.squad.squad.entity.User;
+import com.squad.squad.exception.InvalidCredentialsException;
 import com.squad.squad.exception.UserNotFoundException;
+import com.squad.squad.mapper.UserMapper;
+import com.squad.squad.repository.GroupMembershipRepository;
 import com.squad.squad.repository.UserRepository;
+import com.squad.squad.security.CustomUserDetails;
+import com.squad.squad.security.JwtUtils;
+import com.squad.squad.service.GroupService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.UserService;
 
@@ -42,13 +45,11 @@ public class UserServiceImpl implements UserService {
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
     private final GroupMembershipRepository membershipRepository;
-    private final TenantContextService tenantContextService;
+    private final GroupService groupService;
 
-    @Autowired
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
             PlayerService playerService, AuthenticationManager authenticationManager, JwtUtils jwtUtils,
-            UserMapper userMapper, GroupMembershipRepository membershipRepository,
-            TenantContextService tenantContextService) {
+            UserMapper userMapper, GroupMembershipRepository membershipRepository, GroupService groupService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
@@ -56,7 +57,7 @@ public class UserServiceImpl implements UserService {
         this.jwtUtils = jwtUtils;
         this.userMapper = userMapper;
         this.membershipRepository = membershipRepository;
-        this.tenantContextService = tenantContextService;
+        this.groupService = groupService;
     }
 
     @Override
@@ -69,26 +70,60 @@ public class UserServiceImpl implements UserService {
             Integer userId = userDetails.getId();
             String userRole = userDetails.getRole();
 
-            // Kullanıcının grup ID'sini al ve TenantContext'i ayarla
-            Integer userGroupId = userDetails.getGroupId();
-            if ("ROLE_ADMIN".equals(userRole)) {
-                // Süper admin ise, RLS'yi atlamak için 0'ı kullan (PostgreSQL'de 'SUPER_ADMIN'
-                // olarak ayarlanacak)
-                tenantContextService.setSuperAdminContext(); // setSuperAdminContext çağrıldı
-            } else if (userGroupId != null) {
-                // Normal kullanıcı veya grup yöneticisi ise, kendi grup ID'sini kullan
-                tenantContextService.setTenantContext(userGroupId); // setTenantContext çağrıldı
-            } else {
-                // Grup ID'si null ise (veya pending durumdaysa), varsayılan olarak 0'ı kullan
-                tenantContextService.setTenantContext(0); // Varsayılan veya pending grubu için 0
+            // Kullanıcının onaylanmış grup ID'sini al
+            Integer approvedGroupId = null;
+            if (!"ROLE_ADMIN".equals(userRole)) {
+                // Onaylanmış üyelik var mı kontrol et
+                List<GroupMembership> approvedMemberships = membershipRepository.findByUserIdAndStatus(
+                        userId, GroupMembership.MembershipStatus.APPROVED);
+
+                if (!approvedMemberships.isEmpty()) {
+                    // İlk onaylanmış üyeliği al
+                    approvedGroupId = approvedMemberships.get(0).getGroupId();
+                }
             }
 
             return jwtUtils.generateToken(userId, username,
                     authentication.getAuthorities().stream()
                             .map(GrantedAuthority::getAuthority)
-                            .collect(Collectors.joining(",")));
+                            .collect(Collectors.joining(",")),
+                    approvedGroupId); // Sadece onaylanmış group_id'yi JWT'ye ekle
         } catch (AuthenticationException e) {
             throw new InvalidCredentialsException("Invalid username or password");
+        }
+    }
+
+    @Override
+    @Transactional
+    public String createUserWithGroup(UserCreateRequestDTO user) {
+        // Eğer grup bilgileri varsa otomatik olarak grup oluşturma isteği yap
+        if (user.getGroupName() != null && !user.getGroupName().trim().isEmpty()) {
+            // Önce kullanıcıyı oluştur
+            String token = createUser(user);
+
+            // Kullanıcıyı bul
+            User createdUser = userRepository.findByUsername(user.getUsername().toLowerCase())
+                    .orElseThrow(() -> new RuntimeException("Oluşturulan kullanıcı bulunamadı."));
+
+            // Grup oluşturma isteği oluştur
+            try {
+                com.squad.squad.dto.group.GroupCreateRequestDTO groupRequest = new com.squad.squad.dto.group.GroupCreateRequestDTO();
+                groupRequest.setGroupName(user.getGroupName());
+                groupRequest.setGroupDescription(user.getGroupDescription());
+                groupRequest.setIntendedAdminUserId(createdUser.getId());
+
+                groupService.createGroupRequest(groupRequest);
+
+                return token;
+            } catch (Exception e) {
+                // Grup oluşturma başarısız olursa kullanıcıyı sil
+                userRepository.delete(createdUser);
+                throw new RuntimeException(
+                        "Kullanıcı oluşturuldu ama grup oluşturma başarısız oldu: " + e.getMessage());
+            }
+        } else {
+            // Normal kullanıcı oluşturma
+            return createUser(user);
         }
     }
 
@@ -99,14 +134,14 @@ public class UserServiceImpl implements UserService {
         User savedUser = new User();
         savedUser.setUsername(user.getUsername().toLowerCase());
         savedUser.setPassword(encodedPassword);
-        savedUser.setGroupId(0); // Pending group
+        savedUser.setGroupId(null); // Başlangıçta null - üyelik onaylandığında set edilecek
 
         Player player = new Player();
         player.setName(user.getPlayerCreateDTO().getName());
         player.setSurname(user.getPlayerCreateDTO().getSurname());
         player.setPosition(user.getPlayerCreateDTO().getPosition());
         player.setFoot(user.getPlayerCreateDTO().getFoot());
-        player.setGroupId(0); // Pending group
+        player.setGroupId(null); // Başlangıçta null
 
         player.setUser(savedUser);
         savedUser.setPlayer(player);
@@ -119,15 +154,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<GetAllUsersDTO> getAllUsers() {
         CustomUserDetails currentUser = getCurrentUser();
-        Integer currentUserGroupId = currentUser.getGroupId();
 
         List<User> users;
         if ("ROLE_ADMIN".equals(currentUser.getRole())) {
             // Super Admin tüm kullanıcıları görür.
             users = userRepository.findAll();
         } else {
-            if (currentUserGroupId == 0) {
-                // Kullanıcı henüz onay bekliyor, sadece kendini görür
+            // Normal kullanıcı için onaylanmış üyelikleri kontrol et
+            List<GroupMembership> approvedMemberships = membershipRepository.findByUserIdAndStatus(
+                    currentUser.getId(), GroupMembership.MembershipStatus.APPROVED);
+
+            if (approvedMemberships.isEmpty()) {
+                // Onaylanmış üyelik yoksa sadece kendini görür
                 User currentUserEntity = userRepository.findById(currentUser.getId()).orElse(null);
                 if (currentUserEntity != null) {
                     users = List.of(currentUserEntity);
@@ -135,9 +173,9 @@ public class UserServiceImpl implements UserService {
                     users = new ArrayList<>();
                 }
             } else {
-                // Grup yöneticisi veya normal kullanıcı ise, sadece kendi grubundaki
-                // kullanıcıları getir
-                users = userRepository.findAllByGroupId(currentUserGroupId);
+                // Onaylanmış üyelik varsa, o grubun kullanıcılarını getir
+                Integer approvedGroupId = approvedMemberships.get(0).getGroupId();
+                users = userRepository.findAllByGroupId(approvedGroupId);
             }
         }
 
@@ -156,22 +194,26 @@ public class UserServiceImpl implements UserService {
             // veya sistemdeki ilgili group_membership bilgisi çekilebilir.
             // Şimdilik, eğer current user admin ise ve target user'ın kendi group_id'si
             // varsa o group_id ile sorgula.
-            // Değilse, current user'ın group_id'si ile sorgula.
-            Integer effectiveGroupIdForMembership = ("ROLE_ADMIN".equals(currentUser.getRole())
-                    && targetUserGroupId != null)
-                            ? targetUserGroupId
-                            : currentUserGroupId;
+            // Değilse, current user'ın onaylanmış group_id'si ile sorgula.
+            Integer effectiveGroupIdForMembership;
+            if ("ROLE_ADMIN".equals(currentUser.getRole()) && targetUserGroupId != null) {
+                effectiveGroupIdForMembership = targetUserGroupId;
+            } else {
+                // Normal kullanıcı için onaylanmış üyeliklerden group_id al
+                List<GroupMembership> approvedMemberships = membershipRepository.findByUserIdAndStatus(
+                        currentUser.getId(), GroupMembership.MembershipStatus.APPROVED);
+                effectiveGroupIdForMembership = approvedMemberships.isEmpty() ? null
+                        : approvedMemberships.get(0).getGroupId();
+            }
 
-            if (effectiveGroupIdForMembership != null && effectiveGroupIdForMembership != 0) { // Grup ID 0 ise pending
-                                                                                               // user veya super admin
-                                                                                               // context'i
+            if (effectiveGroupIdForMembership != null) {
                 membershipRepository.findByUserIdAndGroupIdAndStatus(
                         dto.getId(),
                         effectiveGroupIdForMembership,
                         GroupMembership.MembershipStatus.APPROVED)
                         .ifPresent(membership -> dto.setGroupRole(membership.getRole().name()));
-            } else if (effectiveGroupIdForMembership == 0) {
-                // Eğer kullanıcı pending ise (groupId == 0), grup rolü yoktur, boş bırak
+            } else {
+                // Eğer kullanıcının onaylanmış üyeliği yoksa, grup rolü yoktur, boş bırak
                 dto.setGroupRole(null);
             }
         }

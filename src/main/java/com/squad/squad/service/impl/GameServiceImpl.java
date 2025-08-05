@@ -22,6 +22,7 @@ import com.squad.squad.repository.GameLocationRepository;
 import com.squad.squad.repository.GameRepository;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
+import com.squad.squad.security.JwtGroupContextService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
@@ -48,14 +49,17 @@ public class GameServiceImpl implements GameService {
     private final RatingRepository ratingRepository;
     private final GoalMapper goalMapper;
     private final GameMapper gameMapper;
-    private final GameLocationMapper gameLocationMapper ;
+    private final GameLocationMapper gameLocationMapper;
     private final PlayerMapper playerMapper;
     private final RosterPersonaRepository rosterPersonaRepository;
+    private final JwtGroupContextService jwtGroupContextService;
 
     @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-                           PlayerService playerService, RosterPersonaRepository rosterPersonaRepository
-                           ,GameLocationRepository gameLocationRepository, RatingRepository ratingRepository, GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper, PlayerMapper playerMapper) {
+            PlayerService playerService, RosterPersonaRepository rosterPersonaRepository,
+            GameLocationRepository gameLocationRepository, RatingRepository ratingRepository, GoalMapper goalMapper,
+            GameMapper gameMapper, GameLocationMapper gameLocationMapper, PlayerMapper playerMapper,
+            JwtGroupContextService jwtGroupContextService) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
@@ -66,26 +70,40 @@ public class GameServiceImpl implements GameService {
         this.gameLocationMapper = gameLocationMapper;
         this.playerMapper = playerMapper;
         this.rosterPersonaRepository = rosterPersonaRepository;
+        this.jwtGroupContextService = jwtGroupContextService;
     }
 
     @Override
     public GameResponseDTO getLatestGame() {
+        System.out.println("=== NEXT GAME DEBUG ===");
+        System.out.println("Current JWT GroupContext: " + jwtGroupContextService.getCurrentApprovedGroupId());
 
         checkAndUpdateUnplayedGame();
 
-        return gameMapper.gameToGameResponseDTO(gameRepository.findTopByOrderByDateTimeDesc());
+        Game latestGame = gameRepository
+                .findTopByOrderByDateTimeDesc(jwtGroupContextService.getCurrentApprovedGroupId());
+        if (latestGame != null) {
+            System.out.println("Next game found: ID=" + latestGame.getId() + ", Date=" + latestGame.getDateTime());
+        } else {
+            System.out.println("No next game found for current group");
+        }
+        System.out.println("=== END NEXT GAME DEBUG ===");
+
+        return gameMapper.gameToGameResponseDTO(latestGame);
     }
 
     @Override
     public Page<LatestGamesDTO> getAllGames(Pageable pageable) {
-        return gameRepository.findAllByOrderByDateTimeDesc(pageable).map(game ->
-                new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
+        return gameRepository.findAllByOrderByDateTimeDesc(pageable)
+                .map(game -> new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
                         game.getAwayTeamScore(), game.isPlayed()));
     }
 
     @Override
     public Game findGameById(Integer id) {
-        return gameRepository.findById(id)
+        return gameRepository
+                .findByIdAndCurrentGroup(id, jwtGroupContextService.getCurrentApprovedGroupId(),
+                        jwtGroupContextService.getCurrentUserId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
     }
 
@@ -97,12 +115,14 @@ public class GameServiceImpl implements GameService {
     @Override
     public GameResponseDTO getGameById(Integer id) {
 
-        Game game = gameRepository.findById(id)
+        Game game = gameRepository
+                .findByIdAndCurrentGroup(id, jwtGroupContextService.getCurrentApprovedGroupId(),
+                        jwtGroupContextService.getCurrentUserId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
         GameLocation gameLocation = gameLocationRepository.findById(game.getGameLocation().getId())
-                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + game.getGameLocation().getId()));
-
+                .orElseThrow(() -> new NotFoundException(
+                        "Game location not found with id: " + game.getGameLocation().getId()));
 
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(id);
         List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
@@ -126,8 +146,6 @@ public class GameServiceImpl implements GameService {
             goal.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         });
 
-
-
         // GameResponseDTO'yu oluşturun
         GameResponseDTO gameDTO = new GameResponseDTO();
         BeanUtils.copyProperties(game, gameDTO);
@@ -150,9 +168,9 @@ public class GameServiceImpl implements GameService {
         game.setWeather(gameDto.getWeather());
         game.setLocation(gameDto.getLocation());
 
-
         GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(gameDto.getLocation()))
-                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + gameDto.getGameLocationId()));
+                .orElseThrow(
+                        () -> new NotFoundException("Game location not found with id: " + gameDto.getGameLocationId()));
 
         game.setGameLocation(gameLocation);
 
@@ -181,7 +199,8 @@ public class GameServiceImpl implements GameService {
         rosters.forEach(roster -> roster.setGame(savedGame));
         rosterService.saveAllRosters(rosters);
 
-        // yeni mac olusturuldugu icin son mac icin rating tablosu sifirliyoruz data birikmesin diye
+        // yeni mac olusturuldugu icin son mac icin rating tablosu sifirliyoruz data
+        // birikmesin diye
         ratingRepository.deleteAll();
         rosterPersonaRepository.deleteAll();
     }
@@ -197,7 +216,8 @@ public class GameServiceImpl implements GameService {
         }
 
         GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(updatedGame.getLocation()))
-                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + updatedGame.getLocation()));
+                .orElseThrow(
+                        () -> new NotFoundException("Game location not found with id: " + updatedGame.getLocation()));
 
         game.setGameLocation(gameLocation);
         updateFieldIfNotNull(updatedGame.getDateTime(), game::setDateTime);
@@ -225,7 +245,8 @@ public class GameServiceImpl implements GameService {
                         .filter(rosterUpdateDTO -> rosterUpdateDTO.getId().equals(existingRoster.getId()))
                         .findFirst()
                         .ifPresent(rosterUpdateDTO -> {
-                            updateFieldIfNotNull(rosterUpdateDTO.getTeamColor().toUpperCase(), existingRoster::setTeamColor);
+                            updateFieldIfNotNull(rosterUpdateDTO.getTeamColor().toUpperCase(),
+                                    existingRoster::setTeamColor);
 
                             Player player = playerMap.get(rosterUpdateDTO.getPlayerId());
                             if (player != null) {
@@ -270,17 +291,16 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Game findById(Integer id) {
-        return gameRepository.findById(id)
+        return gameRepository
+                .findByIdAndCurrentGroup(id, jwtGroupContextService.getCurrentApprovedGroupId(),
+                        jwtGroupContextService.getCurrentUserId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
     }
 
     @Override
     public void checkAndUpdateUnplayedGame() {
-        Game unplayedGame = gameRepository.findByIsPlayedFalse();
-
-
-
-
+        Game unplayedGame = gameRepository
+                .findByIsPlayedFalseAndGroupId(jwtGroupContextService.getCurrentApprovedGroupId());
 
         if (unplayedGame != null) {
             LocalDateTime currentTime = LocalDateTime.now();
@@ -311,21 +331,29 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Optional<MvpDTO> getMvpPlayer() {
+        System.out.println("=== MVP DEBUG ===");
+        System.out.println("Current GroupContext: " + com.squad.squad.context.GroupContext.getCurrentApprovedGroupId());
 
-        List<Object[]> result = gameRepository.findLatestVotedMvpRaw();
+        List<Object[]> result = gameRepository
+                .findLatestVotedMvpRaw(jwtGroupContextService.getCurrentApprovedGroupId());
+        System.out.println("MVP query result count: " + result.size());
 
         if (result.isEmpty()) {
+            System.out.println("No MVP found for current group");
+            System.out.println("=== END MVP DEBUG ===");
             return Optional.empty();
         }
 
         Object[] row = result.get(0);
+        System.out.println("MVP found: " + row[1] + " " + row[2] + " (ID: " + row[0] + ")");
+        System.out.println("=== END MVP DEBUG ===");
 
         MvpDTO dto = new MvpDTO(
                 (Integer) row[0], // id
-                (String) row[1],  // name
-                (String) row[2],  // surname
-                (String) row[3],  // photo
-                (String) row[4],  // position
+                (String) row[1], // name
+                (String) row[2], // surname
+                (String) row[3], // photo
+                (String) row[4], // position
                 ((Number) row[5]).doubleValue() // rating (cast safe)
         );
 
@@ -334,7 +362,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void updateWeather(Integer id,String weather) {
+    public void updateWeather(Integer id, String weather) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 

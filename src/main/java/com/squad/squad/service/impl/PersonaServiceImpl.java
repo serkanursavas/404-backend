@@ -8,6 +8,7 @@ import com.squad.squad.entity.RosterPersona;
 import com.squad.squad.repository.PersonaRepository;
 import com.squad.squad.repository.PlayerPersonaRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
+import com.squad.squad.security.JwtGroupContextService;
 import com.squad.squad.service.PersonaService;
 import com.squad.squad.service.RosterService;
 import org.springframework.stereotype.Service;
@@ -23,27 +24,26 @@ public class PersonaServiceImpl implements PersonaService {
     private final RosterService rosterService;
     private final PlayerPersonaRepository playerPersonaRepository;
     private final RosterPersonaRepository rosterPersonaRepository;
+    private final JwtGroupContextService jwtGroupContextService;
 
     public PersonaServiceImpl(PersonaRepository personaRepository,
-                          RosterService rosterService,
-                          PlayerPersonaRepository playerPersonaRepository,
-                              RosterPersonaRepository rosterPersonaRepository) {
+            RosterService rosterService,
+            PlayerPersonaRepository playerPersonaRepository,
+            RosterPersonaRepository rosterPersonaRepository,
+            JwtGroupContextService jwtGroupContextService) {
         this.personaRepository = personaRepository;
         this.rosterService = rosterService;
         this.playerPersonaRepository = playerPersonaRepository;
         this.rosterPersonaRepository = rosterPersonaRepository;
+        this.jwtGroupContextService = jwtGroupContextService;
     }
-
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void savePersonas(List<AddPersonaRequestDTO> personas) {
 
-
-
         for (AddPersonaRequestDTO dto : personas) {
+            // SecureJpaRepository zaten güvenlik kontrolü yapıyor
             Roster existingRoster = rosterService.getRosterById(dto.getRosterId());
-
-
 
             if (dto.getPersonaIds().size() > 3) {
                 throw new IllegalArgumentException("Roster ID " + dto.getRosterId() + " has less than to 3 personas.");
@@ -51,11 +51,13 @@ public class PersonaServiceImpl implements PersonaService {
 
             for (Integer personaId : dto.getPersonaIds()) {
 
+                // SecureJpaRepository zaten güvenlik kontrolü yapıyor
                 Persona persona = personaRepository.findById(personaId)
                         .orElseThrow(() -> new IllegalArgumentException("Persona not found with ID: " + personaId));
 
                 PlayerPersona playerPersona = playerPersonaRepository.findByPlayerIdAndPersonaId(
-                                existingRoster.getPlayer().getId(), persona.getId())
+                        existingRoster.getPlayer().getId(), persona.getId(),
+                        jwtGroupContextService.getCurrentApprovedGroupId())
                         .orElseGet(() -> {
                             PlayerPersona newPlayerPersona = new PlayerPersona();
                             newPlayerPersona.setPlayer(existingRoster.getPlayer());
@@ -66,15 +68,14 @@ public class PersonaServiceImpl implements PersonaService {
 
                 // Persona sayısını artır
                 playerPersona.setCount(playerPersona.getCount() + 1);
-                if (personaId != 68){
+                if (personaId != 68) {
                     playerPersonaRepository.save(playerPersona);
                 }
                 playerPersonaRepository.flush();
 
-
                 // After
                 RosterPersona rosterPersona = rosterPersonaRepository.findByRosterIdAndPersonaId(
-                                existingRoster.getId(), persona.getId())
+                        existingRoster.getId(), persona.getId())
                         .orElseGet(() -> {
                             RosterPersona newRosterPersona = new RosterPersona();
                             newRosterPersona.setRoster(existingRoster);
@@ -83,13 +84,9 @@ public class PersonaServiceImpl implements PersonaService {
                             return newRosterPersona;
                         });
 
-
                 rosterPersona.setCount(rosterPersona.getCount() + 1);
                 rosterPersonaRepository.save(rosterPersona);
                 rosterPersonaRepository.flush();
-
-
-
 
             }
         }
