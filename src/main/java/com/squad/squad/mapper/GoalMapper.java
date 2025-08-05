@@ -1,25 +1,40 @@
 package com.squad.squad.mapper;
 
 import com.squad.squad.dto.goal.GoalResponseDTO;
-import com.squad.squad.dto.roster.RosterResponseDTO;
 import com.squad.squad.entity.Goal;
-import com.squad.squad.entity.Roster;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
-public interface GoalMapper {
+@Component
+public class GoalMapper {
 
-    GoalResponseDTO goalToGoalResponseDTO(Goal goal);
+    public GoalResponseDTO goalToGoalResponseDTO(Goal goal) {
+        if (goal == null) {
+            return null;
+        }
 
-    List<GoalResponseDTO> goalsToGoalResponseDTOs(List<Goal> goals);
+        GoalResponseDTO goalResponseDTO = new GoalResponseDTO();
+        goalResponseDTO.setTeamColor(goal.getTeamColor());
 
-    @AfterMapping
-    default void setAdditionalFields(@MappingTarget GoalResponseDTO goalResponseDTO, Goal goal) {
+        // Set additional fields
+        setAdditionalFields(goalResponseDTO, goal);
+
+        return goalResponseDTO;
+    }
+
+    public List<GoalResponseDTO> goalsToGoalResponseDTOs(List<Goal> goals) {
+        if (goals == null) {
+            return null;
+        }
+
+        return goals.stream()
+                .map(this::goalToGoalResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private void setAdditionalFields(GoalResponseDTO goalResponseDTO, Goal goal) {
         if (goal.getPlayer() != null) {
             goalResponseDTO.setPlayerName(goal.getPlayer().getName() + " " + goal.getPlayer().getSurname());
             goalResponseDTO.setPlayerId(goal.getPlayer().getId());
