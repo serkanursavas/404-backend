@@ -8,7 +8,7 @@ public enum Role {
         try {
             return Role.valueOf(role.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid role: " + role);
+            throw new RuntimeException("Geçersiz rol: " + role);
         }
     }
 }
