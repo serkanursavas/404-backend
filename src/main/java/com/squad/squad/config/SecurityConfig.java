@@ -1,8 +1,7 @@
 package com.squad.squad.config;
 
-import com.squad.squad.exception.CustomAccessDeniedHandler;
-import com.squad.squad.exception.CustomAuthenticationEntryPoint;
-import com.squad.squad.filter.JwtAuthenticationFilter;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +18,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
-
-import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
+import com.squad.squad.exception.CustomAccessDeniedHandler;
+import com.squad.squad.exception.CustomAuthenticationEntryPoint;
+import com.squad.squad.filter.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -42,14 +41,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://404-squad.xyz/", "https://404-squad-mu.vercel.app/", "http://localhost:5173"));
+        configuration.setAllowedOrigins(
+                List.of("https://404-squad.xyz/", "https://404-squad-mu.vercel.app/", "http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -65,18 +66,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(regexMatcher("/api/[^/]+/admin/.*")).hasRole("ADMIN")
-                                .requestMatchers("/error").permitAll()
-                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                                .requestMatchers("/api/users/createUser", "/api/users/login").permitAll()
-                                .requestMatchers("/api/groups/public/**").permitAll()
-                                .requestMatchers("/api/groups/approved").permitAll()
-                                .anyRequest().authenticated()
-                )
+                        // .requestMatchers(regexMatcher("/api/[^/]+/admin/.*")).hasRole("ADMIN")
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/users/createUser", "/api/users/login").permitAll()
+                        .requestMatchers("/api/groups/public/**").permitAll()
+                        .requestMatchers("/api/groups/approved").permitAll()
+                        .anyRequest().authenticated())
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler)
-                )
+                        .accessDeniedHandler(customAccessDeniedHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

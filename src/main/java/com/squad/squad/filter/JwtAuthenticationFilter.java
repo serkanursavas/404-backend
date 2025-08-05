@@ -1,9 +1,11 @@
 package com.squad.squad.filter;
 
-import com.squad.squad.context.TenantContext;
+import com.squad.squad.context.GroupContext;
 import com.squad.squad.security.CustomUserDetails;
 import com.squad.squad.security.JwtUtils;
-import com.squad.squad.service.TenantContextService;
+import com.squad.squad.repository.GroupMembershipRepository;
+import com.squad.squad.entity.GroupMembership;
+import java.util.List;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,15 +31,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService customUserDetailsService;
-    private final TenantContextService tenantContextService;
+    private final GroupMembershipRepository groupMembershipRepository;
 
     @Autowired
     public JwtAuthenticationFilter(@Lazy JwtUtils jwtUtils,
-                                   @Lazy UserDetailsService customUserDetailsService,
-                                   @Lazy TenantContextService tenantContextService) {
+            @Lazy UserDetailsService customUserDetailsService,
+            @Lazy GroupMembershipRepository groupMembershipRepository) {
         this.jwtUtils = jwtUtils;
         this.customUserDetailsService = customUserDetailsService;
-        this.tenantContextService = tenantContextService;
+        this.groupMembershipRepository = groupMembershipRepository;
     }
 
     @Override
@@ -70,13 +72,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                    // Tenant context'i set et
-                    setupTenantContext(userDetails, username);
+                    // Group context'i set et
+                    setupGroupContext(userDetails, username, token, request);
+
+                    // Current user ID'yi set et
+                    if (userDetails instanceof CustomUserDetails) {
+                        GroupContext.setCurrentUserId(((CustomUserDetails) userDetails).getId());
+                    }
                 }
             } catch (Exception e) {
                 logger.error("Authentication failed for user: {}", username, e);
                 SecurityContextHolder.clearContext();
-                TenantContext.clear();
+                GroupContext.clear();
             }
         }
 
@@ -99,34 +106,52 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Tenant context'i setup et
+     * JWT token'a group bilgilerini ekle
      */
-    private void setupTenantContext(UserDetails userDetails, String username) {
+    private void setupGroupContext(UserDetails userDetails, String username, String token, HttpServletRequest request) {
         if (userDetails instanceof CustomUserDetails) {
             CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
 
             try {
+                Integer approvedGroupId = null;
+
                 // Super Admin kontrolü
                 if ("ROLE_ADMIN".equals(customUserDetails.getRole())) {
-                    tenantContextService.setSuperAdminContext();
-                    logger.debug("Super Admin context set for user: {}", username);
+                    // Super admin için kendi grubunun ID'sini set et
+                    approvedGroupId = customUserDetails.getGroupId();
+                    logger.debug("Super Admin approvedGroupId set for user: {} with groupId: {}", username,
+                            approvedGroupId);
                 } else {
-                    // Normal user için tenant context
-                    Integer groupId = customUserDetails.getGroupId();
-                    if (groupId != null && groupId > 0) {
-                        tenantContextService.setTenantContext(groupId);
-                        logger.debug("Tenant context set for user: {} with groupId: {}", username, groupId);
+                    // Normal user için approved group ID - sadece onaylanmış üyelikleri dikkate al
+                    List<GroupMembership> approvedMemberships = groupMembershipRepository.findByUserIdAndStatus(
+                            customUserDetails.getId(), GroupMembership.MembershipStatus.APPROVED);
+
+                    if (!approvedMemberships.isEmpty()) {
+                        // İlk onaylanmış üyeliği al
+                        approvedGroupId = approvedMemberships.get(0).getGroupId();
+                        logger.debug("Approved group ID set for user: {} with groupId: {}", username, approvedGroupId);
                     } else {
-                        // Grup ID yoksa (pending user) sadece user context set et
-                        tenantContextService.setUserContext();
-                        logger.debug("User context set for pending user: {}", username);
+                        approvedGroupId = null; // Onaylanmamış üyelik
+                        logger.debug("No approved membership found for user: {}", username);
                     }
                 }
+
+                // JWT token'ı approvedGroupId ile güncelle
+                String updatedToken = jwtUtils.generateToken(
+                        customUserDetails.getId(),
+                        customUserDetails.getUsername(),
+                        customUserDetails.getRole(),
+                        customUserDetails.getGroupId(),
+                        approvedGroupId);
+
+                // Token'ı request attribute'a set et (JwtGroupContextService için)
+                request.setAttribute("JWT_TOKEN", updatedToken);
+
+                logger.debug("JWT token updated with approvedGroupId for user: {}", username);
+
             } catch (Exception e) {
-                logger.error("Failed to set tenant context for user: {}", username, e);
-                // Tenant context set edilemezse güvenlik için authentication'ı temizle
+                logger.error("Failed to setup group context for user: {}", username, e);
                 SecurityContextHolder.clearContext();
-                TenantContext.clear();
                 throw new RuntimeException("Authentication context setup failed", e);
             }
         } else {
@@ -139,17 +164,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private void clearContexts(String path) {
         try {
-            if (TenantContext.hasTenant()) {
-                tenantContextService.clearTenantContext();
-                logger.debug("Tenant context cleared for request: {}", path);
+            if (GroupContext.hasGroupId()) {
+                GroupContext.clear();
+                logger.debug("Group context cleared for request: {}", path);
             }
+            // Current user ID'yi de temizle
+            GroupContext.clearCurrentUserId();
         } catch (Exception e) {
-            logger.warn("Failed to clear tenant context for request: {}, error: {}", path, e.getMessage());
+            logger.warn("Failed to clear group context for request: {}, error: {}", path, e.getMessage());
         }
     }
 
     /**
-     * Public endpoint'leri kontrol et (tenant context gerektirmeyen)
+     * Public endpoint'leri kontrol et (group context gerektirmeyen)
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {

@@ -16,7 +16,8 @@ public class JwtUtils {
     private static final long JWT_EXPIRATION_MS = 259200000; // Token geçerlilik süresi (1 gün)
 
     private static final String SECRET_KEY_STRING = System.getenv("JWT_SECRET_KEY");
-    private static final SecretKey SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(SECRET_KEY_STRING), "HmacSHA256");
+    private static final SecretKey SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(SECRET_KEY_STRING),
+            "HmacSHA256");
 
     static {
         if (SECRET_KEY_STRING == null || SECRET_KEY_STRING.isEmpty()) {
@@ -24,17 +25,37 @@ public class JwtUtils {
         }
     }
 
-    // JWT token oluşturma
-    public String generateToken(Integer id, String username, String role) {
-
+    // JWT token oluşturma (groupId ile)
+    public String generateToken(Integer id, String username, String role, Integer groupId) {
         return Jwts.builder()
-                .setSubject(username.toLowerCase())  // Kullanıcı adını subject olarak ayarlıyoruz
+                .setSubject(username.toLowerCase()) // Kullanıcı adını subject olarak ayarlıyoruz
                 .claim("role", role)
-                .claim("id", id)       // ID'yi de claim olarak ekliyoruz// Rol bilgisini doğrudan claim olarak ekliyoruz
-                .setIssuedAt(new Date())  // Token oluşturulma tarihini ayarlıyoruz
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))  // Token geçerlilik süresini ayarlıyoruz
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)  // İmzalama işlemi yapılıyor
+                .claim("id", id) // ID'yi de claim olarak ekliyoruz
+                .claim("groupId", groupId) // GroupId'yi claim olarak ekliyoruz
+                .setIssuedAt(new Date()) // Token oluşturulma tarihini ayarlıyoruz
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS)) // Token geçerlilik süresini
+                                                                                         // ayarlıyoruz
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS256) // İmzalama işlemi yapılıyor
                 .compact();
+    }
+
+    // JWT token oluşturma (approvedGroupId ile)
+    public String generateToken(Integer id, String username, String role, Integer groupId, Integer approvedGroupId) {
+        return Jwts.builder()
+                .setSubject(username.toLowerCase())
+                .claim("role", role)
+                .claim("id", id)
+                .claim("groupId", groupId)
+                .claim("approvedGroupId", approvedGroupId) // Onaylanmış grup ID'si
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // JWT token oluşturma (eski method - geriye uyumluluk için)
+    public String generateToken(Integer id, String username, String role) {
+        return generateToken(id, username, role, null);
     }
 
     // Token'dan kullanıcı adı çıkarma
@@ -45,7 +66,25 @@ public class JwtUtils {
     // Token'dan rol çıkarma
     public String extractRole(String token) {
         Claims claims = extractClaims(token);
-        return claims.get("role", String.class);  // Token'dan rol bilgisini çıkarıyoruz
+        return claims.get("role", String.class); // Token'dan rol bilgisini çıkarıyoruz
+    }
+
+    // Token'dan groupId çıkarma
+    public Integer extractGroupId(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("groupId", Integer.class);
+    }
+
+    // Token'dan approvedGroupId çıkarma
+    public Integer extractApprovedGroupId(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("approvedGroupId", Integer.class);
+    }
+
+    // Token'dan ID çıkarma
+    public Integer extractId(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("id", Integer.class);
     }
 
     // Token'ın geçerliliğini kontrol etme

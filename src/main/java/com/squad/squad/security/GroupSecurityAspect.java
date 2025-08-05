@@ -2,7 +2,7 @@ package com.squad.squad.security;
 
 import com.squad.squad.entity.GroupMembership;
 import com.squad.squad.repository.GroupMembershipRepository;
-import com.squad.squad.service.TenantContextService;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -32,15 +32,13 @@ public class GroupSecurityAspect {
     @Autowired
     private GroupMembershipRepository membershipRepository;
 
-    @Autowired
-    private TenantContextService tenantContextService;
-
     /**
      * Intercept methods annotated with @RequireGroupMembership
      */
     @Around("@annotation(requireGroupMembership)")
-    public Object checkGroupMembership(ProceedingJoinPoint joinPoint, RequireGroupMembership requireGroupMembership) throws Throwable {
-        
+    public Object checkGroupMembership(ProceedingJoinPoint joinPoint, RequireGroupMembership requireGroupMembership)
+            throws Throwable {
+
         CustomUserDetails currentUser = getCurrentUser();
         if (currentUser == null) {
             throw new AccessDeniedException("Authentication required");
@@ -53,7 +51,7 @@ public class GroupSecurityAspect {
 
         // Check group membership
         Integer userGroupId = currentUser.getGroupId();
-        
+
         // If user is in pending group (Group 0)
         if (userGroupId == null || userGroupId == 0) {
             if (!requireGroupMembership.allowPending()) {
@@ -62,16 +60,17 @@ public class GroupSecurityAspect {
         } else {
             // Verify active membership
             boolean hasActiveMembership = membershipRepository.existsByUserIdAndGroupIdAndStatus(
-                currentUser.getId(), userGroupId, GroupMembership.MembershipStatus.APPROVED);
-            
+                    currentUser.getId(), userGroupId, GroupMembership.MembershipStatus.APPROVED);
+
             if (!hasActiveMembership) {
-                throw new AccessDeniedException(requireGroupMembership.message() + ": No active group membership found");
+                throw new AccessDeniedException(
+                        requireGroupMembership.message() + ": No active group membership found");
             }
         }
 
-        logger.debug("Group membership check passed for user: {} in group: {}", 
+        logger.debug("Group membership check passed for user: {} in group: {}",
                 currentUser.getUsername(), userGroupId);
-        
+
         return joinPoint.proceed();
     }
 
@@ -80,7 +79,7 @@ public class GroupSecurityAspect {
      */
     @Around("@annotation(requireGroupAdmin)")
     public Object checkGroupAdmin(ProceedingJoinPoint joinPoint, RequireGroupAdmin requireGroupAdmin) throws Throwable {
-        
+
         CustomUserDetails currentUser = getCurrentUser();
         if (currentUser == null) {
             throw new AccessDeniedException("Authentication required");
@@ -103,15 +102,15 @@ public class GroupSecurityAspect {
                 throw new AccessDeniedException(requireGroupAdmin.message() + " for group: " + groupId);
             }
 
-            logger.debug("Group admin check passed for user: {} in specific group: {}", 
+            logger.debug("Group admin check passed for user: {} in specific group: {}",
                     currentUser.getUsername(), groupId);
         } else {
             // Check if user has admin role in any group
             boolean isGroupAdmin = membershipRepository.existsByUserIdAndStatusAndRole(
-                currentUser.getId(), 
-                GroupMembership.MembershipStatus.APPROVED, 
-                GroupMembership.MembershipRole.GROUP_ADMIN);
-            
+                    currentUser.getId(),
+                    GroupMembership.MembershipStatus.APPROVED,
+                    GroupMembership.MembershipRole.GROUP_ADMIN);
+
             if (!isGroupAdmin) {
                 throw new AccessDeniedException(requireGroupAdmin.message() + ": User is not a group admin");
             }
@@ -133,12 +132,12 @@ public class GroupSecurityAspect {
 
         for (int i = 0; i < parameters.length; i++) {
             Parameter param = parameters[i];
-            
+
             // Check for @PathVariable or @RequestParam annotations with the specified name
-            if (param.getName().equals(paramName) || 
-                hasAnnotationWithValue(param, "org.springframework.web.bind.annotation.PathVariable", paramName) ||
-                hasAnnotationWithValue(param, "org.springframework.web.bind.annotation.RequestParam", paramName)) {
-                
+            if (param.getName().equals(paramName) ||
+                    hasAnnotationWithValue(param, "org.springframework.web.bind.annotation.PathVariable", paramName) ||
+                    hasAnnotationWithValue(param, "org.springframework.web.bind.annotation.RequestParam", paramName)) {
+
                 Object value = args[i];
                 if (value instanceof Integer) {
                     return (Integer) value;
@@ -166,18 +165,10 @@ public class GroupSecurityAspect {
      * Check if user is admin of specific group
      */
     private boolean isUserAdminOfSpecificGroup(Integer userId, Integer groupId) {
-        Integer originalTenant = tenantContextService.getCurrentTenantId();
-        try {
-            tenantContextService.setTenantContext(groupId);
-            
-            return membershipRepository.existsByUserIdAndGroupIdAndStatusAndRole(
-                userId, groupId, 
-                GroupMembership.MembershipStatus.APPROVED, 
+        return membershipRepository.existsByUserIdAndGroupIdAndStatusAndRole(
+                userId, groupId,
+                GroupMembership.MembershipStatus.APPROVED,
                 GroupMembership.MembershipRole.GROUP_ADMIN);
-                
-        } finally {
-            tenantContextService.setTenantContext(originalTenant);
-        }
     }
 
     /**
