@@ -10,6 +10,8 @@ import java.util.Optional;
 public interface PlayerPersonaRepository extends JpaRepository<PlayerPersona, Integer> {
     Optional<PlayerPersona> findByPlayerIdAndPersonaId(Integer playerId, Integer personaId);
 
+    Optional<PlayerPersona> findByPlayerIdAndPersonaIdAndSquadId(Integer playerId, Integer personaId, Integer squadId);
+
     @Query(value = "SELECT pp.*\n" +
             "FROM player_persona pp\n" +
             "JOIN persona per ON pp.persona_id = per.id\n" +

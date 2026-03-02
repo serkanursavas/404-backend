@@ -1,9 +1,6 @@
 package com.squad.squad.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class GameLocation {
@@ -17,6 +14,10 @@ public class GameLocation {
     private String address;
     private Double latitude;
     private Double longitude;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "squad_id")
+    private Squad squad;
 
 
     // Getters and Setters
@@ -61,6 +62,11 @@ public class GameLocation {
         this.longitude = longitude;
     }
 
+    public Squad getSquad() {
+        return squad;
+    }
 
-
+    public void setSquad(Squad squad) {
+        this.squad = squad;
+    }
 }

@@ -1,5 +1,6 @@
 package com.squad.squad.service.impl;
 
+import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.PlayerDTO;
@@ -22,6 +23,7 @@ import com.squad.squad.repository.GameLocationRepository;
 import com.squad.squad.repository.GameRepository;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
+import com.squad.squad.repository.SquadRepository;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
@@ -48,14 +50,17 @@ public class GameServiceImpl implements GameService {
     private final RatingRepository ratingRepository;
     private final GoalMapper goalMapper;
     private final GameMapper gameMapper;
-    private final GameLocationMapper gameLocationMapper ;
+    private final GameLocationMapper gameLocationMapper;
     private final PlayerMapper playerMapper;
     private final RosterPersonaRepository rosterPersonaRepository;
+    private final SquadRepository squadRepository;
 
     @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-                           PlayerService playerService, RosterPersonaRepository rosterPersonaRepository
-                           ,GameLocationRepository gameLocationRepository, RatingRepository ratingRepository, GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper, PlayerMapper playerMapper) {
+                           PlayerService playerService, RosterPersonaRepository rosterPersonaRepository,
+                           GameLocationRepository gameLocationRepository, RatingRepository ratingRepository,
+                           GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper,
+                           PlayerMapper playerMapper, SquadRepository squadRepository) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
@@ -66,19 +71,24 @@ public class GameServiceImpl implements GameService {
         this.gameLocationMapper = gameLocationMapper;
         this.playerMapper = playerMapper;
         this.rosterPersonaRepository = rosterPersonaRepository;
+        this.squadRepository = squadRepository;
+    }
+
+    private Integer getSquadId() {
+        return GroupContext.getCurrentGroupId();
     }
 
     @Override
     public GameResponseDTO getLatestGame() {
-
+        Integer squadId = getSquadId();
         checkAndUpdateUnplayedGame();
-
-        return gameMapper.gameToGameResponseDTO(gameRepository.findTopByOrderByDateTimeDesc());
+        return gameMapper.gameToGameResponseDTO(gameRepository.findTopBySquadIdOrderByDateTimeDesc(squadId));
     }
 
     @Override
     public Page<LatestGamesDTO> getAllGames(Pageable pageable) {
-        return gameRepository.findAllByOrderByDateTimeDesc(pageable).map(game ->
+        Integer squadId = getSquadId();
+        return gameRepository.findAllBySquadIdOrderByDateTimeDesc(squadId, pageable).map(game ->
                 new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
                         game.getAwayTeamScore(), game.isPlayed()));
     }
@@ -96,26 +106,27 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public GameResponseDTO getGameById(Integer id) {
-
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+
+        // Verify game belongs to current squad
+        Integer squadId = getSquadId();
+        if (game.getSquad() != null && !game.getSquad().getId().equals(squadId)) {
+            throw new SecurityException("Game does not belong to your squad");
+        }
 
         GameLocation gameLocation = gameLocationRepository.findById(game.getGameLocation().getId())
                 .orElseThrow(() -> new NotFoundException("Game location not found with id: " + game.getGameLocation().getId()));
 
-
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(id);
         List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
 
-        // 1. Roster ve Goal içerisindeki tüm playerId'leri toplayın
         Set<Integer> playerIds = new HashSet<>();
         rosters.forEach(roster -> playerIds.add(roster.getPlayerId()));
         goals.forEach(goal -> playerIds.add(goal.getPlayerId()));
 
-        // 2. Tüm player bilgilerini bir defada çekin
         Map<Integer, PlayerDTO> playerMap = playerService.findPlayersByIds(new ArrayList<>(playerIds));
 
-        // 3. Kadro ve goller için oyuncu bilgilerini set edin
         rosters.forEach(roster -> {
             PlayerDTO playerDto = playerMap.get(roster.getPlayerId());
             roster.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
@@ -126,9 +137,6 @@ public class GameServiceImpl implements GameService {
             goal.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
         });
 
-
-
-        // GameResponseDTO'yu oluşturun
         GameResponseDTO gameDTO = new GameResponseDTO();
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);
@@ -140,16 +148,20 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public void createGame(GameCreateRequestDTO gameDto) {
+        Integer squadId = getSquadId();
 
-        if (gameRepository.existsByIsPlayedFalseOrIsVotedFalse()) {
+        if (gameRepository.existsBySquadIdAndIsPlayedFalseOrSquadIdAndIsVotedFalse(squadId, squadId)) {
             throw new IllegalArgumentException("There is already a planned or not yet voted game.");
         }
+
+        Squad squad = squadRepository.findById(squadId)
+                .orElseThrow(() -> new NotFoundException("Squad not found"));
 
         Game game = new Game();
         game.setDateTime(gameDto.getDateTime());
         game.setWeather(gameDto.getWeather());
         game.setLocation(gameDto.getLocation());
-
+        game.setSquad(squad);
 
         GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(gameDto.getLocation()))
                 .orElseThrow(() -> new NotFoundException("Game location not found with id: " + gameDto.getGameLocationId()));
@@ -170,7 +182,6 @@ public class GameServiceImpl implements GameService {
             }
 
             roster.setPlayer(player);
-
             rosters.add(roster);
         }
 
@@ -181,9 +192,9 @@ public class GameServiceImpl implements GameService {
         rosters.forEach(roster -> roster.setGame(savedGame));
         rosterService.saveAllRosters(rosters);
 
-        // yeni mac olusturuldugu icin son mac icin rating tablosu sifirliyoruz data birikmesin diye
-        ratingRepository.deleteAll();
-        rosterPersonaRepository.deleteAll();
+        // Clear ratings and roster personas for this squad only
+        ratingRepository.deleteAllBySquadId(squadId);
+        rosterPersonaRepository.deleteAllBySquadId(squadId);
     }
 
     @Override
@@ -205,7 +216,6 @@ public class GameServiceImpl implements GameService {
         gameRepository.save(game);
 
         if (updatedGame.getRosters() != null && !updatedGame.getRosters().isEmpty()) {
-
             List<Integer> rosterIds = updatedGame.getRosters().stream()
                     .map(RosterUpdateDTO::getId)
                     .collect(Collectors.toList());
@@ -226,7 +236,6 @@ public class GameServiceImpl implements GameService {
                         .findFirst()
                         .ifPresent(rosterUpdateDTO -> {
                             updateFieldIfNotNull(rosterUpdateDTO.getTeamColor().toUpperCase(), existingRoster::setTeamColor);
-
                             Player player = playerMap.get(rosterUpdateDTO.getPlayerId());
                             if (player != null) {
                                 existingRoster.setPlayer(player);
@@ -241,7 +250,6 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public void updateScoreWithGoal(Goal goal) {
-
         Game existingGame = gameRepository.findById(goal.getGame().getId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + goal.getGame().getId()));
 
@@ -276,20 +284,11 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public void checkAndUpdateUnplayedGame() {
-        Game unplayedGame = gameRepository.findByIsPlayedFalse();
-
-        LocalDateTime currentTime1 = LocalDateTime.now();
-
-        System.out.println("Current Time: " + currentTime1);
-
-
-
+        Integer squadId = getSquadId();
+        Game unplayedGame = gameRepository.findBySquadIdAndIsPlayedFalse(squadId);
 
         if (unplayedGame != null) {
             LocalDateTime currentTime = LocalDateTime.now();
-
-            System.out.println("unplayedGame.getDateTime(); " + unplayedGame.getDateTime());
-
             if (currentTime.isAfter(unplayedGame.getDateTime())) {
                 unplayedGame.setPlayed(true);
                 gameRepository.save(unplayedGame);
@@ -316,34 +315,31 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Optional<MvpDTO> getMvpPlayer() {
-
-        List<Object[]> result = gameRepository.findLatestVotedMvpRaw();
+        Integer squadId = getSquadId();
+        List<Object[]> result = gameRepository.findLatestVotedMvpRaw(squadId);
 
         if (result.isEmpty()) {
             return Optional.empty();
         }
 
         Object[] row = result.get(0);
-
         MvpDTO dto = new MvpDTO(
-                (Integer) row[0], // id
-                (String) row[1],  // name
-                (String) row[2],  // surname
-                (String) row[3],  // photo
-                (String) row[4],  // position
-                ((Number) row[5]).doubleValue() // rating (cast safe)
+                (Integer) row[0],
+                (String) row[1],
+                (String) row[2],
+                (String) row[3],
+                (String) row[4],
+                ((Number) row[5]).doubleValue()
         );
 
         return Optional.of(dto);
-
     }
 
     @Override
-    public void updateWeather(Integer id,String weather) {
+    public void updateWeather(Integer id, String weather) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
-        // Fazladan tırnakları kaldır
         String cleanedWeather = weather.replace("\"", "").trim();
 
         if (StringUtils.isNotBlank(game.getWeather())) {
@@ -351,8 +347,6 @@ public class GameServiceImpl implements GameService {
         }
 
         updateFieldIfNotNull(cleanedWeather, game::setWeather);
-
         gameRepository.save(game);
-
     }
 }

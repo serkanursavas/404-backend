@@ -1,5 +1,6 @@
 package com.squad.squad.controller;
 
+import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.DTOvalidators.PlayerDTOValidator;
 import com.squad.squad.dto.TopListProjection;
 import com.squad.squad.dto.TopListsDTO;
@@ -68,7 +69,7 @@ public class PlayerController {
 
     @GetMapping("/getTopFormPlayers")
     public List<TopListProjection> getTopFormPlayers() {
-        return playerRepository.getTopFormPlayers();
+        return playerRepository.getTopFormPlayers(GroupContext.getCurrentGroupId());
     }
 
     @GetMapping("/getLegendaryDuos")

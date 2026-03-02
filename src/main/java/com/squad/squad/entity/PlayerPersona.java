@@ -17,8 +17,12 @@ public class PlayerPersona {
     @JoinColumn(name = "persona_id", nullable = false)
     private Persona persona;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "squad_id")
+    private Squad squad;
+
     @Column(nullable = false)
-    private Integer count = 0; // Varsayılan olarak 0
+    private Integer count = 0;
 
 public Integer getId() {
         return id;
@@ -50,5 +54,13 @@ public Integer getId() {
 
     public void setCount(Integer count) {
         this.count = count;
+    }
+
+    public Squad getSquad() {
+        return squad;
+    }
+
+    public void setSquad(Squad squad) {
+        this.squad = squad;
     }
 }

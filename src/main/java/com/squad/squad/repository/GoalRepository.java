@@ -1,8 +1,8 @@
 package com.squad.squad.repository;
 
-import com.squad.squad.dto.TopListsDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.squad.squad.entity.Goal;
@@ -16,16 +16,19 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
 
     @Query(value = "WITH TopScorers AS (\n" +
             "    SELECT \n" +
-            "        g.player_id AS playerId, \n" +
+            "        gl.player_id AS playerId, \n" +
             "        p.name AS name, \n" +
             "        p.surname AS surname, \n" +
-            "        COUNT(g.id) AS goalCount\n" +
+            "        COUNT(gl.id) AS goalCount\n" +
             "    FROM \n" +
-            "        goal g\n" +
+            "        goal gl\n" +
             "    JOIN \n" +
-            "        player p ON g.player_id = p.id\n" +
+            "        player p ON gl.player_id = p.id\n" +
+            "    JOIN \n" +
+            "        game g ON gl.game_id = g.id\n" +
+            "    WHERE g.squad_id = :squadId\n" +
             "    GROUP BY \n" +
-            "        g.player_id, p.name, p.surname\n" +
+            "        gl.player_id, p.name, p.surname\n" +
             "    ORDER BY \n" +
             "        goalCount DESC\n" +
             "    LIMIT 10\n" +
@@ -36,6 +39,8 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "        COUNT(r.id) AS rosterCount\n" +
             "    FROM\n" +
             "        roster r\n" +
+            "    JOIN game g ON r.game_id = g.id\n" +
+            "    WHERE g.squad_id = :squadId\n" +
             "    GROUP BY\n" +
             "        r.player_id\n" +
             ")\n" +
@@ -51,5 +56,5 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "    PlayerRosterCount prc ON ts.playerId = prc.playerId\n" +
             "ORDER BY \n" +
             "    ts.goalCount DESC;", nativeQuery = true)
-    List<Object[]> findTopScorersNative();
+    List<Object[]> findTopScorersNative(@Param("squadId") Integer squadId);
 }

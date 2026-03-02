@@ -1,5 +1,6 @@
 package com.squad.squad.controller;
 
+import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.DTOvalidators.GameDTOValidator;
 import com.squad.squad.dto.GameLocationDTO;
 import com.squad.squad.dto.MvpDTO;
@@ -114,8 +115,9 @@ public class GameController {
 
     @GetMapping("/getGameLocations")
     public ResponseEntity<List<GameLocationDTO>> getGameLocations() {
-        Sort sort = Sort.by(Sort.Direction.ASC, "location");
-        return ResponseEntity.ok(gameLocationMapper.gameLocationListToGameLocationDTOList(gameLocationRepository.findAll(sort)));
+        Integer squadId = GroupContext.getCurrentGroupId();
+        return ResponseEntity.ok(gameLocationMapper.gameLocationListToGameLocationDTOList(
+                gameLocationRepository.findBySquadIdOrderByLocationAsc(squadId)));
     }
 
 

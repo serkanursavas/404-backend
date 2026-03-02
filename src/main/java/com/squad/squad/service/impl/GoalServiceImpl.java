@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
@@ -55,14 +56,12 @@ public class GoalServiceImpl implements GoalService {
 
     @Override
     public void addGoals(AddGoalsRequestDTO requestDto) {
-
         Integer gameId = requestDto.getGameId();
         Game existingGame = gameService.findGameById(gameId);
 
         List<GoalAddRequestDTO> goalDtos = requestDto.getGoals();
 
         for (GoalAddRequestDTO goalDto : goalDtos) {
-
             Player existingPlayer = playerMapper.playerDTOToPlayer(playerService.getPlayerById(goalDto.getPlayerId()));
 
             Goal goal = new Goal();
@@ -71,21 +70,21 @@ public class GoalServiceImpl implements GoalService {
             goal.setTeamColor(goalDto.getTeamColor());
 
             goalRepository.save(goal);
-
             gameService.updateScoreWithGoal(goal);
         }
     }
 
     public List<TopListsDTO> getTopScorers() {
-        List<Object[]> results = goalRepository.findTopScorersNative();
+        Integer squadId = GroupContext.getCurrentGroupId();
+        List<Object[]> results = goalRepository.findTopScorersNative(squadId);
         List<TopListsDTO> topScorers = new ArrayList<>();
 
         for (Object[] result : results) {
             Integer playerId = (Integer) result[0];
             String name = (String) result[1];
             String surname = (String) result[2];
-            Long goalCount = ((Number) result[3]).longValue(); // Long'a dönüştürüyoruz
-            Long gameCount = ((Number) result[4]).longValue(); // Long'a dönüştürüyoruz
+            Long goalCount = ((Number) result[3]).longValue();
+            Long gameCount = ((Number) result[4]).longValue();
 
             TopListsDTO dto = new TopListsDTO(playerId, name, surname, goalCount, gameCount);
             topScorers.add(dto);

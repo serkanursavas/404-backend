@@ -1,5 +1,6 @@
 package com.squad.squad.service.impl;
 
+import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import com.squad.squad.entity.*;
 import com.squad.squad.mapper.PlayerMapper;
@@ -7,6 +8,7 @@ import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.RosterRepository;
 import com.squad.squad.service.GameService;
+import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RatingService;
 import com.squad.squad.service.RosterService;
@@ -32,15 +34,20 @@ public class RatingServiceImpl implements RatingService {
     private final RosterRepository rosterRepository;
     private final RosterPersonaRepository rosterPersonaRepository;
     private final PlayerMapper playerMapper;
+    private final GroupAuthorizationService groupAuthorizationService;
 
-    @Autowired public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
-                                        RosterService rosterService, GameService gameService, RosterPersonaRepository rosterPersonaRepository, RosterRepository rosterRepository, PlayerMapper playerMapper) {
+    @Autowired
+    public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
+                             RosterService rosterService, GameService gameService,
+                             RosterPersonaRepository rosterPersonaRepository, RosterRepository rosterRepository,
+                             PlayerMapper playerMapper, GroupAuthorizationService groupAuthorizationService) {
         this.ratingRepository = ratingRepository;
         this.playerService = playerService;
         this.gameService = gameService;
         this.rosterPersonaRepository = rosterPersonaRepository;
         this.rosterRepository = rosterRepository;
         this.playerMapper = playerMapper;
+        this.groupAuthorizationService = groupAuthorizationService;
     }
 
     @Autowired
@@ -58,6 +65,9 @@ public class RatingServiceImpl implements RatingService {
             throw new IllegalArgumentException("Ratings list cannot be null or empty");
         }
 
+        // Get current player ID from group context
+        Integer currentPlayerId = groupAuthorizationService.getCurrentPlayerId();
+
         for (AddRatingRequestDTO ratingDto : ratings) {
             Player existingPlayer = playerMapper.playerDTOToPlayer(
                     playerService.getPlayerById(ratingDto.getPlayerId()));
@@ -67,10 +77,10 @@ public class RatingServiceImpl implements RatingService {
             if (gameId == null && voterTeamColor == null) {
                 gameId = existingRoster.getGame().getId();
 
-                Roster voterRoster = rosterService.getRosterByPlayerIdAndGameId(gameId, existingPlayer.getId());
+                Roster voterRoster = rosterService.getRosterByPlayerIdAndGameId(gameId, currentPlayerId);
 
                 if (voterRoster == null) {
-                    throw new IllegalStateException("Voter player is not in the roster for this game." + getCurrentPlayerId());
+                    throw new IllegalStateException("Voter player is not in the roster for this game.");
                 }
 
                 if (!voterRoster.getHasVote()) {
@@ -82,10 +92,10 @@ public class RatingServiceImpl implements RatingService {
 
                 Game existingGame = gameService.findGameById(gameId);
 
-                if (!existingGame.isPlayed() || existingGame.isVoted() ) {
+                if (!existingGame.isPlayed() || existingGame.isVoted()) {
                     throw new IllegalStateException("Voting is not allowed for this game. Check game state.");
                 }
-                if ( ((existingGame.getRoster().size() /2 ) - 1) != ratings.size()) {
+                if (((existingGame.getRoster().size() / 2) - 1) != ratings.size()) {
                     throw new IllegalStateException("You must vote for all players except yourself.");
                 }
             }
@@ -98,7 +108,7 @@ public class RatingServiceImpl implements RatingService {
                 throw new IllegalArgumentException("Players can only vote for their teammates.");
             }
 
-            boolean hasAlreadyVoted = ratingRepository.existsByPlayerIdAndRosterId(existingPlayer.getId(), ratingDto.getRosterId());
+            boolean hasAlreadyVoted = ratingRepository.existsByPlayerIdAndRosterId(currentPlayerId, ratingDto.getRosterId());
             if (hasAlreadyVoted) {
                 throw new IllegalArgumentException("You have already voted for this player.");
             }
@@ -110,8 +120,6 @@ public class RatingServiceImpl implements RatingService {
 
             ratingRepository.save(rating);
         }
-
-
 
         checkIfVotingIsComplete(gameId, voterTeamColor);
     }
@@ -125,7 +133,6 @@ public class RatingServiceImpl implements RatingService {
     @Override
     @Transactional
     public void updateRatingsForGame(Integer gameId, String teamColor) {
-
         List<Roster> rosters = rosterService.findRosterByGameIdAndTeamColor(gameId, teamColor);
 
         for (Roster roster : rosters) {
@@ -139,7 +146,6 @@ public class RatingServiceImpl implements RatingService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkIfVotingIsComplete(Integer gameId, String teamColor) {
-
         Integer totalVotesByTeam = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
         Game game = gameService.findGameById(gameId);
         int expectedVotes = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
@@ -148,35 +154,30 @@ public class RatingServiceImpl implements RatingService {
             updateRatingsForGame(gameId, teamColor);
         }
 
-        Integer totalVotes = (int) ratingRepository.count();
-
+        // Count total votes for this game (not all ratings in the system)
+        Integer totalVotes = ratingRepository.countByRosterGameIdAndTeamColor(gameId, "BLACK")
+                + ratingRepository.countByRosterGameIdAndTeamColor(gameId, "WHITE");
 
         if (totalVotes.equals(expectedVotes * 2)) {
-
             List<Roster> rosters = rosterRepository.findAllByGameId(gameId);
-
-
 
             for (Roster roster : rosters) {
                 List<RosterPersona> topRosterPersonas = rosterPersonaRepository.findTop3ByRosterId(roster.getId());
 
-                // Eğer 3 kayıt yoksa null değer atamaktan kaçınmak için:
                 roster.setPersona1(!topRosterPersonas.isEmpty() ? topRosterPersonas.get(0).getPersona().getId() : null);
                 roster.setPersona2(topRosterPersonas.size() > 1 ? topRosterPersonas.get(1).getPersona().getId() : null);
                 roster.setPersona3(topRosterPersonas.size() > 2 ? topRosterPersonas.get(2).getPersona().getId() : null);
             }
 
             rosterService.updateAllRosters(rosters);
-
             rosterService.updatePlayerGeneralRating(gameId);
             game.setVoted(true);
 
-            Integer mvpId = rosterPersonaRepository.findMvp();
-
+            Integer squadId = GroupContext.getCurrentGroupId();
+            Integer mvpId = rosterPersonaRepository.findMvp(squadId);
             game.setMvpId(mvpId);
 
             gameService.updateVote(game);
-
         }
     }
 
@@ -187,11 +188,7 @@ public class RatingServiceImpl implements RatingService {
     }
 
     public Integer getCurrentPlayerId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
-            return Integer.valueOf(userDetails.getUsername());
-        }
-        throw new IllegalStateException("Current user not found");
+        return groupAuthorizationService.getCurrentPlayerId();
     }
 
     @Override

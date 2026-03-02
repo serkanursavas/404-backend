@@ -36,8 +36,9 @@ public class Player {
 
     private boolean active = true;
 
-    @OneToOne(mappedBy = "player")
-    private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "squad_id")
+    private Squad squad;
 
     @OneToMany(mappedBy = "player")
     private List<Roster> roster;
@@ -112,12 +113,12 @@ public class Player {
         this.position = position;
     }
 
-    public User getUser() {
-        return user;
+    public Squad getSquad() {
+        return squad;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setSquad(Squad squad) {
+        this.squad = squad;
     }
 
     public List<Roster> getRoster() {

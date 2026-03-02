@@ -1,5 +1,6 @@
 package com.squad.squad.service.impl;
 
+import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.PlayerPersonaDTO;
 import com.squad.squad.dto.TopListProjection;
@@ -17,7 +18,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.text.Collator;
@@ -33,17 +33,22 @@ public class PlayerServiceImpl implements PlayerService {
     private final PlayerMapper playerMapper;
 
     @Autowired
-    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerPersonaRepository playerPersonaRepository, PersonaRepository personaRepository, PlayerMapper playerMapper) {
+    public PlayerServiceImpl(PlayerRepository playerRepository, PlayerPersonaRepository playerPersonaRepository,
+                             PersonaRepository personaRepository, PlayerMapper playerMapper) {
         this.playerRepository = playerRepository;
         this.playerPersonaRepository = playerPersonaRepository;
         this.personaRepository = personaRepository;
         this.playerMapper = playerMapper;
     }
 
+    private Integer getSquadId() {
+        return GroupContext.getCurrentGroupId();
+    }
+
     @Override
     public List<PlayerDTO> getAllPlayers() {
-
-        List<Player> players = playerRepository.findAll();
+        Integer squadId = getSquadId();
+        List<Player> players = playerRepository.findBySquadId(squadId);
         Collator trCollator = Collator.getInstance(new Locale("tr", "TR"));
 
         players.sort(Comparator
@@ -53,10 +58,9 @@ public class PlayerServiceImpl implements PlayerService {
                 .map(player -> {
                     PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
 
-                    // PlayerPersona verilerini manuel olarak DTO'ya ekle
                     List<PlayerPersonaDTO> personas = player.getPlayerPersonas().stream()
-                            .sorted((p1, p2) -> Integer.compare(p2.getCount(), p1.getCount())) // count DESC sıralama
-                            .limit(3) // İlk 3 sonucu al
+                            .sorted((p1, p2) -> Integer.compare(p2.getCount(), p1.getCount()))
+                            .limit(3)
                             .map(playerPersona -> {
                                 PlayerPersonaDTO dto = new PlayerPersonaDTO();
                                 dto.setPersonaId(playerPersona.getPersona().getId());
@@ -70,9 +74,8 @@ public class PlayerServiceImpl implements PlayerService {
 
                     playerDTO.setPersonas(personas);
 
-                    List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId());
+                    List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId(), squadId);
                     playerDTO.setLast5GameRating(last5GameRating);
-
 
                     return playerDTO;
                 })
@@ -84,13 +87,11 @@ public class PlayerServiceImpl implements PlayerService {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));
 
-
-
         PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);
 
         List<PlayerPersonaDTO> personas = player.getPlayerPersonas().stream()
-                .sorted((p1, p2) -> Integer.compare(p2.getCount(), p1.getCount())) // count DESC sıralama
-                .limit(3) // İlk 3 sonucu al
+                .sorted((p1, p2) -> Integer.compare(p2.getCount(), p1.getCount()))
+                .limit(3)
                 .map(playerPersona -> {
                     PlayerPersonaDTO dto = new PlayerPersonaDTO();
                     dto.setPersonaId(playerPersona.getPersona().getId());
@@ -104,10 +105,11 @@ public class PlayerServiceImpl implements PlayerService {
 
         playerDTO.setPersonas(personas);
 
-        List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId());
-
-        playerDTO.setLast5GameRating(last5GameRating);
-
+        Integer squadId = getSquadId();
+        if (squadId != null) {
+            List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId(), squadId);
+            playerDTO.setLast5GameRating(last5GameRating);
+        }
 
         return playerDTO;
     }
@@ -118,14 +120,13 @@ public class PlayerServiceImpl implements PlayerService {
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + updatedPlayer.getId()));
 
         BeanUtils.copyProperties(updatedPlayer, existingPlayer);
-
         playerRepository.save(existingPlayer);
     }
 
     @Override
     public void softDelete(PlayerDTO deletedPlayer) {
         Player existingPlayer = playerRepository.findById(deletedPlayer.getId())
-                .orElseThrow(() -> new RuntimeException("Player not foundasasdas with id: " + deletedPlayer.getId()));
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + deletedPlayer.getId()));
 
         existingPlayer.setActive(false);
         playerRepository.save(existingPlayer);
@@ -133,7 +134,8 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public List<GetAllActivePlayersDTO> getAllActivePlayers() {
-        return playerMapper.playersToGetAllActivePlayersDTOs(playerRepository.findByActive(true));
+        Integer squadId = getSquadId();
+        return playerMapper.playersToGetAllActivePlayersDTOs(playerRepository.findByActiveAndSquadId(true, squadId));
     }
 
     @Override
@@ -142,32 +144,29 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     public List<TopListsDTO> getTopRatedPlayersWithoutRecentGames() {
-        // 1. Top Rated oyuncuları al
-        List<Object[]> topRatedPlayers = playerRepository.findTopRatedPlayers();
+        Integer squadId = getSquadId();
+        List<Object[]> topRatedPlayers = playerRepository.findTopRatedPlayers(squadId);
         List<TopListsDTO> topRatedList = topRatedPlayers.stream()
                 .map(record -> new TopListsDTO(
-                        (Integer) record[0],    // playerId
-                        (String) record[1],     // name
-                        (String) record[2],     // surname
-                        (Double) record[3],      // rating
-                        (Long) record[4]      // rating
+                        (Integer) record[0],
+                        (String) record[1],
+                        (String) record[2],
+                        (Double) record[3],
+                        (Long) record[4]
                 ))
                 .toList();
 
-        // 2. Son 2 maçtaki oyuncuları al
-        List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames();
+        List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames(squadId);
 
-        // 3. Filtreleme
         return topRatedList.stream()
                 .filter(player -> recentGamePlayerIds.contains(player.getPlayerId()))
-                .limit(10)  // En iyi 5 oyuncuyu al
+                .limit(10)
                 .collect(Collectors.toList());
     }
 
     public List<TopListProjection> getLegendaryDuos() {
-        List<TopListProjection> rawDataLegendaryDuos = playerRepository.getLegendaryDuos();
-
-        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos();
+        Integer squadId = getSquadId();
+        List<TopListProjection> rawDataLegendaryDuos = playerRepository.getLegendaryDuos(squadId);
 
         Set<Integer> usedPlayers = new HashSet<>();
         List<TopListProjection> filteredResults = new ArrayList<>();
@@ -176,17 +175,14 @@ public class PlayerServiceImpl implements PlayerService {
             Integer player1 = duo.getPlayer1Id();
             Integer player2 = duo.getPlayer2Id();
 
-            // Eğer oyunculardan biri daha önce listede varsa, atla
             if (usedPlayers.contains(player1) || usedPlayers.contains(player2)) {
                 continue;
             }
 
-            // Çifti listeye ekle ve oyuncuları işaretle
             filteredResults.add(duo);
             usedPlayers.add(player1);
             usedPlayers.add(player2);
 
-            // İlk 5 sonucu aldıktan sonra döngüyü durdur
             if (filteredResults.size() >= 5) {
                 break;
             }
@@ -196,45 +192,34 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     public List<TopListProjection> getRivalDuos() {
-        // 1️⃣ "Legendary Duos" verisini servis üzerinden al
+        Integer squadId = getSquadId();
         List<TopListProjection> legendaryDuos = getLegendaryDuos();
+        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos(squadId);
 
-        // 2️⃣ "Rival Duos" verisini repodan al
-        List<TopListProjection> rawDataRivalDuos = playerRepository.getRivalDuos();
-
-        // 3️⃣ "Legendary Duos" içindeki oyuncu çiftlerini sakla
         Set<Set<Integer>> legendaryPairs = new HashSet<>();
-
         for (TopListProjection duo : legendaryDuos) {
             Set<Integer> pair = new HashSet<>(Arrays.asList(duo.getPlayer1Id(), duo.getPlayer2Id()));
             legendaryPairs.add(pair);
         }
 
-        // 4️⃣ "Rival Duos" listesinden "Legendary Duos" içindeki çiftleri çıkar
         List<TopListProjection> filteredResults = new ArrayList<>();
-
-        // 5️⃣ Daha önce listeye eklenmiş oyuncuları takip etmek için bir set oluşturuyoruz
         Set<Integer> usedPlayers = new HashSet<>();
 
         for (TopListProjection duo : rawDataRivalDuos) {
             Set<Integer> pair = new HashSet<>(Arrays.asList(duo.getPlayer1Id(), duo.getPlayer2Id()));
 
-            // Eğer bu çift "Legendary Duos" içinde varsa, listeye ekleme
             if (legendaryPairs.contains(pair)) {
                 continue;
             }
 
-            // Eğer bu oyunculardan biri zaten başka bir çiftte listede varsa, ekleme
             if (usedPlayers.contains(duo.getPlayer1Id()) || usedPlayers.contains(duo.getPlayer2Id())) {
                 continue;
             }
 
-            // Çifti listeye ekle ve oyuncuları işaretle
             filteredResults.add(duo);
             usedPlayers.add(duo.getPlayer1Id());
             usedPlayers.add(duo.getPlayer2Id());
 
-            // İlk 5 sonucu aldıktan sonra döngüyü durdur
             if (filteredResults.size() >= 5) {
                 break;
             }
@@ -243,22 +228,17 @@ public class PlayerServiceImpl implements PlayerService {
         return filteredResults;
     }
 
-
-
     @Cacheable(value = "playerCache")
     @Transactional
     public Map<Integer, PlayerDTO> findPlayersByIds(List<Integer> playerIds) {
-        // Player bilgilerini repository üzerinden topluca çekelim
         List<Player> players = playerRepository.findByIdIn(playerIds);
 
-        // Player nesnelerini Map yapısına dönüştürüp döndür
         return players.stream()
                 .collect(Collectors.toMap(Player::getId, player -> {
                     PlayerDTO playerDTO = new PlayerDTO();
                     playerDTO.setId(player.getId());
                     playerDTO.setName(player.getName());
                     playerDTO.setSurname(player.getSurname());
-                    // Diğer gerekli alanları burada set edebilirsiniz
                     return playerDTO;
                 }));
     }

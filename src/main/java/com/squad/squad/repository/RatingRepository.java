@@ -1,6 +1,7 @@
 package com.squad.squad.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -24,4 +25,11 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
     boolean existsByPlayerIdAndRosterId(Integer playerId, Integer rosterId);
 
     boolean existsByPlayerId(Integer playerId);
+
+    @Modifying
+    @Query("DELETE FROM Rating r WHERE r.roster.game.squad.id = :squadId")
+    void deleteAllBySquadId(@Param("squadId") Integer squadId);
+
+    @Query("SELECT COUNT(r) FROM Rating r WHERE r.roster.game.squad.id = :squadId")
+    long countBySquadId(@Param("squadId") Integer squadId);
 }

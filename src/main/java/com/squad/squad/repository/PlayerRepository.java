@@ -3,12 +3,10 @@ package com.squad.squad.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.squad.squad.dto.PlayerProjection;
 import com.squad.squad.dto.TopListProjection;
-import com.squad.squad.dto.TopListsDTO;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.squad.squad.entity.Player;
@@ -18,15 +16,21 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
     List<Player> findByActive(boolean active);
 
+    List<Player> findByActiveAndSquadId(boolean active, Integer squadId);
+
+    List<Player> findBySquadId(Integer squadId);
+
     Optional<Player> findByIdAndActive(Integer id, boolean active);
 
     @Query(value = "with TopRated as (SELECT p.id AS playerId, p.name, p.surname, p.rating\n" +
             "                  FROM player p\n" +
-            "                  WHERE p.rating IS NOT NULL\n" +
+            "                  WHERE p.rating IS NOT NULL AND p.squad_id = :squadId\n" +
             "                  ORDER BY p.rating DESC),\n" +
             "     PlayerRosterCount AS (SELECT r.player_id AS playerId,\n" +
             "                                  COUNT(r.id) AS rosterCount\n" +
             "                           FROM roster r\n" +
+            "                           JOIN game g ON r.game_id = g.id\n" +
+            "                           WHERE g.squad_id = :squadId\n" +
             "                           GROUP BY r.player_id)\n" +
             "SELECT ts.playerId,\n" +
             "       ts.name,\n" +
@@ -38,12 +42,12 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "     PlayerRosterCount prc ON ts.playerId = prc.playerId\n" +
             "ORDER BY ts.rating DESC",
             nativeQuery = true)
-    List<Object[]> findTopRatedPlayers();
+    List<Object[]> findTopRatedPlayers(@Param("squadId") Integer squadId);
 
     @Query(value = "WITH RecentGames AS ( " +
             "    SELECT g.id " +
             "    FROM game g " +
-            "    WHERE g.is_played = true " +
+            "    WHERE g.is_played = true AND g.squad_id = :squadId " +
             "    ORDER BY g.date_time DESC " +
             "    LIMIT 2 " +
             ") " +
@@ -51,8 +55,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "FROM roster r " +
             "WHERE r.game_id IN (SELECT id FROM RecentGames)",
             nativeQuery = true)
-    List<Integer> findPlayersInRecentGames();
-
+    List<Integer> findPlayersInRecentGames(@Param("squadId") Integer squadId);
 
     @Query(value = "select *\n" +
             "from (WITH Last10WeeksMatches AS (SELECT r.player_id,\n" +
@@ -62,16 +65,14 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "                                  FROM roster r\n" +
             "                                           JOIN game g ON r.game_id = g.id\n" +
             "                                  WHERE g.date_time >= NOW() - INTERVAL '12 weeks'\n" +
-            "                                    and g.is_played and g.is_voted),\n" +
+            "                                    and g.is_played and g.is_voted AND g.squad_id = :squadId),\n" +
             "\n" +
-            "           -- Son 3 maçı belirle\n" +
             "           Last4Games AS (SELECT id\n" +
-            "                          FROM game" +
-            "                           where game.is_voted\n" +
+            "                          FROM game\n" +
+            "                           where game.is_voted AND game.squad_id = :squadId\n" +
             "                          ORDER BY date_time DESC\n" +
             "                          LIMIT 4),\n" +
             "\n" +
-            "           -- Son 5 maçı sıralıyoruz\n" +
             "           PlayerLast5Matches AS (SELECT r.player_id,\n" +
             "                                         r.game_id,\n" +
             "                                         r.rating,\n" +
@@ -80,27 +81,23 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "                                  FROM Last10WeeksMatches r\n" +
             "                                           JOIN game g ON r.game_id = g.id),\n" +
             "\n" +
-            "           -- En az 5 maç oynamış oyuncular\n" +
             "           EligiblePlayers AS (SELECT player_id\n" +
             "                               FROM PlayerLast5Matches\n" +
             "                               GROUP BY player_id\n" +
             "                               HAVING COUNT(*) >= 5),\n" +
             "\n" +
-            "           -- Son 3 maçtan en az 2’sinde aktif olan oyuncular\n" +
             "           ActivePlayers AS (SELECT player_id\n" +
             "                             FROM roster\n" +
             "                             WHERE game_id IN (SELECT id FROM Last4Games)\n" +
             "                             GROUP BY player_id\n" +
             "                             HAVING COUNT(DISTINCT game_id) >= 2),\n" +
             "\n" +
-            "           -- Son maç ve önceki 3 maçın ortalamasını hesaplıyoruz\n" +
             "           RecentStats AS (SELECT player_id,\n" +
             "                                  MAX(CASE WHEN match_rank = 1 THEN rating END)             AS last_match_rating,\n" +
             "                                  AVG(CASE WHEN match_rank BETWEEN 2 AND 4 THEN rating END) AS last3_avg_rating\n" +
             "                           FROM PlayerLast5Matches\n" +
             "                           GROUP BY player_id),\n" +
             "\n" +
-            "           -- Rating değişimini hesaplıyoruz\n" +
             "           FinalChanges AS (SELECT rs.player_id,\n" +
             "                                   rs.last_match_rating,\n" +
             "                                   rs.last3_avg_rating,\n" +
@@ -125,10 +122,9 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "      ORDER BY fc.rating_change DESC\n" +
             "      LIMIT 5) aa\n" +
             "order by aa.rating desc", nativeQuery = true)
-    List<TopListProjection> getTopFormPlayers();
+    List<TopListProjection> getTopFormPlayers(@Param("squadId") Integer squadId);
 
     @Query(value = "WITH ranked_pairs AS (\n" +
-            "    -- 1\uFE0F⃣ Oyuncu çiftlerini hesapla ve maç sayılarına göre sırala\n" +
             "    SELECT r1.player_id AS player1,\n" +
             "           r2.player_id AS player2,\n" +
             "           COUNT(*) AS games_together\n" +
@@ -137,6 +133,8 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "        ON r1.game_id = r2.game_id\n" +
             "        AND r1.team_color = r2.team_color\n" +
             "        AND r1.player_id < r2.player_id\n" +
+            "    JOIN game g ON r1.game_id = g.id\n" +
+            "    WHERE g.squad_id = :squadId\n" +
             "    GROUP BY player1, player2\n" +
             "    ORDER BY games_together DESC\n" +
             "),\n" +
@@ -154,7 +152,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "FROM filtered_pairs\n" +
             "join player pp1 on pp1.id = player1\n" +
             "join player pp2 on pp2.id = player2", nativeQuery = true)
-    List<TopListProjection> getLegendaryDuos();
+    List<TopListProjection> getLegendaryDuos(@Param("squadId") Integer squadId);
 
     @Query(value = "WITH ranked_rivals AS (\n" +
             "    SELECT r1.player_id AS player1,\n" +
@@ -165,6 +163,8 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "        ON r1.game_id = r2.game_id\n" +
             "        AND r1.team_color <> r2.team_color\n" +
             "        AND r1.player_id < r2.player_id\n" +
+            "    JOIN game g ON r1.game_id = g.id\n" +
+            "    WHERE g.squad_id = :squadId\n" +
             "    GROUP BY player1, player2\n" +
             "    ORDER BY games_against DESC\n" +
             "),\n" +
@@ -188,7 +188,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "JOIN player p2 ON p2.id = r.player2\n" +
             "WHERE r.rn1 = 1 OR r.rn2 = 1\n" +
             "ORDER BY r.games_against DESC", nativeQuery = true)
-    List<TopListProjection> getRivalDuos();
+    List<TopListProjection> getRivalDuos(@Param("squadId") Integer squadId);
 
     @Query(value = "select r.rating as last5GameRating\n" +
             "from roster r\n" +
@@ -197,12 +197,10 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "where p.id = :playerId\n" +
             "  and r.rating != 0\n" +
             "and g.is_voted\n" +
+            "and g.squad_id = :squadId\n" +
             "order by r.id desc\n" +
             "limit 5", nativeQuery = true)
-    List<Double> getLast5MatchRatingByPlayerId(Integer playerId);
+    List<Double> getLast5MatchRatingByPlayerId(@Param("playerId") Integer playerId, @Param("squadId") Integer squadId);
 
     List<Player> findByIdIn(List<Integer> ids);
-
-
-
 }

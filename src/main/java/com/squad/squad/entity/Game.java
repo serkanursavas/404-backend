@@ -27,6 +27,10 @@ public class Game {
     @Column(nullable = true)
     private Integer mvpId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "squad_id")
+    private Squad squad;
+
     @ManyToOne
     private GameLocation gameLocation;
 
@@ -147,5 +151,11 @@ public class Game {
         this.mvpId = mvpId;
     }
 
+    public Squad getSquad() {
+        return squad;
+    }
 
+    public void setSquad(Squad squad) {
+        this.squad = squad;
+    }
 }
