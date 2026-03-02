@@ -9,7 +9,7 @@ public interface UserService {
 
     boolean existsByUsername(String username);
 
-    String createUser(UserCreateRequestDTO user);
+    AuthResponseDTO createUser(UserCreateRequestDTO user);
 
     List<GetAllUsersDTO> getAllUsers();
 
@@ -21,7 +21,7 @@ public interface UserService {
 
     User getUserByUsername(String username);
 
-    String login(String username, String password);
+    AuthResponseDTO login(String username, String password);
 
     void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO);
 }

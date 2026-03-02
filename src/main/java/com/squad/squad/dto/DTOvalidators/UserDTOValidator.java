@@ -45,9 +45,7 @@ public class UserDTOValidator {
             errors.add("Passwords must match");
         }
 
-        if (!playerDTOValidator.validate(user.getPlayerCreateDTO()).isEmpty()) {
-            errors.addAll(playerDTOValidator.validate(user.getPlayerCreateDTO()));
-        }
+        // Player info is no longer required at signup - it's provided when joining a squad
 
         return errors;
     }

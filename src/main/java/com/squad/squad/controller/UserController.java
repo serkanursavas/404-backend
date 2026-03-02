@@ -42,17 +42,13 @@ public class UserController {
                     .body("Username already exists. Please choose a different username.");
         }
 
-        String token = userService.createUser(user);
-        AuthResponseDTO response = new AuthResponseDTO();
-        response.setToken(token);
+        AuthResponseDTO response = userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody UserLoginRequestDTO userLoginRequestDTO) {
-        String token = userService.login(userLoginRequestDTO.getUsername(), userLoginRequestDTO.getPassword());
-        AuthResponseDTO response = new AuthResponseDTO();
-        response.setToken(token);
+        AuthResponseDTO response = userService.login(userLoginRequestDTO.getUsername(), userLoginRequestDTO.getPassword());
         return ResponseEntity.ok(response);
     }
 

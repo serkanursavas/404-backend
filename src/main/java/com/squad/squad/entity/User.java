@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"user\"") // Çift tırnak içinde yazın
+@Table(name = "\"user\"")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class User {
 
@@ -26,11 +26,10 @@ public class User {
     private String role = "USER";
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private boolean isSuperAdmin = false;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "player_id", referencedColumnName = "id")
-    private Player player;
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public Integer getId() {
         return id;
@@ -64,19 +63,19 @@ public class User {
         this.role = role;
     }
 
+    public boolean isSuperAdmin() {
+        return isSuperAdmin;
+    }
+
+    public void setSuperAdmin(boolean superAdmin) {
+        isSuperAdmin = superAdmin;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Player getPlayer() {
-        return player;
-    }
-
-    public void setPlayer(Player player) {
-        this.player = player;
     }
 }

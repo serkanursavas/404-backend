@@ -13,7 +13,7 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
-    private static final long JWT_EXPIRATION_MS = 259200000; // Token geçerlilik süresi (1 gün)
+    private static final long JWT_EXPIRATION_MS = 259200000; // 3 days
 
     private static final String SECRET_KEY_STRING = System.getenv("JWT_SECRET_KEY");
     private static final SecretKey SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(SECRET_KEY_STRING), "HmacSHA256");
@@ -24,28 +24,20 @@ public class JwtUtils {
         }
     }
 
-    // JWT token oluşturma
-    public String generateToken(Integer id, String username, String role) {
-
+    // JWT token oluşturma - artık role yok
+    public String generateToken(Integer id, String username) {
         return Jwts.builder()
-                .setSubject(username.toLowerCase())  // Kullanıcı adını subject olarak ayarlıyoruz
-                .claim("role", role)
-                .claim("id", id)       // ID'yi de claim olarak ekliyoruz// Rol bilgisini doğrudan claim olarak ekliyoruz
-                .setIssuedAt(new Date())  // Token oluşturulma tarihini ayarlıyoruz
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))  // Token geçerlilik süresini ayarlıyoruz
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)  // İmzalama işlemi yapılıyor
+                .setSubject(username.toLowerCase())
+                .claim("id", id)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     // Token'dan kullanıcı adı çıkarma
     public String extractUsername(String token) {
         return extractClaims(token).getSubject();
-    }
-
-    // Token'dan rol çıkarma
-    public String extractRole(String token) {
-        Claims claims = extractClaims(token);
-        return claims.get("role", String.class);  // Token'dan rol bilgisini çıkarıyoruz
     }
 
     // Token'ın geçerliliğini kontrol etme

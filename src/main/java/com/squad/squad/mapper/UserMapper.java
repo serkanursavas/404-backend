@@ -12,8 +12,8 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    @Mapping(source = "player", target = "player")
     @Mapping(source = "createdAt", target = "createdAt")
+    @Mapping(target = "player", ignore = true)
     UserResponseDTO userToUserResponseDTO(User user);
     
     @Mapping(source = "createdAt", target = "createdAt")
