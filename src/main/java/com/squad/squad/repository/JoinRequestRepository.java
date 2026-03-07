@@ -17,4 +17,8 @@ public interface JoinRequestRepository extends JpaRepository<JoinRequest, Intege
     boolean existsByUserIdAndSquadIdAndStatus(Integer userId, Integer squadId, RequestStatus status);
 
     long countBySquadIdAndStatus(Integer squadId, RequestStatus status);
+
+    long countByUserIdAndSquadIdAndStatus(Integer userId, Integer squadId, RequestStatus status);
+
+    List<JoinRequest> findByUserIdAndStatus(Integer userId, RequestStatus status);
 }
