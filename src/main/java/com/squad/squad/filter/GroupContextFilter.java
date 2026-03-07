@@ -2,6 +2,7 @@ package com.squad.squad.filter;
 
 import com.squad.squad.context.GroupContext;
 import com.squad.squad.repository.GroupMembershipRepository;
+import com.squad.squad.repository.SquadRepository;
 import com.squad.squad.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,6 +20,7 @@ import java.util.Set;
 public class GroupContextFilter extends OncePerRequestFilter {
 
     private final GroupMembershipRepository groupMembershipRepository;
+    private final SquadRepository squadRepository;
 
     private static final Set<String> EXEMPT_PATHS = Set.of(
             "/api/users/login",
@@ -36,8 +38,9 @@ public class GroupContextFilter extends OncePerRequestFilter {
             "/error"
     );
 
-    public GroupContextFilter(GroupMembershipRepository groupMembershipRepository) {
+    public GroupContextFilter(GroupMembershipRepository groupMembershipRepository, SquadRepository squadRepository) {
         this.groupMembershipRepository = groupMembershipRepository;
+        this.squadRepository = squadRepository;
     }
 
     @Override
@@ -83,6 +86,11 @@ public class GroupContextFilter extends OncePerRequestFilter {
             // Verify user is member of this group
             if (!groupMembershipRepository.existsBySquadIdAndUserId(groupId, userId)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You are not a member of this group");
+                return;
+            }
+
+            if (!squadRepository.existsByIdAndActiveTrue(groupId)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Squad is not active");
                 return;
             }
 
