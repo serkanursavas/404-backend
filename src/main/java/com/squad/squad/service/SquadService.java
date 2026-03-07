@@ -81,6 +81,12 @@ public class SquadService {
             throw new IllegalStateException("You already have a pending join request for this squad");
         }
 
+        long rejectedCount = joinRequestRepository.countByUserIdAndSquadIdAndStatus(
+                userId, squad.getId(), RequestStatus.REJECTED);
+        if (rejectedCount >= 3) {
+            throw new IllegalStateException("You have been rejected too many times from this squad");
+        }
+
         JoinRequest request = new JoinRequest();
         request.setSquad(squad);
         request.setUser(user);
@@ -201,6 +207,11 @@ public class SquadService {
         authService.requireAdmin();
         Integer groupId = GroupContext.getCurrentGroupId();
 
+        Integer currentUserId = authService.getCurrentUserId();
+        if (userId.equals(currentUserId)) {
+            throw new IllegalStateException("You cannot remove yourself from the squad");
+        }
+
         GroupMembership membership = groupMembershipRepository.findBySquadIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found"));
 
@@ -275,7 +286,7 @@ public class SquadService {
         Squad squad = new Squad();
         squad.setName(request.getName());
         squad.setInviteCode(generateInviteCode());
-        squad.setCreatedByUser(request.getRequestedByUser());
+        squad.setOwnerUser(request.getRequestedByUser());
         squad = squadRepository.save(squad);
 
         // Create player for the requester in this squad
@@ -294,6 +305,11 @@ public class SquadService {
         membership.setPlayer(player);
         membership.setRole(GroupRole.ADMIN);
         groupMembershipRepository.save(membership);
+
+        // Kullanıcının diğer pending join request'lerini temizle
+        joinRequestRepository.findByUserIdAndStatus(
+                request.getRequestedByUser().getId(), RequestStatus.PENDING)
+                .forEach(joinRequestRepository::delete);
 
         // Update request
         Integer reviewerId = authService.getCurrentUserId();
@@ -334,6 +350,16 @@ public class SquadService {
                 .orElse(null);
     }
 
+    public String getAdminPlayerNameForSquad(Integer squadId) {
+        return groupMembershipRepository.findFirstBySquadIdAndRole(squadId, GroupRole.ADMIN)
+                .map(m -> m.getPlayer().getName() + " " + m.getPlayer().getSurname())
+                .orElse(null);
+    }
+
+    public int getMemberCountForSquad(Integer squadId) {
+        return (int) groupMembershipRepository.countBySquadId(squadId);
+    }
+
     @Transactional
     public void cancelJoinRequest(Integer requestId) {
         Integer userId = authService.getCurrentUserId();
@@ -350,6 +376,29 @@ public class SquadService {
         }
 
         joinRequestRepository.delete(request);
+    }
+
+    @Transactional
+    public void cancelSquadRequest(Integer requestId) {
+        Integer userId = authService.getCurrentUserId();
+        SquadRequest request = squadRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Squad request not found"));
+        if (!request.getRequestedByUser().getId().equals(userId)) {
+            throw new SecurityException("You can only cancel your own requests");
+        }
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new IllegalStateException("Only pending requests can be cancelled");
+        }
+        squadRequestRepository.delete(request);
+    }
+
+    @Transactional
+    public void deactivateSquad(Integer squadId) {
+        authService.requireSuperAdmin();
+        Squad squad = squadRepository.findById(squadId)
+                .orElseThrow(() -> new IllegalArgumentException("Squad not found"));
+        squad.setActive(false);
+        squadRepository.save(squad);
     }
 
     // ==================== Helpers ====================
