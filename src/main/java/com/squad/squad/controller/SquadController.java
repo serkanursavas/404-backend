@@ -52,7 +52,12 @@ public class SquadController {
     public ResponseEntity<List<SquadSummaryDTO>> getMySquads() {
         List<GroupMembership> memberships = squadService.getMySquads();
         List<SquadSummaryDTO> squads = memberships.stream()
-                .map(m -> new SquadSummaryDTO(m.getSquad().getId(), m.getSquad().getName(), m.getRole().name()))
+                .map(m -> {
+                    Integer squadId = m.getSquad().getId();
+                    String adminName = squadService.getAdminPlayerNameForSquad(squadId);
+                    int memberCount = squadService.getMemberCountForSquad(squadId);
+                    return new SquadSummaryDTO(squadId, m.getSquad().getName(), m.getRole().name(), adminName, memberCount);
+                })
                 .toList();
         return ResponseEntity.ok(squads);
     }
@@ -103,6 +108,20 @@ public class SquadController {
         ));
     }
 
+    @DeleteMapping("/cancel-squad/{requestId}")
+    public ResponseEntity<?> cancelSquadRequest(@PathVariable Integer requestId) {
+        try {
+            squadService.cancelSquadRequest(requestId);
+            return ResponseEntity.ok("Squad request cancelled");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/cancel-join/{requestId}")
     public ResponseEntity<?> cancelJoinRequest(@PathVariable Integer requestId) {
         try {
@@ -127,6 +146,7 @@ public class SquadController {
         dto.setName(squad.getName());
         dto.setInviteCode(squad.getInviteCode());
         dto.setCreatedAt(squad.getCreatedAt());
+        dto.setMemberCount(squadService.getMemberCountForSquad(squad.getId()));
         return ResponseEntity.ok(dto);
     }
 
@@ -184,6 +204,8 @@ public class SquadController {
         try {
             squadService.removeMember(userId);
             return ResponseEntity.ok("Member removed");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
@@ -238,6 +260,16 @@ public class SquadController {
         return ResponseEntity.ok("Squad request approved");
     }
 
+    @PutMapping("/super/deactivate/{squadId}")
+    public ResponseEntity<?> deactivateSquad(@PathVariable Integer squadId) {
+        try {
+            squadService.deactivateSquad(squadId);
+            return ResponseEntity.ok("Squad deactivated");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @PutMapping("/super/reject/{requestId}")
     public ResponseEntity<?> rejectSquadRequest(@PathVariable Integer requestId) {
         squadService.rejectSquadRequest(requestId);
@@ -254,6 +286,8 @@ public class SquadController {
                     dto.setName(s.getName());
                     dto.setInviteCode(s.getInviteCode());
                     dto.setCreatedAt(s.getCreatedAt());
+                    dto.setMemberCount(squadService.getMemberCountForSquad(s.getId()));
+                    dto.setActive(s.isActive());
                     return dto;
                 }).toList();
         return ResponseEntity.ok(dtos);

@@ -8,6 +8,7 @@ public class SquadDetailDTO {
     private String inviteCode;
     private LocalDateTime createdAt;
     private int memberCount;
+    private boolean active;
 
     public Integer getId() {
         return id;
@@ -47,5 +48,13 @@ public class SquadDetailDTO {
 
     public void setMemberCount(int memberCount) {
         this.memberCount = memberCount;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
