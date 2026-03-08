@@ -184,7 +184,8 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
     @Override
     @Transactional
     public void clearAllRatings() {
-        ratingRepository.deleteAll();
+        Integer squadId = getSquadId();
+        ratingRepository.deleteAllBySquadId(squadId);
     }
 
     public Integer getCurrentPlayerId() {
@@ -193,6 +194,7 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
 
     @Override
     public boolean checkVote(Integer playerId) {
-        return ratingRepository.existsByPlayerId(playerId);
+        Integer squadId = getSquadId();
+        return ratingRepository.existsByPlayerIdAndActiveGame(playerId, squadId);
     }
 }

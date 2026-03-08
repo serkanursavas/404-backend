@@ -41,7 +41,8 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
 
     @Override
     public List<GoalDTO> getAllGoals() {
-        return goalRepository.findAll().stream().map(
+        Integer squadId = getSquadId();
+        return goalRepository.findAllBySquadId(squadId).stream().map(
                         goal -> new GoalDTO(goal.getGame().getId(), goal.getPlayer().getId(), goal.getPlayer().getName(),
                                 goal.getTeamColor()))
                 .collect(Collectors.toList());
@@ -49,6 +50,7 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
 
     @Override
     public List<GoalDTO> getGoalsByGameId(Integer gameId) {
+        gameService.findGameById(gameId); // squad check — başka squad'ın maçı ise exception fırlatır
         return goalRepository.findGoalsByGameId(gameId).stream().map(
                         goal -> new GoalDTO(gameId, goal.getPlayer().getId(), goal.getPlayer().getName(), goal.getTeamColor()))
                 .collect(Collectors.toList());

@@ -70,13 +70,13 @@ public class RosterServiceImpl extends BaseSquadService implements RosterService
     @Override
     @Transactional
     public void updatePlayerGeneralRating(Integer gameId) {
-
+        Integer squadId = getSquadId();
         List<Roster> gameRosters = rosterRepository.findRosterByGameId(gameId);
 
         for (Roster roster : gameRosters) {
             Player player = roster.getPlayer();
 
-            List<Roster> playerRosters = rosterRepository.findRosterByPlayerId(player.getId());
+            List<Roster> playerRosters = rosterRepository.findRosterByPlayerIdAndSquadId(player.getId(), squadId);
 
             double generalRating = playerRosters.stream()
                     .mapToDouble(Roster::getRating)

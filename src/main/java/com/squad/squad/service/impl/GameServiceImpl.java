@@ -123,7 +123,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
 
         // Verify game belongs to current squad
         Integer squadId = getSquadId();
-        if (game.getSquad() != null && !game.getSquad().getId().equals(squadId)) {
+        if (game.getSquad() == null || !game.getSquad().getId().equals(squadId)) {
             throw new SecurityException("Game does not belong to your squad");
         }
 
@@ -214,7 +214,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
     @Override
     @Transactional
     public void updateGame(Integer id, GameUpdateRequestDTO updatedGame) {
-        Game game = gameRepository.findById(id)
+        Game game = gameRepository.findByIdAndSquadId(id, getSquadId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
         if (game.isPlayed()) {
@@ -284,6 +284,8 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
     @Override
     @Transactional
     public void deleteGame(Integer id) {
+        gameRepository.findByIdAndSquadId(id, getSquadId())
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
         try {
             rosterService.deleteRosterByGameId(id);
             gameRepository.deleteById(id);
@@ -352,7 +354,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
 
     @Override
     public void updateWeather(Integer id, String weather) {
-        Game game = gameRepository.findById(id)
+        Game game = gameRepository.findByIdAndSquadId(id, getSquadId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
 
         String cleanedWeather = weather.replace("\"", "").trim();
