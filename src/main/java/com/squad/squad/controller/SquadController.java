@@ -136,6 +136,11 @@ public class SquadController {
         }
     }
 
+    @GetMapping("/my-player-id")
+    public ResponseEntity<Integer> getMyPlayerId() {
+        return ResponseEntity.ok(squadService.getMyPlayerId());
+    }
+
     // ==================== Group Admin (group context required) ====================
 
     @GetMapping("/current")

@@ -401,6 +401,14 @@ public class SquadService {
         squadRepository.save(squad);
     }
 
+    public Integer getMyPlayerId() {
+        try {
+            return authService.getCurrentPlayerId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     // ==================== Helpers ====================
 
     public long getPendingJoinRequestCount() {
