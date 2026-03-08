@@ -28,6 +28,7 @@ import com.squad.squad.entity.User;
 import com.squad.squad.exception.UserNotFoundException;
 import com.squad.squad.repository.UserRepository;
 import com.squad.squad.service.PlayerService;
+import com.squad.squad.service.SquadService;
 import com.squad.squad.service.UserService;
 
 import jakarta.transaction.Transactional;
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserService {
     private final GroupMembershipRepository groupMembershipRepository;
     private final SquadRequestRepository squadRequestRepository;
     private final JoinRequestRepository joinRequestRepository;
+    private final SquadService squadService;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
@@ -51,7 +53,8 @@ public class UserServiceImpl implements UserService {
                            JwtUtils jwtUtils, UserMapper userMapper,
                            GroupMembershipRepository groupMembershipRepository,
                            SquadRequestRepository squadRequestRepository,
-                           JoinRequestRepository joinRequestRepository) {
+                           JoinRequestRepository joinRequestRepository,
+                           SquadService squadService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.playerService = playerService;
@@ -61,6 +64,7 @@ public class UserServiceImpl implements UserService {
         this.groupMembershipRepository = groupMembershipRepository;
         this.squadRequestRepository = squadRequestRepository;
         this.joinRequestRepository = joinRequestRepository;
+        this.squadService = squadService;
     }
 
     @Override
@@ -77,7 +81,12 @@ public class UserServiceImpl implements UserService {
             // Build squad list
             List<GroupMembership> memberships = groupMembershipRepository.findByUserId(userId);
             List<SquadSummaryDTO> squads = memberships.stream()
-                    .map(m -> new SquadSummaryDTO(m.getSquad().getId(), m.getSquad().getName(), m.getRole().name()))
+                    .map(m -> {
+                        Integer squadId = m.getSquad().getId();
+                        String adminName = squadService.getAdminPlayerNameForSquad(squadId);
+                        int memberCount = squadService.getMemberCountForSquad(squadId);
+                        return new SquadSummaryDTO(squadId, m.getSquad().getName(), m.getRole().name(), adminName, memberCount);
+                    })
                     .collect(Collectors.toList());
 
             // Count pending requests
