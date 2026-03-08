@@ -14,7 +14,7 @@ public class GetAllPlayersDTO {
     private String surname;
     private String foot;
     private String photo;
-    private double rating;
+    private Double rating;
     private String position;
     private boolean active = true;
 
@@ -58,11 +58,11 @@ public class GetAllPlayersDTO {
         this.photo = photo;
     }
 
-    public double getRating() {
-        return Math.round(rating * 100.0) / 100.0;
+    public Double getRating() {
+        return rating != null ? Math.round(rating * 100.0) / 100.0 : null;
     }
 
-    public void setRating(double rating) {
+    public void setRating(Double rating) {
         this.rating = rating;
     }
 
