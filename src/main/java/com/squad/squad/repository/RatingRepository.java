@@ -26,6 +26,15 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
 
     boolean existsByPlayerId(Integer playerId);
 
+    @Query("SELECT COUNT(r) > 0 FROM Rating r " +
+           "WHERE r.player.id = :playerId " +
+           "AND r.roster.game.isPlayed = true " +
+           "AND r.roster.game.isVoted = false " +
+           "AND r.roster.game.squad.id = :squadId")
+    boolean existsByPlayerIdAndActiveGame(
+        @Param("playerId") Integer playerId,
+        @Param("squadId") Integer squadId);
+
     @Modifying
     @Query("DELETE FROM Rating r WHERE r.roster.game.squad.id = :squadId")
     void deleteAllBySquadId(@Param("squadId") Integer squadId);

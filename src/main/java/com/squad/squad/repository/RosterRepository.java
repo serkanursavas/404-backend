@@ -2,6 +2,8 @@ package com.squad.squad.repository;
 
 import com.squad.squad.entity.Roster;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,5 +23,9 @@ public interface RosterRepository extends JpaRepository<Roster, Integer> {
 
     List<Roster> findAllByGameId(Integer gameId);
 
+    @Query("SELECT r FROM Roster r WHERE r.player.id = :playerId AND r.game.squad.id = :squadId")
+    List<Roster> findRosterByPlayerIdAndSquadId(
+        @Param("playerId") Integer playerId,
+        @Param("squadId") Integer squadId);
 
 }

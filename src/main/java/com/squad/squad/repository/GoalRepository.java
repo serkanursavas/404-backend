@@ -14,6 +14,9 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
 
     List<Goal> findGoalsByGameId(Integer game_id);
 
+    @Query("SELECT g FROM Goal g WHERE g.game.squad.id = :squadId")
+    List<Goal> findAllBySquadId(@Param("squadId") Integer squadId);
+
     @Query(value = "WITH TopScorers AS (\n" +
             "    SELECT \n" +
             "        gl.player_id AS playerId, \n" +
