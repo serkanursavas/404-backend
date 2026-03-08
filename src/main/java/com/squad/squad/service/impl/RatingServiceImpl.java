@@ -1,12 +1,12 @@
 package com.squad.squad.service.impl;
 
-import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import com.squad.squad.entity.*;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.RosterRepository;
+import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.PlayerService;
@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class RatingServiceImpl implements RatingService {
+public class RatingServiceImpl extends BaseSquadService implements RatingService {
 
     private final RatingRepository ratingRepository;
     private final PlayerService playerService;
@@ -173,7 +173,7 @@ public class RatingServiceImpl implements RatingService {
             rosterService.updatePlayerGeneralRating(gameId);
             game.setVoted(true);
 
-            Integer squadId = GroupContext.getCurrentGroupId();
+            Integer squadId = getSquadId();
             Integer mvpId = rosterPersonaRepository.findMvp(squadId);
             game.setMvpId(mvpId);
 

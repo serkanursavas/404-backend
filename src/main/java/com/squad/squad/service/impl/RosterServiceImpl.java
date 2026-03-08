@@ -13,13 +13,14 @@ import com.squad.squad.exception.RosterNotFoundException;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.mapper.RosterMapper;
 import com.squad.squad.repository.RosterRepository;
+import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
 
 import jakarta.transaction.Transactional;
 
 @Service
-public class RosterServiceImpl implements RosterService {
+public class RosterServiceImpl extends BaseSquadService implements RosterService {
 
     private final RosterRepository rosterRepository;
 

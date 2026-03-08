@@ -1,6 +1,5 @@
 package com.squad.squad.service.impl;
 
-import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.AddPersonaRequestDTO;
 import com.squad.squad.entity.Persona;
 import com.squad.squad.entity.PlayerPersona;
@@ -11,6 +10,7 @@ import com.squad.squad.repository.PersonaRepository;
 import com.squad.squad.repository.PlayerPersonaRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.SquadRepository;
+import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.PersonaService;
 import com.squad.squad.service.RosterService;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class PersonaServiceImpl implements PersonaService {
+public class PersonaServiceImpl extends BaseSquadService implements PersonaService {
 
     private final PersonaRepository personaRepository;
     private final RosterService rosterService;
@@ -42,7 +42,7 @@ public class PersonaServiceImpl implements PersonaService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void savePersonas(List<AddPersonaRequestDTO> personas) {
-        Integer squadId = GroupContext.getCurrentGroupId();
+        Integer squadId = getSquadId();
         Squad squad = squadRepository.findById(squadId).orElse(null);
 
         for (AddPersonaRequestDTO dto : personas) {

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
@@ -18,12 +17,13 @@ import com.squad.squad.entity.Player;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GoalRepository;
+import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.GoalService;
 import com.squad.squad.service.PlayerService;
 
 @Service
-public class GoalServiceImpl implements GoalService {
+public class GoalServiceImpl extends BaseSquadService implements GoalService {
     private final GoalRepository goalRepository;
     private final GameService gameService;
     private final PlayerService playerService;
@@ -75,7 +75,7 @@ public class GoalServiceImpl implements GoalService {
     }
 
     public List<TopListsDTO> getTopScorers() {
-        Integer squadId = GroupContext.getCurrentGroupId();
+        Integer squadId = getSquadId();
         List<Object[]> results = goalRepository.findTopScorersNative(squadId);
         List<TopListsDTO> topScorers = new ArrayList<>();
 
