@@ -89,13 +89,8 @@ public class GameController {
     }
 
     @GetMapping("/getNextGame")
-    public ResponseEntity<?> getNextGame() {
-        GameResponseDTO latestGame = gameService.getLatestGame();
-        if (latestGame != null) {
-            return ResponseEntity.ok(latestGame);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No upcoming matches available");
-        }
+    public ResponseEntity<GameResponseDTO> getNextGame() {
+        return ResponseEntity.ok(gameService.getLatestGame()); // null dönerse frontend boş durum olarak işler
     }
 
     @GetMapping("/getMvp")
