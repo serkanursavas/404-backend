@@ -10,11 +10,7 @@ import jakarta.persistence.*;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Roster {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class Roster extends BaseEntity {
 
     @Column(nullable = false)
     private String teamColor;
@@ -51,7 +47,7 @@ public class Roster {
     }
 
     public Roster(Integer id, String teamColor, Game game, Player player) {
-        this.id = id;
+        setId(id);
         this.teamColor = teamColor;
         this.game = game;
         this.player = player;
@@ -63,14 +59,6 @@ public class Roster {
 
     public void setHasVote(Boolean hasVote) {
         this.hasVote = hasVote;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getTeamColor() {
@@ -136,6 +124,4 @@ public class Roster {
     public void setPersona3(Integer persona3) {
         this.persona3 = persona3;
     }
-
-
 }

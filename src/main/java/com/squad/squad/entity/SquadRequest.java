@@ -7,11 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "squad_request")
-public class SquadRequest {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class SquadRequest extends BaseEntity {
 
     @Column(nullable = false)
     private String name;
@@ -24,28 +20,16 @@ public class SquadRequest {
     @Column(nullable = false)
     private RequestStatus status = RequestStatus.PENDING;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     private LocalDateTime reviewedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by_user_id")
     private User reviewedByUser;
 
-    // Player info for the squad creator
     private String playerName;
     private String playerSurname;
     private String playerPosition;
     private String playerFoot;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
@@ -69,14 +53,6 @@ public class SquadRequest {
 
     public void setStatus(RequestStatus status) {
         this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public LocalDateTime getReviewedAt() {

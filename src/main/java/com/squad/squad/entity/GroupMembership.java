@@ -7,11 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "group_membership", uniqueConstraints = @UniqueConstraint(columnNames = {"squad_id", "user_id"}))
-public class GroupMembership {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class GroupMembership extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "squad_id", nullable = false)
@@ -31,14 +27,6 @@ public class GroupMembership {
 
     @Column(nullable = false)
     private LocalDateTime joinedAt = LocalDateTime.now();
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public Squad getSquad() {
         return squad;

@@ -2,15 +2,9 @@ package com.squad.squad.entity;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "squad")
-public class Squad {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class Squad extends BaseEntity {
 
     @Column(nullable = false)
     private String name;
@@ -18,20 +12,9 @@ public class Squad {
     @Column(nullable = false, unique = true, length = 8)
     private String inviteCode;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_user_id")
-    private User createdByUser;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    @JoinColumn(name = "owner_user_id")
+    private User ownerUser;
 
     public String getName() {
         return name;
@@ -49,19 +32,11 @@ public class Squad {
         this.inviteCode = inviteCode;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public User getOwnerUser() {
+        return ownerUser;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public User getCreatedByUser() {
-        return createdByUser;
-    }
-
-    public void setCreatedByUser(User createdByUser) {
-        this.createdByUser = createdByUser;
+    public void setOwnerUser(User ownerUser) {
+        this.ownerUser = ownerUser;
     }
 }

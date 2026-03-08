@@ -4,11 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "roster_persona")
-public class RosterPersona {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class RosterPersona extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "roster_id", nullable = false)
@@ -19,15 +15,7 @@ public class RosterPersona {
     private Persona persona;
 
     @Column(nullable = false)
-    private Integer count = 0; // Varsayılan olarak 0
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    private Integer count = 0;
 
     public Roster getRoster() {
         return roster;
@@ -52,5 +40,4 @@ public class RosterPersona {
     public void setCount(Integer count) {
         this.count = count;
     }
-
 }

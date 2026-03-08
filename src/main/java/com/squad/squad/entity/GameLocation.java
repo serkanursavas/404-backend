@@ -3,11 +3,7 @@ package com.squad.squad.entity;
 import jakarta.persistence.*;
 
 @Entity
-public class GameLocation {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class GameLocation extends BaseEntity {
 
     private String location;
 
@@ -18,17 +14,6 @@ public class GameLocation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "squad_id")
     private Squad squad;
-
-
-    // Getters and Setters
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getLocation() {
         return location;

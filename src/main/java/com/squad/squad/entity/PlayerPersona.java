@@ -4,10 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "player_persona", uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "persona_id"}))
-public class PlayerPersona {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class PlayerPersona extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "player_id", nullable = false)
@@ -23,14 +20,6 @@ public class PlayerPersona {
 
     @Column(nullable = false)
     private Integer count = 0;
-
-public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public Player getPlayer() {
         return player;

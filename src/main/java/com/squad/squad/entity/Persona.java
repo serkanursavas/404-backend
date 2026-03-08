@@ -4,11 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "persona")
-public class Persona {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class Persona extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -16,14 +12,6 @@ public class Persona {
     private String description;
 
     private String category;
-
-public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;

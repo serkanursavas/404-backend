@@ -10,11 +10,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "player")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Player {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class Player extends BaseEntity {
 
     @Column(nullable = true)
     private String name;
@@ -29,12 +25,10 @@ public class Player {
     private String photo;
 
     @Column(nullable = true)
-    private double rating;
+    private Double rating;
 
     @Column(nullable = true)
     private String position;
-
-    private boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "squad_id")
@@ -55,14 +49,6 @@ public class Player {
 
     public void setPlayerPersonas(List<PlayerPersona> playerPersonas) {
         this.playerPersonas = playerPersonas;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -97,11 +83,11 @@ public class Player {
         this.photo = photo;
     }
 
-    public double getRating() {
+    public Double getRating() {
         return rating;
     }
 
-    public void setRating(double rating) {
+    public void setRating(Double rating) {
         this.rating = rating;
     }
 
@@ -135,13 +121,5 @@ public class Player {
 
     public void setGoal(List<Goal> goal) {
         this.goal = goal;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
     }
 }

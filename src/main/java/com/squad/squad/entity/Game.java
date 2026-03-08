@@ -9,11 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-public class Game {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class Game extends BaseEntity {
 
     @Column(nullable = false)
     private boolean isPlayed = false;
@@ -52,15 +48,6 @@ public class Game {
     @OneToMany(mappedBy = "game")
     @JsonIgnore
     private List<Goal> goal;
-
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public boolean isPlayed() {
         return isPlayed;
@@ -134,7 +121,6 @@ public class Game {
         isVoted = voted;
     }
 
-    // missed getter and setters
     public GameLocation getGameLocation() {
         return gameLocation;
     }
