@@ -15,6 +15,8 @@ import java.util.Optional;
 @Repository
 public interface GameRepository extends JpaRepository<Game, Integer> {
 
+    Optional<Game> findByIdAndSquadId(Integer id, Integer squadId);
+
     Game findTopBySquadIdOrderByDateTimeDesc(Integer squadId);
 
     Game findBySquadIdAndIsPlayedFalse(Integer squadId);

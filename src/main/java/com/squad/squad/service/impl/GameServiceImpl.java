@@ -1,6 +1,5 @@
 package com.squad.squad.service.impl;
 
-import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.PlayerDTO;
@@ -24,6 +23,7 @@ import com.squad.squad.repository.GameRepository;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.SquadRepository;
+import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
@@ -41,7 +41,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
-public class GameServiceImpl implements GameService {
+public class GameServiceImpl extends BaseSquadService implements GameService {
 
     private final GameRepository gameRepository;
     private final RosterService rosterService;
@@ -57,10 +57,10 @@ public class GameServiceImpl implements GameService {
 
     @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
-                           PlayerService playerService, RosterPersonaRepository rosterPersonaRepository,
-                           GameLocationRepository gameLocationRepository, RatingRepository ratingRepository,
-                           GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper,
-                           PlayerMapper playerMapper, SquadRepository squadRepository) {
+            PlayerService playerService, RosterPersonaRepository rosterPersonaRepository,
+            GameLocationRepository gameLocationRepository, RatingRepository ratingRepository,
+            GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper,
+            PlayerMapper playerMapper, SquadRepository squadRepository) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
@@ -74,28 +74,40 @@ public class GameServiceImpl implements GameService {
         this.squadRepository = squadRepository;
     }
 
-    private Integer getSquadId() {
-        return GroupContext.getCurrentGroupId();
-    }
-
     @Override
     public GameResponseDTO getLatestGame() {
         Integer squadId = getSquadId();
         checkAndUpdateUnplayedGame();
-        return gameMapper.gameToGameResponseDTO(gameRepository.findTopBySquadIdOrderByDateTimeDesc(squadId));
+        Game game = gameRepository.findTopBySquadIdOrderByDateTimeDesc(squadId);
+        if (game == null) return null;
+
+        GameResponseDTO dto = gameMapper.gameToGameResponseDTO(game);
+
+        List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(game.getId());
+        Set<Integer> playerIds = new HashSet<>();
+        rosters.forEach(r -> playerIds.add(r.getPlayerId()));
+        Map<Integer, PlayerDTO> playerMap = playerService.findPlayersByIds(new ArrayList<>(playerIds));
+        rosters.forEach(r -> {
+            PlayerDTO p = playerMap.get(r.getPlayerId());
+            if (p != null) r.setPlayerName(p.getName() + " " + p.getSurname());
+        });
+        dto.setRosters(rosters);
+
+        return dto;
     }
 
     @Override
     public Page<LatestGamesDTO> getAllGames(Pageable pageable) {
         Integer squadId = getSquadId();
-        return gameRepository.findAllBySquadIdOrderByDateTimeDesc(squadId, pageable).map(game ->
-                new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
+        return gameRepository.findAllBySquadIdOrderByDateTimeDesc(squadId, pageable)
+                .map(game -> new LatestGamesDTO(game.getId(), game.getDateTime(), game.getHomeTeamScore(),
                         game.getAwayTeamScore(), game.isPlayed()));
     }
 
     @Override
     public Game findGameById(Integer id) {
-        return gameRepository.findById(id)
+        Integer squadId = getSquadId();
+        return gameRepository.findByIdAndSquadId(id, squadId)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
     }
 
@@ -116,7 +128,8 @@ public class GameServiceImpl implements GameService {
         }
 
         GameLocation gameLocation = gameLocationRepository.findById(game.getGameLocation().getId())
-                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + game.getGameLocation().getId()));
+                .orElseThrow(() -> new NotFoundException(
+                        "Game location not found with id: " + game.getGameLocation().getId()));
 
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(id);
         List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
@@ -164,7 +177,8 @@ public class GameServiceImpl implements GameService {
         game.setSquad(squad);
 
         GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(gameDto.getLocation()))
-                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + gameDto.getGameLocationId()));
+                .orElseThrow(
+                        () -> new NotFoundException("Game location not found with id: " + gameDto.getGameLocationId()));
 
         game.setGameLocation(gameLocation);
 
@@ -208,7 +222,8 @@ public class GameServiceImpl implements GameService {
         }
 
         GameLocation gameLocation = gameLocationRepository.findById(Integer.parseInt(updatedGame.getLocation()))
-                .orElseThrow(() -> new NotFoundException("Game location not found with id: " + updatedGame.getLocation()));
+                .orElseThrow(
+                        () -> new NotFoundException("Game location not found with id: " + updatedGame.getLocation()));
 
         game.setGameLocation(gameLocation);
         updateFieldIfNotNull(updatedGame.getDateTime(), game::setDateTime);
@@ -235,7 +250,8 @@ public class GameServiceImpl implements GameService {
                         .filter(rosterUpdateDTO -> rosterUpdateDTO.getId().equals(existingRoster.getId()))
                         .findFirst()
                         .ifPresent(rosterUpdateDTO -> {
-                            updateFieldIfNotNull(rosterUpdateDTO.getTeamColor().toUpperCase(), existingRoster::setTeamColor);
+                            updateFieldIfNotNull(rosterUpdateDTO.getTeamColor().toUpperCase(),
+                                    existingRoster::setTeamColor);
                             Player player = playerMap.get(rosterUpdateDTO.getPlayerId());
                             if (player != null) {
                                 existingRoster.setPlayer(player);
@@ -329,8 +345,7 @@ public class GameServiceImpl implements GameService {
                 (String) row[2],
                 (String) row[3],
                 (String) row[4],
-                ((Number) row[5]).doubleValue()
-        );
+                ((Number) row[5]).doubleValue());
 
         return Optional.of(dto);
     }

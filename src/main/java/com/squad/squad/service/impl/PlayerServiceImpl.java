@@ -1,6 +1,5 @@
 package com.squad.squad.service.impl;
 
-import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.PlayerDTO;
 import com.squad.squad.dto.PlayerPersonaDTO;
 import com.squad.squad.dto.TopListProjection;
@@ -13,6 +12,7 @@ import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.PersonaRepository;
 import com.squad.squad.repository.PlayerPersonaRepository;
 import com.squad.squad.repository.PlayerRepository;
+import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.PlayerService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class PlayerServiceImpl implements PlayerService {
+public class PlayerServiceImpl extends BaseSquadService implements PlayerService {
 
     private final PlayerRepository playerRepository;
     private final PlayerPersonaRepository playerPersonaRepository;
@@ -39,10 +39,6 @@ public class PlayerServiceImpl implements PlayerService {
         this.playerPersonaRepository = playerPersonaRepository;
         this.personaRepository = personaRepository;
         this.playerMapper = playerMapper;
-    }
-
-    private Integer getSquadId() {
-        return GroupContext.getCurrentGroupId();
     }
 
     @Override
@@ -84,7 +80,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public PlayerDTO getPlayerById(Integer id) {
-        Player player = playerRepository.findById(id)
+        Player player = playerRepository.findByIdAndSquadId(id, getSquadId())
                 .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));
 
         PlayerDTO playerDTO = playerMapper.playerToPlayerDTO(player);

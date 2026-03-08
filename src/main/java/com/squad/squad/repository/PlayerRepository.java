@@ -14,6 +14,8 @@ import com.squad.squad.entity.Player;
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
+    Optional<Player> findByIdAndSquadId(Integer id, Integer squadId);
+
     List<Player> findByActive(boolean active);
 
     List<Player> findByActiveAndSquadId(boolean active, Integer squadId);

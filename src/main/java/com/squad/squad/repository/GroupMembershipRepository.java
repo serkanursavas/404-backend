@@ -19,6 +19,8 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
 
     boolean existsBySquadIdAndUserId(Integer squadId, Integer userId);
 
+    long countBySquadId(Integer squadId);
+
     long countBySquadIdAndRole(Integer squadId, GroupRole role);
 
     Optional<GroupMembership> findFirstBySquadIdAndRole(Integer squadId, GroupRole role);
