@@ -242,7 +242,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
                     .distinct()
                     .collect(Collectors.toList());
 
-            Map<Integer, Player> playerMap = playerService.findAllById(playerIds).stream()
+            Map<Integer, Player> playerMap = playerService.findAllByIdsInCurrentSquad(playerIds).stream()
                     .collect(Collectors.toMap(Player::getId, player -> player));
 
             existingRosters.forEach(existingRoster -> {

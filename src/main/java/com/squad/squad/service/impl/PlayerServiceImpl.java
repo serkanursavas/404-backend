@@ -112,8 +112,8 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
 
     @Override
     public void updatePlayer(PlayerUpdateRequestDTO updatedPlayer) {
-        Player existingPlayer = playerRepository.findById(updatedPlayer.getId())
-                .orElseThrow(() -> new RuntimeException("Player not found with id: " + updatedPlayer.getId()));
+        Player existingPlayer = playerRepository.findByIdAndSquadId(updatedPlayer.getId(), getSquadId())
+                .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + updatedPlayer.getId()));
 
         BeanUtils.copyProperties(updatedPlayer, existingPlayer);
         playerRepository.save(existingPlayer);
@@ -137,6 +137,11 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
     @Override
     public List<Player> findAllById(List<Integer> playerIds) {
         return playerRepository.findAllById(playerIds);
+    }
+
+    @Override
+    public List<Player> findAllByIdsInCurrentSquad(List<Integer> ids) {
+        return playerRepository.findByIdInAndSquadId(ids, getSquadId());
     }
 
     public List<TopListsDTO> getTopRatedPlayersWithoutRecentGames() {

@@ -25,6 +25,8 @@ public interface PlayerService {
 
     List<Player> findAllById(List<Integer> playerIds);
 
+    List<Player> findAllByIdsInCurrentSquad(List<Integer> ids);
+
     List<TopListsDTO> getTopRatedPlayersWithoutRecentGames();
 
     List<TopListProjection> getLegendaryDuos();
