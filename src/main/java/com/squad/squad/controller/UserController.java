@@ -4,6 +4,7 @@ import com.squad.squad.dto.user.*;
 import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
+import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.UserService;
 
 import java.util.List;
@@ -17,14 +18,17 @@ public class UserController {
 
     private final UserService userService;
     private final UserDTOValidator userDTOValidator;
+    private final GroupAuthorizationService authService;
 
-    public UserController(UserService userService, UserDTOValidator userDTOValidator) {
+    public UserController(UserService userService, UserDTOValidator userDTOValidator, GroupAuthorizationService authService) {
         this.userService = userService;
         this.userDTOValidator = userDTOValidator;
+        this.authService = authService;
     }
 
     @GetMapping("/admin/getAllUsers")
     public ResponseEntity<List<GetAllUsersDTO>> getAllUsers() {
+        authService.requireSuperAdmin();
         List<GetAllUsersDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
@@ -54,6 +58,7 @@ public class UserController {
 
     @PostMapping("/admin/resetPassword/{username}")
     public ResponseEntity<?> resetPassword(@PathVariable String username) {
+        authService.requireSuperAdmin();
         String result = userService.resetPassword(username);
         return ResponseEntity.ok(result);
     }
@@ -83,6 +88,7 @@ public class UserController {
 
     @PutMapping("/admin/updateUserRole/{username}")
     public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserRoleUpdateRequestDTO updatedRole) {
+        authService.requireSuperAdmin();
         List<String> errors = userDTOValidator.validateRoleUpdate(updatedRole);
         if (!errors.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
@@ -100,6 +106,7 @@ public class UserController {
 
     @DeleteMapping("/admin/deleteUser/{username}")
     public ResponseEntity<String> deleteUser(@PathVariable String username) {
+        authService.requireSuperAdmin();
         userService.deleteUser(username);
         return ResponseEntity.ok("User deleted successfully with username: " + username.toLowerCase());
     }

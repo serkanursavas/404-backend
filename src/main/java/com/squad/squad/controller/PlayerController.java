@@ -8,6 +8,7 @@ import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.GetAllPlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
 import com.squad.squad.repository.PlayerRepository;
+import com.squad.squad.service.GroupAuthorizationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,11 +29,13 @@ public class PlayerController {
     private final PlayerService playerService;
     private final PlayerDTOValidator playerDTOValidator;
     private final PlayerRepository playerRepository;
+    private final GroupAuthorizationService authService;
 
-    public PlayerController(PlayerService playerService, PlayerDTOValidator playerDTOValidator, PlayerRepository playerRepository) {
+    public PlayerController(PlayerService playerService, PlayerDTOValidator playerDTOValidator, PlayerRepository playerRepository, GroupAuthorizationService authService) {
         this.playerService = playerService;
         this.playerDTOValidator = playerDTOValidator;
         this.playerRepository = playerRepository;
+        this.authService = authService;
     }
 
     @GetMapping("/getAllPlayers")
@@ -47,6 +50,7 @@ public class PlayerController {
 
     @PutMapping("/admin/updatePlayer")
     public ResponseEntity<?> updatePlayer(@RequestBody PlayerUpdateRequestDTO updatedPlayer) {
+        authService.requireAdmin();
         List<String> errors = playerDTOValidator.validateUpdate(updatedPlayer);
 
         if (!errors.isEmpty()) {
@@ -59,6 +63,7 @@ public class PlayerController {
 
     @GetMapping("/admin/getAllActivePlayers")
     public List<GetAllActivePlayersDTO> getAllActivePlayers() {
+        authService.requireAdmin();
         return playerService.getAllActivePlayers();
     }
 

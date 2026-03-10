@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import com.squad.squad.dto.GameDTO;
 import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.service.GameService;
+import com.squad.squad.service.GroupAuthorizationService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,13 +37,15 @@ public class GameController {
     private final GameLocationRepository gameLocationRepository;
     private final GameDTOValidator gameDTOValidator;
     private final GameLocationMapper gameLocationMapper;
+    private final GroupAuthorizationService authService;
 
     @Autowired
-    public GameController(GameService gameService, GameDTOValidator gameDTOValidator, GameLocationRepository gameLocationRepository, GameLocationMapper gameLocationMapper) {
+    public GameController(GameService gameService, GameDTOValidator gameDTOValidator, GameLocationRepository gameLocationRepository, GameLocationMapper gameLocationMapper, GroupAuthorizationService authService) {
         this.gameService = gameService;
         this.gameDTOValidator = gameDTOValidator;
         this.gameLocationRepository = gameLocationRepository;
         this.gameLocationMapper = gameLocationMapper;
+        this.authService = authService;
     }
 
 
@@ -62,6 +65,7 @@ public class GameController {
 
     @PostMapping("/admin/createGame")
     public ResponseEntity<?> createGame(@RequestBody GameCreateRequestDTO gameDto) {
+        authService.requireAdmin();
         List<String> errors = gameDTOValidator.validate(gameDto);
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(errors);
@@ -73,6 +77,7 @@ public class GameController {
 
     @PutMapping("/admin/updateGame/{id}")
     public ResponseEntity<?> updateGame(@PathVariable Integer id, @RequestBody GameUpdateRequestDTO updatedGame) {
+        authService.requireAdmin();
         List<String> errors = gameDTOValidator.updateValidate(updatedGame);
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(errors);
@@ -84,6 +89,7 @@ public class GameController {
 
     @DeleteMapping("/admin/deleteGame/{id}")
     public ResponseEntity<Void> deleteGame(@PathVariable Integer id) {
+        authService.requireAdmin();
         gameService.deleteGame(id);
         return ResponseEntity.noContent().build();
     }
@@ -102,7 +108,7 @@ public class GameController {
 
     @PutMapping("/updateWeather/{id}")
     public ResponseEntity<?> updateWeather(@PathVariable Integer id, @RequestBody String weather) {
-
+        authService.requireAdmin();
         gameService.updateWeather(id, weather);
         return ResponseEntity.ok("Game updated successfully");
     }

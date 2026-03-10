@@ -3,6 +3,7 @@ package com.squad.squad.controller;
 import com.squad.squad.dto.AddPersonaRequestDTO;
 import com.squad.squad.entity.Persona;
 import com.squad.squad.repository.PersonaRepository;
+import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.PersonaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,12 @@ public class PersonaController {
 
     private final PersonaRepository personaRepository;
     private final PersonaService personaService;
+    private final GroupAuthorizationService authService;
 
-    public PersonaController(PersonaRepository personaRepository, PersonaService personaService) {
+    public PersonaController(PersonaRepository personaRepository, PersonaService personaService, GroupAuthorizationService authService) {
         this.personaRepository = personaRepository;
         this.personaService = personaService;
+        this.authService = authService;
     }
 
     @GetMapping("/all")
@@ -29,6 +32,7 @@ public class PersonaController {
 
     @PostMapping("/savePersonas")
     public ResponseEntity<?> savePersonas(@RequestBody List<AddPersonaRequestDTO> personas) {
+        authService.requireSuperAdmin();
         try {
             personaService.savePersonas(personas);
             return ResponseEntity.ok("Personas saved successfully.");

@@ -28,11 +28,13 @@ public class GroupContextFilter extends OncePerRequestFilter {
             "/api/squads/request-create",
             "/api/squads/request-join",
             "/api/squads/my-squads",
-            "/api/squads/my-requests"
+            "/api/squads/my-requests",
+            "/api/personas/savePersonas"
     );
 
     private static final Set<String> EXEMPT_PREFIXES = Set.of(
             "/api/squads/super/",
+            "/api/users/admin/",
             "/v3/api-docs",
             "/swagger-ui",
             "/error"

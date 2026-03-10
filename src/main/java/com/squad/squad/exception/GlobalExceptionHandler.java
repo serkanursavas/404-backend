@@ -62,6 +62,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ExceptionResponse> handleSecurityException(SecurityException ex, WebRequest request) {
+        ExceptionResponse response = new ExceptionResponse(
+                LocalDateTime.now(),
+                ex.getMessage(),
+                request.getDescription(false));
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponse> handleGlobalException(Exception ex, WebRequest request) {
         ExceptionResponse response = new ExceptionResponse(

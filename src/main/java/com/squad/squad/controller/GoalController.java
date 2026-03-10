@@ -6,6 +6,7 @@ import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
 import com.squad.squad.entity.Roster;
 import com.squad.squad.service.GameService;
+import com.squad.squad.service.GroupAuthorizationService;
 import org.springframework.web.bind.annotation.*;
 
 import com.squad.squad.service.GoalService;
@@ -21,16 +22,18 @@ public class GoalController {
     private final GoalService goalService;
     private final GameService gameService;
     private final GoalDTOValidator goalDTOValidator;
+    private final GroupAuthorizationService authService;
 
-    public GoalController(GoalService goalService, GameService gameService, GoalDTOValidator goalDTOValidator) {
+    public GoalController(GoalService goalService, GameService gameService, GoalDTOValidator goalDTOValidator, GroupAuthorizationService authService) {
         this.goalService = goalService;
         this.gameService = gameService;
         this.goalDTOValidator = goalDTOValidator;
+        this.authService = authService;
     }
 
     @PostMapping("/admin/addGoals")
     public ResponseEntity<?> addGoals(@RequestBody AddGoalsRequestDTO requestDto) {
-
+        authService.requireAdmin();
         Integer gameId = requestDto.getGameId();
         List<GoalAddRequestDTO> goalDtos = requestDto.getGoals();
 
