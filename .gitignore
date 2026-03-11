@@ -38,3 +38,6 @@ logs/
 ### Environment ###
 .env
 CLAUDE.md
+
+### macOS ###
+.DS_Store
