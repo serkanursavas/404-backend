@@ -1,7 +1,9 @@
 package com.squad.squad.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 
+@Audited
 @Entity
 @Table(name = "persona")
 public class Persona extends BaseEntity {

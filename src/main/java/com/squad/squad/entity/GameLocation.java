@@ -1,7 +1,9 @@
 package com.squad.squad.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 
+@Audited
 @Entity
 public class GameLocation extends BaseEntity {
 

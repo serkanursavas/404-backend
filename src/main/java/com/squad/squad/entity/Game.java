@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Audited
 @Entity
 public class Game extends BaseEntity {
 

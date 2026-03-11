@@ -2,9 +2,11 @@ package com.squad.squad.entity;
 
 import com.squad.squad.enums.RequestStatus;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 
 import java.time.LocalDateTime;
 
+@Audited
 @Entity
 @Table(name = "join_request")
 public class JoinRequest extends BaseEntity {

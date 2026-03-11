@@ -1,7 +1,9 @@
 package com.squad.squad.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 
+@Audited
 @Entity
 @Table(name = "player_persona", uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "persona_id"}))
 public class PlayerPersona extends BaseEntity {

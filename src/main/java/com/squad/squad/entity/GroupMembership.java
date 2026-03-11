@@ -2,9 +2,11 @@ package com.squad.squad.entity;
 
 import com.squad.squad.enums.GroupRole;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 
 import java.time.LocalDateTime;
 
+@Audited
 @Entity
 @Table(name = "group_membership", uniqueConstraints = @UniqueConstraint(columnNames = {"squad_id", "user_id"}))
 public class GroupMembership extends BaseEntity {

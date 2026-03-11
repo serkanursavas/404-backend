@@ -3,7 +3,9 @@ package com.squad.squad.entity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 
+@Audited
 @Entity
 public class Rating extends BaseEntity {
 
