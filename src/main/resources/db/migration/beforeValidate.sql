@@ -13,10 +13,14 @@
 -- ============================================================
 
 -- [2026-03-12] V3 → timestamp naming convention rename
+-- version ve script ikisi birden güncellenmeli; idempotent (no-op eğer kayıt yoksa)
 UPDATE flyway_schema_history
-SET    script = 'V20260312_01_33_00__envers-audit-tables-001.sql'
+SET    version = '20260312013300',
+       script  = 'V20260312_01_33_00__envers-audit-tables-001.sql'
 WHERE  version = '3'
   AND  script  = 'V3__add_envers_audit_tables.sql';
 
--- Gelecek düzeltmeler buraya eklenir. Örnek:
--- DELETE FROM flyway_schema_history WHERE version = '20260315_09_00_00';
+-- [2026-03-13] V1 + V2 → V20260101 init-schema ile konsolide edildi
+-- Bu dosyalar artık classpath'te yok; validate öncesi history'den temizle
+-- (idempotent: kayıt yoksa no-op)
+DELETE FROM flyway_schema_history WHERE version IN ('1', '2');
