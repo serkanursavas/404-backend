@@ -84,14 +84,24 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         GameResponseDTO dto = gameMapper.gameToGameResponseDTO(game);
 
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(game.getId());
+        List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
+
         Set<Integer> playerIds = new HashSet<>();
         rosters.forEach(r -> playerIds.add(r.getPlayerId()));
+        goals.forEach(g -> playerIds.add(g.getPlayerId()));
         Map<Integer, PlayerDTO> playerMap = playerService.findPlayersByIds(new ArrayList<>(playerIds));
+
         rosters.forEach(r -> {
             PlayerDTO p = playerMap.get(r.getPlayerId());
             if (p != null) r.setPlayerName(p.getName() + " " + p.getSurname());
         });
+        goals.forEach(g -> {
+            PlayerDTO p = playerMap.get(g.getPlayerId());
+            if (p != null) g.setPlayerName(p.getName() + " " + p.getSurname());
+        });
+
         dto.setRosters(rosters);
+        dto.setGoals(goals);
 
         return dto;
     }
