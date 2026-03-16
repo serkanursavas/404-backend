@@ -1,32 +1,23 @@
 package com.squad.squad.controller;
 
-import com.squad.squad.context.GroupContext;
 import com.squad.squad.dto.DTOvalidators.GameDTOValidator;
 import com.squad.squad.dto.GameLocationDTO;
+import com.squad.squad.dto.LatestGamesDTO;
 import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.dto.game.GameCreateRequestDTO;
 import com.squad.squad.dto.game.GameResponseDTO;
 import com.squad.squad.dto.game.GameUpdateRequestDTO;
-import com.squad.squad.dto.game.NextGameResponseDTO;
-import com.squad.squad.mapper.GameLocationMapper;
-import com.squad.squad.repository.GameLocationRepository;
+import com.squad.squad.service.GameLocationService;
+import com.squad.squad.service.GameService;
+import com.squad.squad.service.GroupAuthorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.squad.squad.dto.GameDTO;
-import com.squad.squad.dto.LatestGamesDTO;
-import com.squad.squad.service.GameService;
-import com.squad.squad.service.GroupAuthorizationService;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -34,17 +25,16 @@ import java.util.Optional;
 public class GameController {
 
     private final GameService gameService;
-    private final GameLocationRepository gameLocationRepository;
     private final GameDTOValidator gameDTOValidator;
-    private final GameLocationMapper gameLocationMapper;
+    private final GameLocationService gameLocationService;
     private final GroupAuthorizationService authService;
 
     @Autowired
-    public GameController(GameService gameService, GameDTOValidator gameDTOValidator, GameLocationRepository gameLocationRepository, GameLocationMapper gameLocationMapper, GroupAuthorizationService authService) {
+    public GameController(GameService gameService, GameDTOValidator gameDTOValidator,
+                          GameLocationService gameLocationService, GroupAuthorizationService authService) {
         this.gameService = gameService;
         this.gameDTOValidator = gameDTOValidator;
-        this.gameLocationRepository = gameLocationRepository;
-        this.gameLocationMapper = gameLocationMapper;
+        this.gameLocationService = gameLocationService;
         this.authService = authService;
     }
 
@@ -116,9 +106,7 @@ public class GameController {
 
     @GetMapping("/getGameLocations")
     public ResponseEntity<List<GameLocationDTO>> getGameLocations() {
-        Integer squadId = GroupContext.getCurrentGroupId();
-        return ResponseEntity.ok(gameLocationMapper.gameLocationListToGameLocationDTOList(
-                gameLocationRepository.findBySquadIdOrderByLocationAsc(squadId)));
+        return ResponseEntity.ok(gameLocationService.getAll());
     }
 
 
