@@ -167,6 +167,7 @@ public class SquadController {
                     dto.setPlayerName(m.getPlayer().getName());
                     dto.setPlayerSurname(m.getPlayer().getSurname());
                     dto.setRole(m.getRole().name());
+                    dto.setPlayerPosition(m.getPlayer().getPosition());
                     dto.setJoinedAt(m.getJoinedAt());
                     return dto;
                 }).toList();

@@ -10,6 +10,7 @@ public class MemberDTO {
     private String playerSurname;
     private String role;
     private LocalDateTime joinedAt;
+    private String playerPosition;
 
     public Integer getUserId() {
         return userId;
@@ -65,5 +66,13 @@ public class MemberDTO {
 
     public void setJoinedAt(LocalDateTime joinedAt) {
         this.joinedAt = joinedAt;
+    }
+
+    public String getPlayerPosition() {
+        return playerPosition;
+    }
+
+    public void setPlayerPosition(String playerPosition) {
+        this.playerPosition = playerPosition;
     }
 }
