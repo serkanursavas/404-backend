@@ -16,10 +16,10 @@ jobs:
       - name: Deploy to TEST
         if: github.ref == 'refs/heads/staging'
         run: |
-          cp target/squad-0.0.1-SNAPSHOT.jar target/squad-staging.jar
-          launchctl stop me.serkanursavas.404-test || true
+          cp target/futza-0.0.1-SNAPSHOT.jar target/futza-staging.jar
+          launchctl stop me.serkanursavas.futza-test || true
           sleep 2
-          launchctl start me.serkanursavas.404-test
+          launchctl start me.serkanursavas.futza-test
           sleep 20
           HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8083/swagger-ui.html)
           echo "BE health: $HTTP"
@@ -28,10 +28,10 @@ jobs:
       - name: Deploy to PROD
         if: github.ref == 'refs/heads/master'
         run: |
-          cp target/squad-0.0.1-SNAPSHOT.jar target/squad-prod.jar
-          launchctl stop me.serkanursavas.404-prod || true
+          cp target/futza-0.0.1-SNAPSHOT.jar target/futza-prod.jar
+          launchctl stop me.serkanursavas.futza-prod || true
           sleep 2
-          launchctl start me.serkanursavas.404-prod
+          launchctl start me.serkanursavas.futza-prod
           sleep 25
           HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8084/swagger-ui.html)
           echo "BE health: $HTTP"

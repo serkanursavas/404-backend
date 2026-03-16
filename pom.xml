@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.squad</groupId>
-    <artifactId>squad</artifactId>
+    <artifactId>futza</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>squad</name>
-    <description>squad project</description>
+    <name>futza</name>
+    <description>futza project</description>
     <url/>
     <licenses>
         <license/>
