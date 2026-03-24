@@ -73,7 +73,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/users/createUser", "/api/users/login").permitAll()
+                        .requestMatchers("/api/users/createUser", "/api/users/login",
+                                "/api/users/forgot-password", "/api/users/reset-password").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling

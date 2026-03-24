@@ -6,6 +6,7 @@ public class UserCreateRequestDTO {
     private String username;
     private String password;
     private String passwordAgain;
+    private String email;
     private PlayerCreateDTO playerCreateDTO;
 
     public UserCreateRequestDTO() {
@@ -37,6 +38,14 @@ public class UserCreateRequestDTO {
 
     public void setPasswordAgain(String passwordAgain) {
         this.passwordAgain = passwordAgain;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public PlayerCreateDTO getPlayerCreateDTO() {

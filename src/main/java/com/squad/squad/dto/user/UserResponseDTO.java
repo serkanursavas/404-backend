@@ -8,17 +8,15 @@ import java.util.Date;
 public class UserResponseDTO {
     private Integer id;
     private String username;
-    private String role;
     private PlayerDTO player;
     private LocalDateTime createdAt;
 
     public UserResponseDTO() {
     }
 
-    public UserResponseDTO(Integer id, String username, String role) {
+    public UserResponseDTO(Integer id, String username) {
         this.id = id;
         this.username = username;
-        this.role = role;
     }
 
     public Integer getId() {
@@ -35,14 +33,6 @@ public class UserResponseDTO {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public PlayerDTO getPlayer() {

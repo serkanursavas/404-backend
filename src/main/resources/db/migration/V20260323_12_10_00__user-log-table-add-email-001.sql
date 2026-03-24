@@ -1,0 +1,1 @@
+ALTER TABLE user_log_table ADD COLUMN IF NOT EXISTS email VARCHAR(255);

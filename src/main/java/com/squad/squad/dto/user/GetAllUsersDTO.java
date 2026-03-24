@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class GetAllUsersDTO {
     private Integer id;
     private String username;
-    private String role;
+    private boolean isSuperAdmin;
     private LocalDateTime createdAt;
 
     public Integer getId() {
@@ -24,12 +24,12 @@ public class GetAllUsersDTO {
         this.username = username;
     }
 
-    public String getRole() {
-        return role;
+    public boolean isSuperAdmin() {
+        return isSuperAdmin;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setSuperAdmin(boolean superAdmin) {
+        isSuperAdmin = superAdmin;
     }
 
     public LocalDateTime getCreatedAt() {

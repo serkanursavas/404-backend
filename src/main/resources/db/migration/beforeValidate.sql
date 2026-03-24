@@ -30,5 +30,8 @@ BEGIN
 
     -- [2026-03-13] V1 + V2 → V20260101 init-schema ile konsolide edildi
     DELETE FROM flyway_schema_history WHERE version IN ('1', '2');
+
+    -- [2026-03-22] device-tokens migration FK hatası düzeltildi → yeni timestamp ile tekrar çalışacak
+    DELETE FROM flyway_schema_history WHERE version = '20260322120000';
   END IF;
 END $$;

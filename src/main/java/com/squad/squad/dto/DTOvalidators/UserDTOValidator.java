@@ -3,9 +3,7 @@ package com.squad.squad.dto.DTOvalidators;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.squad.squad.dto.user.UserRoleUpdateRequestDTO;
 import com.squad.squad.dto.user.UserUpdateRequestDTO;
-import com.squad.squad.enums.Role;
 import com.squad.squad.enums.TeamColor;
 import org.springframework.stereotype.Component;
 
@@ -45,6 +43,13 @@ public class UserDTOValidator {
             errors.add("Passwords must match");
         }
 
+        // Email validation
+        if (user.getEmail() == null || user.getEmail().isEmpty() || user.getEmail().trim().isEmpty()) {
+            errors.add("Email is required");
+        } else if (!isValidEmail(user.getEmail())) {
+            errors.add("Please enter a valid email address");
+        }
+
         // Player info is no longer required at signup - it's provided when joining a squad
 
         return errors;
@@ -72,20 +77,8 @@ public class UserDTOValidator {
         return errors;
     }
 
-    public List<String> validateRoleUpdate(UserRoleUpdateRequestDTO user) {
-        List<String> errors = new ArrayList<>();
-
-        if (user.getRole() == null || user.getRole().isEmpty()) {
-            errors.add("Role cannot be empty.");
-        } else {
-            try {
-                Role.fromString(user.getRole());
-            } catch (RuntimeException e) {
-                errors.add("Invalid role: " + user.getRole());
-            }
-        }
-
-        return errors;
+    private boolean isValidEmail(String email) {
+        return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     }
 
     private boolean isValidPassword(String password) {

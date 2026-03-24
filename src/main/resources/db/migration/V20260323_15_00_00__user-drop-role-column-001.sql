@@ -1,0 +1,2 @@
+ALTER TABLE "user" DROP COLUMN IF EXISTS role;
+ALTER TABLE user_log_table DROP COLUMN IF EXISTS role;

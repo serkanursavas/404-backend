@@ -12,6 +12,8 @@ public class AuthResponseDTO {
     @JsonProperty("isSuperAdmin")
     private boolean isSuperAdmin;
     private int pendingRequestCount;
+    private boolean hasEmail;
+    private String email;
 
     public String getToken() {
         return token;
@@ -43,5 +45,21 @@ public class AuthResponseDTO {
 
     public void setPendingRequestCount(int pendingRequestCount) {
         this.pendingRequestCount = pendingRequestCount;
+    }
+
+    public boolean isHasEmail() {
+        return hasEmail;
+    }
+
+    public void setHasEmail(boolean hasEmail) {
+        this.hasEmail = hasEmail;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

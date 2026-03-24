@@ -40,7 +40,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             token = authorizationHeader.substring(7);
-            username = jwtUtils.extractUsername(token);
+            try {
+                username = jwtUtils.extractUsername(token);
+            } catch (Exception e) {
+                // Malformed or invalid token — treat as unauthenticated, let Spring Security handle
+            }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

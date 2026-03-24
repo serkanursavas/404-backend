@@ -19,10 +19,10 @@ public class User extends BaseEntity {
     private String password;
 
     @Column(nullable = false)
-    private String role = "USER";
-
-    @Column(nullable = false)
     private boolean isSuperAdmin = false;
+
+    @Column(unique = true)
+    private String email;
 
     public String getUsername() {
         return username;
@@ -40,19 +40,19 @@ public class User extends BaseEntity {
         this.password = password;
     }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
     public boolean isSuperAdmin() {
         return isSuperAdmin;
     }
 
     public void setSuperAdmin(boolean superAdmin) {
         isSuperAdmin = superAdmin;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

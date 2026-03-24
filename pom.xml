@@ -139,6 +139,36 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
+        <!-- Spring Mail — Gmail SMTP ile email gönderimi -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- Apache HttpClient 5 — enables TestRestTemplate to handle 401 responses correctly (Spring Boot 3.x) -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- TestContainers -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -154,6 +184,19 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <!-- Test JWT key: Base64("testSecretKey1234567890123456789") = 32 bytes, valid for HS256 -->
+                        <JWT_SECRET_KEY>dGVzdFNlY3JldEtleTEyMzQ1Njc4OTAxMjM0NTY3ODk=</JWT_SECRET_KEY>
+                        <!-- Test DB credentials (squad_test DB, local PostgreSQL) -->
+                        <DB_USERNAME>squad_dev</DB_USERNAME>
+                        <DB_PASSWORD>squad_dev_2024</DB_PASSWORD>
+                    </environmentVariables>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

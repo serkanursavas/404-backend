@@ -33,8 +33,8 @@ public class GameDTOValidator {
             errors.add("Game date cannot be in the past");
         }
 
-        if (game.getTeamSize() == null || game.getTeamSize() < 6 || game.getTeamSize() > 11) {
-            errors.add("Team size cannot be empty and must be between 6 and 11");
+        if (game.getTeamSize() == null || game.getTeamSize() < 2 || game.getTeamSize() > 11) {
+            errors.add("Team size cannot be empty and must be between 2 and 11");
         } else if (game.getRosters().size() != game.getTeamSize() * 2) {
             errors.add("Roster size must be equal to " + game.getTeamSize() * 2);
         }
@@ -74,8 +74,8 @@ public class GameDTOValidator {
         }
 
         if (game.getTeamSize() != null && game.getRosters() != null && !game.getRosters().isEmpty()) {
-            if (game.getTeamSize() < 6 || game.getTeamSize() > 11) {
-                errors.add("Team size must be between 6 and 11.");
+            if (game.getTeamSize() < 2 || game.getTeamSize() > 11) {
+                errors.add("Team size must be between 2 and 11.");
             }
             if (game.getRosters().size() != game.getTeamSize() * 2) {
                 errors.add("Roster size must be equal to " + game.getTeamSize() * 2);
