@@ -47,7 +47,7 @@ public class Game extends BaseEntity {
     @JsonBackReference
     private List<Roster> roster;
 
-    @OneToMany(mappedBy = "game")
+    @OneToMany(mappedBy = "game", fetch = FetchType.EAGER)
     @JsonIgnore
     private List<Goal> goal;
 
