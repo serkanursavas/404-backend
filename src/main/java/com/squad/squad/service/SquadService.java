@@ -1,6 +1,7 @@
 package com.squad.squad.service;
 
 import com.squad.squad.context.GroupContext;
+import com.squad.squad.dto.squad.*;
 import com.squad.squad.entity.*;
 import com.squad.squad.enums.GroupRole;
 import com.squad.squad.enums.RequestStatus;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -98,41 +100,113 @@ public class SquadService {
         return joinRequestRepository.save(request);
     }
 
-    public List<GroupMembership> getMySquads() {
+    @Transactional
+    public List<SquadSummaryDTO> getMySquads() {
         Integer userId = authService.getCurrentUserId();
-        return groupMembershipRepository.findByUserId(userId);
+        List<GroupMembership> memberships = groupMembershipRepository.findByUserId(userId);
+        return memberships.stream()
+                .map(m -> {
+                    Integer squadId = m.getSquad().getId();
+                    String adminName = getAdminPlayerNameForSquad(squadId);
+                    int memberCount = getMemberCountForSquad(squadId);
+                    return new SquadSummaryDTO(squadId, m.getSquad().getName(), m.getRole().name(), adminName, memberCount);
+                })
+                .toList();
     }
 
-    public List<Object[]> getMyRequests() {
+    @Transactional
+    public Map<String, Object> getMyRequests() {
         Integer userId = authService.getCurrentUserId();
         List<SquadRequest> squadRequests = squadRequestRepository.findByRequestedByUserId(userId);
         List<JoinRequest> joinRequests = joinRequestRepository.findByUserId(userId);
 
-        // Return both types as Object arrays for simplicity
-        return List.of(
-                new Object[]{"squadRequests", squadRequests},
-                new Object[]{"joinRequests", joinRequests}
+        List<SquadRequestDTO> squadRequestDTOs = squadRequests.stream()
+                .map(r -> {
+                    SquadRequestDTO dto = new SquadRequestDTO();
+                    dto.setId(r.getId());
+                    dto.setSquadName(r.getName());
+                    dto.setStatus(r.getStatus().name());
+                    dto.setCreatedAt(r.getCreatedAt());
+                    return dto;
+                }).toList();
+
+        List<JoinRequestDTO> joinRequestDTOs = joinRequests.stream()
+                .map(r -> {
+                    JoinRequestDTO dto = new JoinRequestDTO();
+                    dto.setId(r.getId());
+                    dto.setSquadName(r.getSquad().getName());
+                    dto.setAdminUsername(getAdminUsernameForSquad(r.getSquad().getId()));
+                    dto.setPlayerName(r.getPlayerName());
+                    dto.setPlayerSurname(r.getPlayerSurname());
+                    dto.setStatus(r.getStatus().name());
+                    dto.setCreatedAt(r.getCreatedAt());
+                    return dto;
+                }).toList();
+
+        int pendingCount = (int) squadRequests.stream().filter(r -> r.getStatus() == RequestStatus.PENDING).count()
+                + (int) joinRequests.stream().filter(r -> r.getStatus() == RequestStatus.PENDING).count();
+
+        return Map.of(
+                "squadRequests", squadRequestDTOs,
+                "joinRequests", joinRequestDTOs,
+                "pendingCount", pendingCount
         );
     }
 
     // ==================== Group Admin (group context required) ====================
 
-    public Squad getCurrentSquad() {
+    @Transactional
+    public SquadDetailDTO getCurrentSquad() {
         Integer groupId = GroupContext.getCurrentGroupId();
-        return squadRepository.findById(groupId)
+        Squad squad = squadRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalStateException("Squad not found"));
+        SquadDetailDTO dto = new SquadDetailDTO();
+        dto.setId(squad.getId());
+        dto.setName(squad.getName());
+        dto.setInviteCode(squad.getInviteCode());
+        dto.setCreatedAt(squad.getCreatedAt());
+        dto.setMemberCount(getMemberCountForSquad(squad.getId()));
+        return dto;
     }
 
-    public List<GroupMembership> getMembers() {
+    @Transactional
+    public List<MemberDTO> getMembers() {
         authService.requireAdmin();
         Integer groupId = GroupContext.getCurrentGroupId();
-        return groupMembershipRepository.findBySquadId(groupId);
+        List<GroupMembership> memberships = groupMembershipRepository.findBySquadId(groupId);
+        return memberships.stream()
+                .map(m -> {
+                    MemberDTO dto = new MemberDTO();
+                    dto.setUserId(m.getUser().getId());
+                    dto.setUsername(m.getUser().getUsername());
+                    dto.setPlayerId(m.getPlayer().getId());
+                    dto.setPlayerName(m.getPlayer().getName());
+                    dto.setPlayerSurname(m.getPlayer().getSurname());
+                    dto.setRole(m.getRole().name());
+                    dto.setPlayerPosition(m.getPlayer().getPosition());
+                    dto.setJoinedAt(m.getJoinedAt());
+                    return dto;
+                }).toList();
     }
 
-    public List<JoinRequest> getPendingJoinRequests() {
+    @Transactional
+    public List<JoinRequestDTO> getPendingJoinRequests() {
         authService.requireAdmin();
         Integer groupId = GroupContext.getCurrentGroupId();
-        return joinRequestRepository.findBySquadIdAndStatus(groupId, RequestStatus.PENDING);
+        List<JoinRequest> requests = joinRequestRepository.findBySquadIdAndStatus(groupId, RequestStatus.PENDING);
+        return requests.stream()
+                .map(r -> {
+                    JoinRequestDTO dto = new JoinRequestDTO();
+                    dto.setId(r.getId());
+                    dto.setUsername(r.getUser().getUsername());
+                    dto.setPlayerName(r.getPlayerName());
+                    dto.setPlayerSurname(r.getPlayerSurname());
+                    dto.setPlayerPosition(r.getPlayerPosition());
+                    dto.setPlayerFoot(r.getPlayerFoot());
+                    dto.setStatus(r.getStatus().name());
+                    dto.setCreatedAt(r.getCreatedAt());
+                    return dto;
+                }).toList();
     }
 
     @Transactional
@@ -229,6 +303,10 @@ public class SquadService {
     @Transactional
     public void updateMemberRole(Integer userId, GroupRole newRole) {
         authService.requireAdmin();
+        Integer currentUserId = authService.getCurrentUserId();
+        if (userId.equals(currentUserId)) {
+            throw new IllegalStateException("You cannot change your own role");
+        }
         Integer groupId = GroupContext.getCurrentGroupId();
 
         GroupMembership membership = groupMembershipRepository.findBySquadIdAndUserId(groupId, userId)
@@ -249,7 +327,7 @@ public class SquadService {
     @Transactional
     public void updateSquadName(String name) {
         authService.requireAdmin();
-        Squad squad = getCurrentSquad();
+        Squad squad = findCurrentSquadEntity();
         squad.setName(name);
         squadRepository.save(squad);
     }
@@ -257,7 +335,7 @@ public class SquadService {
     @Transactional
     public String regenerateInviteCode() {
         authService.requireAdmin();
-        Squad squad = getCurrentSquad();
+        Squad squad = findCurrentSquadEntity();
         String newCode = generateInviteCode();
         squad.setInviteCode(newCode);
         squadRepository.save(squad);
@@ -266,9 +344,22 @@ public class SquadService {
 
     // ==================== Super Admin ====================
 
-    public List<SquadRequest> getPendingSquadRequests() {
+    @Transactional
+    public List<SquadRequestDTO> getPendingSquadRequests() {
         authService.requireSuperAdmin();
-        return squadRequestRepository.findByStatus(RequestStatus.PENDING);
+        List<SquadRequest> requests = squadRequestRepository.findByStatus(RequestStatus.PENDING);
+        return requests.stream()
+                .map(r -> {
+                    SquadRequestDTO dto = new SquadRequestDTO();
+                    dto.setId(r.getId());
+                    dto.setSquadName(r.getName());
+                    dto.setRequestedByUsername(r.getRequestedByUser().getUsername());
+                    dto.setPlayerName(r.getPlayerName());
+                    dto.setPlayerSurname(r.getPlayerSurname());
+                    dto.setStatus(r.getStatus().name());
+                    dto.setCreatedAt(r.getCreatedAt());
+                    return dto;
+                }).toList();
     }
 
     @Transactional
@@ -339,17 +430,31 @@ public class SquadService {
         squadRequestRepository.save(request);
     }
 
-    public List<Squad> getAllSquads() {
+    @Transactional
+    public List<SquadDetailDTO> getAllSquads() {
         authService.requireSuperAdmin();
-        return squadRepository.findAll();
+        List<Squad> squads = squadRepository.findAll();
+        return squads.stream()
+                .map(s -> {
+                    SquadDetailDTO dto = new SquadDetailDTO();
+                    dto.setId(s.getId());
+                    dto.setName(s.getName());
+                    dto.setInviteCode(s.getInviteCode());
+                    dto.setCreatedAt(s.getCreatedAt());
+                    dto.setMemberCount(getMemberCountForSquad(s.getId()));
+                    dto.setActive(s.isActive());
+                    return dto;
+                }).toList();
     }
 
+    @Transactional
     public String getAdminUsernameForSquad(Integer squadId) {
         return groupMembershipRepository.findFirstBySquadIdAndRole(squadId, GroupRole.ADMIN)
                 .map(m -> m.getUser().getUsername())
                 .orElse(null);
     }
 
+    @Transactional
     public String getAdminPlayerNameForSquad(Integer squadId) {
         return groupMembershipRepository.findFirstBySquadIdAndRole(squadId, GroupRole.ADMIN)
                 .map(m -> m.getPlayer().getName() + " " + m.getPlayer().getSurname())
@@ -414,6 +519,12 @@ public class SquadService {
     public long getPendingJoinRequestCount() {
         Integer groupId = GroupContext.getCurrentGroupId();
         return joinRequestRepository.countBySquadIdAndStatus(groupId, RequestStatus.PENDING);
+    }
+
+    private Squad findCurrentSquadEntity() {
+        Integer groupId = GroupContext.getCurrentGroupId();
+        return squadRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalStateException("Squad not found"));
     }
 
     private String generateInviteCode() {

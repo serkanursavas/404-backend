@@ -35,7 +35,6 @@ public class GroupContextFilter extends OncePerRequestFilter {
 
     private static final Set<String> EXEMPT_PREFIXES = Set.of(
             "/api/squads/super/",
-            "/api/users/admin/",
             "/api/users/updateProfile/",
             "/v3/api-docs",
             "/swagger-ui",

@@ -42,6 +42,7 @@ public class GroupAuthorizationService {
     }
 
     public void requireAdmin() {
+        if (isSuperAdmin()) return;
         GroupMembership membership = getCurrentMembership();
         if (membership.getRole() != GroupRole.ADMIN) {
             throw new SecurityException("Admin access required");
