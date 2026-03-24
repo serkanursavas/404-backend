@@ -33,5 +33,8 @@ BEGIN
 
     -- [2026-03-22] device-tokens migration FK hatası düzeltildi → yeni timestamp ile tekrar çalışacak
     DELETE FROM flyway_schema_history WHERE version = '20260322120000';
+
+    -- [2026-03-24] device-tokens migration staging DB'de mevcut ama JAR'da yok (uncommitted) → ignore
+    DELETE FROM flyway_schema_history WHERE version = '20260322.12.30.00';
   END IF;
 END $$;
