@@ -17,7 +17,7 @@ import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RosterServiceImpl extends BaseSquadService implements RosterService {

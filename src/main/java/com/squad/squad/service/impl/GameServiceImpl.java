@@ -27,7 +27,7 @@ import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
