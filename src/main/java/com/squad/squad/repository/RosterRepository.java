@@ -11,7 +11,8 @@ import java.util.List;
 @Repository
 public interface RosterRepository extends JpaRepository<Roster, Integer> {
 
-    List<Roster> findRosterByGameId(Integer gameId);
+    @Query("SELECT r FROM Roster r JOIN FETCH r.player WHERE r.game.id = :gameId")
+    List<Roster> findRosterByGameId(@Param("gameId") Integer gameId);
 
     List<Roster> findRosterByPlayerId(Integer player_id);
 
