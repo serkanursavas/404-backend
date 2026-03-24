@@ -11,7 +11,6 @@ import com.squad.squad.dto.user.*;
 import com.squad.squad.dto.user.ForgotPasswordResultDTO;
 import com.squad.squad.entity.GroupMembership;
 import com.squad.squad.exception.InvalidCredentialsException;
-import com.squad.squad.mapper.UserMapper;
 import com.squad.squad.repository.GroupMembershipRepository;
 import com.squad.squad.repository.SquadRequestRepository;
 import com.squad.squad.repository.JoinRequestRepository;
@@ -53,7 +52,6 @@ public class UserServiceImpl implements UserService {
     private final PlayerService playerService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
-    private final UserMapper userMapper;
     private final GroupMembershipRepository groupMembershipRepository;
     private final SquadRequestRepository squadRequestRepository;
     private final JoinRequestRepository joinRequestRepository;
@@ -64,7 +62,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
                            PlayerService playerService, AuthenticationManager authenticationManager,
-                           JwtUtils jwtUtils, UserMapper userMapper,
+                           JwtUtils jwtUtils,
                            GroupMembershipRepository groupMembershipRepository,
                            SquadRequestRepository squadRequestRepository,
                            JoinRequestRepository joinRequestRepository,
@@ -76,7 +74,6 @@ public class UserServiceImpl implements UserService {
         this.playerService = playerService;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
-        this.userMapper = userMapper;
         this.groupMembershipRepository = groupMembershipRepository;
         this.squadRequestRepository = squadRequestRepository;
         this.joinRequestRepository = joinRequestRepository;
@@ -157,11 +154,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<GetAllUsersDTO> getAllUsers() {
-        return userMapper.usersToGetAllUsersDTOs(userRepository.findAll());
-    }
-
-    @Override
     public void updateUser(String username, UserUpdateRequestDTO updatedUser) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
@@ -186,29 +178,6 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepository.save(existingUser);
-    }
-
-    @Override
-    @Transactional
-    public void deleteUser(String username) {
-        if (username != null) {
-            User user = getUserByUsername(username);
-            // Player deletion is now handled per-squad via membership
-            userRepository.deleteByUsername(username);
-        } else {
-            throw new IllegalArgumentException("Username must be provided.");
-        }
-    }
-
-    @Override
-    public String resetPassword(String username) {
-        User user = getUserByUsername(username);
-
-        String encodedPassword = passwordEncoder.encode("reset" + user.getUsername());
-        user.setPassword(encodedPassword);
-        userRepository.save(user);
-
-        return "Password reset to reset" + username + " successfully for user: " + username;
     }
 
     @Override

@@ -15,13 +15,7 @@ public interface UserService {
 
     AuthResponseDTO createUser(UserCreateRequestDTO user);
 
-    List<GetAllUsersDTO> getAllUsers();
-
     void updateUser(String username, UserUpdateRequestDTO updatedUser);
-
-    void deleteUser(String username);
-
-    String resetPassword(String username);
 
     User getUserByUsername(String username);
 

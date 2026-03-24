@@ -28,13 +28,6 @@ public class UserController {
         this.authService = authService;
     }
 
-    @GetMapping("/admin/getAllUsers")
-    public ResponseEntity<List<GetAllUsersDTO>> getAllUsers() {
-        authService.requireSuperAdmin();
-        List<GetAllUsersDTO> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
-    }
-
     @PostMapping("/createUser")
     public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDTO user) {
         List<String> errors = userDTOValidator.validate(user);
@@ -58,13 +51,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/admin/resetPassword/{username}")
-    public ResponseEntity<?> resetPassword(@PathVariable String username) {
-        authService.requireSuperAdmin();
-        String result = userService.resetPassword(username);
-        return ResponseEntity.ok(result);
-    }
-
     @PutMapping("/updateProfile/{username}")
     public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserUpdateRequestDTO updatedUser) {
         List<String> errors = userDTOValidator.validateUpdate(updatedUser);
@@ -86,13 +72,6 @@ public class UserController {
 
         userService.updateUser(username, updatedUser);
         return ResponseEntity.ok("User updated successfully.");
-    }
-
-    @DeleteMapping("/admin/deleteUser/{username}")
-    public ResponseEntity<String> deleteUser(@PathVariable String username) {
-        authService.requireSuperAdmin();
-        userService.deleteUser(username);
-        return ResponseEntity.ok("User deleted successfully with username: " + username.toLowerCase());
     }
 
     @PostMapping("/forgot-password")
