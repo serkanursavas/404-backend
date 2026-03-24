@@ -1,9 +1,7 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.squad.*;
-import com.squad.squad.entity.*;
 import com.squad.squad.enums.GroupRole;
-import com.squad.squad.enums.RequestStatus;
 import com.squad.squad.service.SquadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,62 +48,12 @@ public class SquadController {
 
     @GetMapping("/my-squads")
     public ResponseEntity<List<SquadSummaryDTO>> getMySquads() {
-        List<GroupMembership> memberships = squadService.getMySquads();
-        List<SquadSummaryDTO> squads = memberships.stream()
-                .map(m -> {
-                    Integer squadId = m.getSquad().getId();
-                    String adminName = squadService.getAdminPlayerNameForSquad(squadId);
-                    int memberCount = squadService.getMemberCountForSquad(squadId);
-                    return new SquadSummaryDTO(squadId, m.getSquad().getName(), m.getRole().name(), adminName, memberCount);
-                })
-                .toList();
-        return ResponseEntity.ok(squads);
+        return ResponseEntity.ok(squadService.getMySquads());
     }
 
     @GetMapping("/my-requests")
-    public ResponseEntity<?> getMyRequests() {
-        Object[] data = squadService.getMyRequests().toArray();
-
-        // Build response manually
-        Object[] squadRequestsPair = (Object[]) data[0];
-        Object[] joinRequestsPair = (Object[]) data[1];
-
-        @SuppressWarnings("unchecked")
-        List<SquadRequest> squadRequests = (List<SquadRequest>) squadRequestsPair[1];
-        @SuppressWarnings("unchecked")
-        List<JoinRequest> joinRequests = (List<JoinRequest>) joinRequestsPair[1];
-
-        List<SquadRequestDTO> squadRequestDTOs = squadRequests.stream()
-                .map(r -> {
-                    SquadRequestDTO dto = new SquadRequestDTO();
-                    dto.setId(r.getId());
-                    dto.setSquadName(r.getName());
-                    dto.setStatus(r.getStatus().name());
-                    dto.setCreatedAt(r.getCreatedAt());
-                    return dto;
-                }).toList();
-
-        List<JoinRequestDTO> joinRequestDTOs = joinRequests.stream()
-                .map(r -> {
-                    JoinRequestDTO dto = new JoinRequestDTO();
-                    dto.setId(r.getId());
-                    dto.setSquadName(r.getSquad().getName());
-                    dto.setAdminUsername(squadService.getAdminUsernameForSquad(r.getSquad().getId()));
-                    dto.setPlayerName(r.getPlayerName());
-                    dto.setPlayerSurname(r.getPlayerSurname());
-                    dto.setStatus(r.getStatus().name());
-                    dto.setCreatedAt(r.getCreatedAt());
-                    return dto;
-                }).toList();
-
-        int pendingCount = (int) squadRequests.stream().filter(r -> r.getStatus() == RequestStatus.PENDING).count()
-                + (int) joinRequests.stream().filter(r -> r.getStatus() == RequestStatus.PENDING).count();
-
-        return ResponseEntity.ok(Map.of(
-                "squadRequests", squadRequestDTOs,
-                "joinRequests", joinRequestDTOs,
-                "pendingCount", pendingCount
-        ));
+    public ResponseEntity<Map<String, Object>> getMyRequests() {
+        return ResponseEntity.ok(squadService.getMyRequests());
     }
 
     @DeleteMapping("/cancel-squad/{requestId}")
@@ -145,52 +93,17 @@ public class SquadController {
 
     @GetMapping("/current")
     public ResponseEntity<SquadDetailDTO> getCurrentSquad() {
-        Squad squad = squadService.getCurrentSquad();
-        SquadDetailDTO dto = new SquadDetailDTO();
-        dto.setId(squad.getId());
-        dto.setName(squad.getName());
-        dto.setInviteCode(squad.getInviteCode());
-        dto.setCreatedAt(squad.getCreatedAt());
-        dto.setMemberCount(squadService.getMemberCountForSquad(squad.getId()));
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(squadService.getCurrentSquad());
     }
 
     @GetMapping("/admin/members")
     public ResponseEntity<List<MemberDTO>> getMembers() {
-        List<GroupMembership> memberships = squadService.getMembers();
-        List<MemberDTO> members = memberships.stream()
-                .map(m -> {
-                    MemberDTO dto = new MemberDTO();
-                    dto.setUserId(m.getUser().getId());
-                    dto.setUsername(m.getUser().getUsername());
-                    dto.setPlayerId(m.getPlayer().getId());
-                    dto.setPlayerName(m.getPlayer().getName());
-                    dto.setPlayerSurname(m.getPlayer().getSurname());
-                    dto.setRole(m.getRole().name());
-                    dto.setPlayerPosition(m.getPlayer().getPosition());
-                    dto.setJoinedAt(m.getJoinedAt());
-                    return dto;
-                }).toList();
-        return ResponseEntity.ok(members);
+        return ResponseEntity.ok(squadService.getMembers());
     }
 
     @GetMapping("/admin/join-requests")
     public ResponseEntity<List<JoinRequestDTO>> getPendingJoinRequests() {
-        List<JoinRequest> requests = squadService.getPendingJoinRequests();
-        List<JoinRequestDTO> dtos = requests.stream()
-                .map(r -> {
-                    JoinRequestDTO dto = new JoinRequestDTO();
-                    dto.setId(r.getId());
-                    dto.setUsername(r.getUser().getUsername());
-                    dto.setPlayerName(r.getPlayerName());
-                    dto.setPlayerSurname(r.getPlayerSurname());
-                    dto.setPlayerPosition(r.getPlayerPosition());
-                    dto.setPlayerFoot(r.getPlayerFoot());
-                    dto.setStatus(r.getStatus().name());
-                    dto.setCreatedAt(r.getCreatedAt());
-                    return dto;
-                }).toList();
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(squadService.getPendingJoinRequests());
     }
 
     @PutMapping("/admin/approve-join/{requestId}")
@@ -244,20 +157,7 @@ public class SquadController {
 
     @GetMapping("/super/pending-requests")
     public ResponseEntity<List<SquadRequestDTO>> getPendingSquadRequests() {
-        List<SquadRequest> requests = squadService.getPendingSquadRequests();
-        List<SquadRequestDTO> dtos = requests.stream()
-                .map(r -> {
-                    SquadRequestDTO dto = new SquadRequestDTO();
-                    dto.setId(r.getId());
-                    dto.setSquadName(r.getName());
-                    dto.setRequestedByUsername(r.getRequestedByUser().getUsername());
-                    dto.setPlayerName(r.getPlayerName());
-                    dto.setPlayerSurname(r.getPlayerSurname());
-                    dto.setStatus(r.getStatus().name());
-                    dto.setCreatedAt(r.getCreatedAt());
-                    return dto;
-                }).toList();
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(squadService.getPendingSquadRequests());
     }
 
     @PutMapping("/super/approve/{requestId}")
@@ -284,18 +184,6 @@ public class SquadController {
 
     @GetMapping("/super/all-squads")
     public ResponseEntity<List<SquadDetailDTO>> getAllSquads() {
-        List<Squad> squads = squadService.getAllSquads();
-        List<SquadDetailDTO> dtos = squads.stream()
-                .map(s -> {
-                    SquadDetailDTO dto = new SquadDetailDTO();
-                    dto.setId(s.getId());
-                    dto.setName(s.getName());
-                    dto.setInviteCode(s.getInviteCode());
-                    dto.setCreatedAt(s.getCreatedAt());
-                    dto.setMemberCount(squadService.getMemberCountForSquad(s.getId()));
-                    dto.setActive(s.isActive());
-                    return dto;
-                }).toList();
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(squadService.getAllSquads());
     }
 }
