@@ -3,6 +3,8 @@ package com.squad.squad.controller;
 import com.squad.squad.dto.user.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 import com.squad.squad.dto.DTOvalidators.UserDTOValidator;
 import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.UserService;
@@ -86,28 +88,40 @@ public class UserController {
         return ResponseEntity.ok("User updated successfully.");
     }
 
-    @PutMapping("/admin/updateUserRole/{username}")
-    public ResponseEntity<?> updateUserByUsername(@PathVariable String username, @RequestBody UserRoleUpdateRequestDTO updatedRole) {
-        authService.requireSuperAdmin();
-        List<String> errors = userDTOValidator.validateRoleUpdate(updatedRole);
-        if (!errors.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
-        }
-
-        boolean userExists = userService.existsByUsername(username);
-        if (!userExists) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("User not found.");
-        }
-
-        userService.updateUserRole(username, updatedRole);
-        return ResponseEntity.ok("User updated successfully.");
-    }
-
     @DeleteMapping("/admin/deleteUser/{username}")
     public ResponseEntity<String> deleteUser(@PathVariable String username) {
         authService.requireSuperAdmin();
         userService.deleteUser(username);
         return ResponseEntity.ok("User deleted successfully with username: " + username.toLowerCase());
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        if (request.getIdentifier() == null || request.getIdentifier().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Bu alan zorunludur."));
+        }
+        // Kullanıcı bulunamasa bile 200 dön (enumeration koruması)
+        var result = userService.forgotPassword(request.getIdentifier());
+        return ResponseEntity.ok(Map.of(
+                "message", "Şifre sıfırlama linki email adresinize gönderildi.",
+                "username", result.getUsername() != null ? result.getUsername() : "",
+                "email", result.getEmail() != null ? result.getEmail() : ""
+        ));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPasswordByToken(@RequestBody ResetPasswordRequestDTO request) {
+        if (request.getToken() == null || request.getToken().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Token zorunludur."));
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Yeni şifre zorunludur."));
+        }
+        try {
+            userService.resetPasswordByToken(request.getToken(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Şifreniz başarıyla güncellendi."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

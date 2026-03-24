@@ -2,7 +2,11 @@ package com.squad.squad.service;
 
 import java.util.List;
 
-import com.squad.squad.dto.user.*;
+import com.squad.squad.dto.user.AuthResponseDTO;
+import com.squad.squad.dto.user.ForgotPasswordResultDTO;
+import com.squad.squad.dto.user.GetAllUsersDTO;
+import com.squad.squad.dto.user.UserCreateRequestDTO;
+import com.squad.squad.dto.user.UserUpdateRequestDTO;
 import com.squad.squad.entity.User;
 
 public interface UserService {
@@ -23,5 +27,7 @@ public interface UserService {
 
     AuthResponseDTO login(String username, String password);
 
-    void updateUserRole(String username, UserRoleUpdateRequestDTO roleDTO);
+    ForgotPasswordResultDTO forgotPassword(String identifier);
+
+    void resetPasswordByToken(String token, String newPassword);
 }
