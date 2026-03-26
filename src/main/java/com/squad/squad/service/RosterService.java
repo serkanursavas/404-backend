@@ -23,5 +23,9 @@ public interface RosterService {
 
     List<Roster> findAllById(List<Integer> rosterIds);
 
+    void deleteAllByIds(List<Integer> ids);
+
     Roster getRosterByPlayerIdAndGameId(Integer gameId, Integer playerId);
+
+    Roster getRosterByPlayerIdAndGameIdWithLock(Integer gameId, Integer playerId);
 }

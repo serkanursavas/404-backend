@@ -100,8 +100,19 @@ public class RosterServiceImpl extends BaseSquadService implements RosterService
     }
 
     @Override
+    @Transactional
+    public void deleteAllByIds(List<Integer> ids) {
+        rosterRepository.deleteAllById(ids);
+    }
+
+    @Override
     public Roster getRosterByPlayerIdAndGameId(Integer gameId, Integer playerId) {
         return rosterRepository.findByGameIdAndPlayerId(gameId, playerId);
+    }
+
+    @Override
+    public Roster getRosterByPlayerIdAndGameIdWithLock(Integer gameId, Integer playerId) {
+        return rosterRepository.findByGameIdAndPlayerIdWithLock(gameId, playerId);
     }
 
     private <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {

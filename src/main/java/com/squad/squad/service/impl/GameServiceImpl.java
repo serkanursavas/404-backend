@@ -248,6 +248,20 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
                     .filter(r -> r.getId() == null)
                     .collect(Collectors.toList());
 
+            // Orphan silme: DB'deki roster ID'leri ile gönderilenleri karşılaştır
+            List<Integer> currentRosterIds = rosterService.findRosterByGameId(id).stream()
+                    .map(RosterResponseDTO::getId)
+                    .collect(Collectors.toList());
+            List<Integer> sentRosterIds = toUpdate.stream()
+                    .map(RosterUpdateDTO::getId)
+                    .collect(Collectors.toList());
+            List<Integer> toDeleteIds = currentRosterIds.stream()
+                    .filter(rid -> !sentRosterIds.contains(rid))
+                    .collect(Collectors.toList());
+            if (!toDeleteIds.isEmpty()) {
+                rosterService.deleteAllByIds(toDeleteIds);
+            }
+
             List<Integer> playerIds = updatedGame.getRosters().stream()
                     .map(RosterUpdateDTO::getPlayerId)
                     .distinct()
