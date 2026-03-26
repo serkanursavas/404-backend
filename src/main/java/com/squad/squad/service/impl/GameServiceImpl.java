@@ -241,11 +241,12 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         gameRepository.save(game);
 
         if (updatedGame.getRosters() != null && !updatedGame.getRosters().isEmpty()) {
-            List<Integer> rosterIds = updatedGame.getRosters().stream()
-                    .map(RosterUpdateDTO::getId)
+            List<RosterUpdateDTO> toUpdate = updatedGame.getRosters().stream()
+                    .filter(r -> r.getId() != null)
                     .collect(Collectors.toList());
-
-            List<Roster> existingRosters = rosterService.findAllById(rosterIds);
+            List<RosterUpdateDTO> toCreate = updatedGame.getRosters().stream()
+                    .filter(r -> r.getId() == null)
+                    .collect(Collectors.toList());
 
             List<Integer> playerIds = updatedGame.getRosters().stream()
                     .map(RosterUpdateDTO::getPlayerId)
@@ -255,21 +256,39 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
             Map<Integer, Player> playerMap = playerService.findAllByIdsInCurrentSquad(playerIds).stream()
                     .collect(Collectors.toMap(Player::getId, player -> player));
 
-            existingRosters.forEach(existingRoster -> {
-                updatedGame.getRosters().stream()
-                        .filter(rosterUpdateDTO -> rosterUpdateDTO.getId().equals(existingRoster.getId()))
-                        .findFirst()
-                        .ifPresent(rosterUpdateDTO -> {
-                            updateFieldIfNotNull(rosterUpdateDTO.getTeamColor().toUpperCase(),
-                                    existingRoster::setTeamColor);
-                            Player player = playerMap.get(rosterUpdateDTO.getPlayerId());
-                            if (player != null) {
-                                existingRoster.setPlayer(player);
-                            }
-                        });
-            });
+            if (!toUpdate.isEmpty()) {
+                List<Integer> rosterIds = toUpdate.stream()
+                        .map(RosterUpdateDTO::getId)
+                        .collect(Collectors.toList());
+                List<Roster> existingRosters = rosterService.findAllById(rosterIds);
 
-            rosterService.updateAllRosters(existingRosters);
+                existingRosters.forEach(existingRoster ->
+                    toUpdate.stream()
+                            .filter(dto -> existingRoster.getId().equals(dto.getId()))
+                            .findFirst()
+                            .ifPresent(dto -> {
+                                updateFieldIfNotNull(dto.getTeamColor().toUpperCase(), existingRoster::setTeamColor);
+                                Player player = playerMap.get(dto.getPlayerId());
+                                if (player != null) existingRoster.setPlayer(player);
+                            })
+                );
+                rosterService.updateAllRosters(existingRosters);
+            }
+
+            if (!toCreate.isEmpty()) {
+                List<Roster> newRosters = new ArrayList<>();
+                for (RosterUpdateDTO dto : toCreate) {
+                    Player player = playerMap.get(dto.getPlayerId());
+                    if (player != null) {
+                        Roster roster = new Roster();
+                        roster.setGame(game);
+                        roster.setTeamColor(dto.getTeamColor().toUpperCase());
+                        roster.setPlayer(player);
+                        newRosters.add(roster);
+                    }
+                }
+                rosterService.saveAllRosters(newRosters);
+            }
         }
     }
 
@@ -325,7 +344,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
     }
 
     public List<Roster> getRostersByGameId(Integer gameId) {
-        return gameRepository.findById(gameId)
+        return gameRepository.findByIdWithRoster(gameId)
                 .map(Game::getRoster)
                 .orElse(new ArrayList<>());
     }

@@ -17,6 +17,9 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 
     Optional<Game> findByIdAndSquadId(Integer id, Integer squadId);
 
+    @Query("SELECT g FROM Game g LEFT JOIN FETCH g.roster WHERE g.id = :id")
+    Optional<Game> findByIdWithRoster(@Param("id") Integer id);
+
     Game findTopBySquadIdOrderByDateTimeDesc(Integer squadId);
 
     Game findBySquadIdAndIsPlayedFalse(Integer squadId);
