@@ -28,4 +28,10 @@ public interface RosterPersonaRepository extends JpaRepository<RosterPersona, In
     @Modifying
     @Query(value = "DELETE FROM roster_persona rp USING roster r, game g WHERE rp.roster_id = r.id AND r.game_id = g.id AND g.squad_id = :squadId", nativeQuery = true)
     void deleteAllBySquadId(@Param("squadId") Integer squadId);
+
+    @Query(value = "SELECT COUNT(*) > 0 FROM roster_persona rp JOIN roster r ON rp.roster_id = r.id WHERE r.game_id = :gameId AND rp.created_by_user_id = :userId", nativeQuery = true)
+    boolean existsByGameIdAndCreatedByUserId(@Param("gameId") Integer gameId, @Param("userId") Integer userId);
+
+    @Query(value = "SELECT COUNT(DISTINCT rp.created_by_user_id) FROM roster_persona rp JOIN roster r ON rp.roster_id = r.id WHERE r.game_id = :gameId", nativeQuery = true)
+    Integer countDistinctSubmittersByGameId(@Param("gameId") Integer gameId);
 }

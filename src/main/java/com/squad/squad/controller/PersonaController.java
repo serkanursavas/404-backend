@@ -32,7 +32,6 @@ public class PersonaController {
 
     @PostMapping("/savePersonas")
     public ResponseEntity<?> savePersonas(@RequestBody List<AddPersonaRequestDTO> personas) {
-        authService.requireSuperAdmin();
         try {
             personaService.savePersonas(personas);
             return ResponseEntity.ok("Personas saved successfully.");
@@ -41,6 +40,24 @@ public class PersonaController {
         }
     }
 
+    @PostMapping("/recalculate/{gameId}")
+    public ResponseEntity<?> recalculatePersonas(@PathVariable Integer gameId) {
+        personaService.recalculatePersonasForGame(gameId);
+        return ResponseEntity.ok("Personas recalculated for game " + gameId);
+    }
 
+    @PostMapping("/game/{gameId}/resubmit")
+    public ResponseEntity<?> resubmitPersonas(
+            @PathVariable Integer gameId,
+            @RequestBody List<AddPersonaRequestDTO> personas) {
+        try {
+            personaService.resubmitPersonasForGame(gameId, personas);
+            return ResponseEntity.ok("Personas submitted.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
 }

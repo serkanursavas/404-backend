@@ -10,4 +10,8 @@ public interface PersonaService {
 
     void savePersonas(List<AddPersonaRequestDTO> ratings);
 
+    void recalculatePersonasForGame(Integer gameId);
+
+    void resubmitPersonasForGame(Integer gameId, List<AddPersonaRequestDTO> personas);
+
 }
