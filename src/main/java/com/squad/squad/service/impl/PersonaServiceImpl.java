@@ -106,69 +106,61 @@ public class PersonaServiceImpl extends BaseSquadService implements PersonaServi
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void resubmitPersonasForGame(Integer gameId, List<AddPersonaRequestDTO> personas) {
-        Integer userId = authService.getCurrentUserId();
         Integer playerId = authService.getCurrentPlayerId();
         Integer squadId = getSquadId();
-
-        if (rosterPersonaRepository.existsByGameIdAndCreatedByUserId(gameId, userId)) {
-            throw new IllegalStateException("You have already submitted personas for this game.");
-        }
 
         Roster voterRoster = rosterService.getRosterByPlayerIdAndGameId(gameId, playerId);
         if (voterRoster == null) {
             throw new IllegalArgumentException("You are not a participant in this game.");
         }
-
-        if (!voterRoster.getHasVote()) {
-            throw new IllegalStateException("You must have submitted ratings to resubmit personas.");
+        if (Boolean.TRUE.equals(voterRoster.getHasPersonaVote())) {
+            throw new IllegalStateException("You have already submitted personas for this game.");
         }
 
         Squad squad = squadRepository.findById(squadId).orElse(null);
 
         for (AddPersonaRequestDTO dto : personas) {
-            Roster existingRoster = rosterService.getRosterById(dto.getRosterId());
+            Roster targetRoster = rosterService.getRosterById(dto.getRosterId());
 
-            if (dto.getPersonaIds().size() > 3) {
-                throw new IllegalArgumentException("Roster ID " + dto.getRosterId() + " has more than 3 personas.");
+            if (dto.getPersonaIds() != null && dto.getPersonaIds().size() > 3) {
+                throw new IllegalArgumentException("Max 3 personas per player.");
             }
+
+            if (dto.getPersonaIds() == null) continue;
 
             for (Integer personaId : dto.getPersonaIds()) {
                 Persona persona = personaRepository.findById(personaId)
                         .orElseThrow(() -> new IllegalArgumentException("Persona not found: " + personaId));
 
                 if (personaId != 68) {
-                    PlayerPersona playerPersona = playerPersonaRepository
-                            .findByPlayerIdAndPersonaIdAndSquadId(existingRoster.getPlayer().getId(), persona.getId(), squadId)
+                    PlayerPersona pp = playerPersonaRepository
+                            .findByPlayerIdAndPersonaIdAndSquadId(targetRoster.getPlayer().getId(), personaId, squadId)
                             .orElseGet(() -> {
-                                PlayerPersona pp = new PlayerPersona();
-                                pp.setPlayer(existingRoster.getPlayer());
-                                pp.setPersona(persona);
-                                pp.setSquad(squad);
-                                pp.setCount(0);
-                                return pp;
+                                PlayerPersona newPp = new PlayerPersona();
+                                newPp.setPlayer(targetRoster.getPlayer());
+                                newPp.setPersona(persona);
+                                newPp.setSquad(squad);
+                                newPp.setCount(0);
+                                return newPp;
                             });
-                    playerPersona.setCount(playerPersona.getCount() + 1);
-                    playerPersonaRepository.save(playerPersona);
+                    pp.setCount(pp.getCount() + 1);
+                    playerPersonaRepository.save(pp);
                 }
 
-                RosterPersona rosterPersona = rosterPersonaRepository
-                        .findByRosterIdAndPersonaId(existingRoster.getId(), persona.getId())
-                        .orElseGet(() -> {
-                            RosterPersona rp = new RosterPersona();
-                            rp.setRoster(existingRoster);
-                            rp.setPersona(persona);
-                            rp.setCount(0);
-                            return rp;
-                        });
-                rosterPersona.setCount(rosterPersona.getCount() + 1);
-                rosterPersonaRepository.save(rosterPersona);
+                RosterPersona rp = new RosterPersona();
+                rp.setRoster(targetRoster);
+                rp.setPersona(persona);
+                rp.setCount(1);
+                rosterPersonaRepository.save(rp);
             }
         }
-        rosterPersonaRepository.flush();
 
-        int totalRosters = rosterRepository.findAllByGameId(gameId).size();
-        Integer submitters = rosterPersonaRepository.countDistinctSubmittersByGameId(gameId);
-        if (submitters != null && submitters >= totalRosters) {
+        voterRoster.setHasPersonaVote(true);
+        rosterRepository.save(voterRoster);
+
+        long total = rosterRepository.countByGameId(gameId);
+        long pressed = rosterRepository.countByGameIdAndHasPersonaVoteTrue(gameId);
+        if (pressed >= total) {
             recalculatePersonasForGame(gameId);
         }
     }
@@ -179,16 +171,16 @@ public class PersonaServiceImpl extends BaseSquadService implements PersonaServi
         List<Roster> rosters = rosterRepository.findAllByGameId(gameId);
 
         for (Roster roster : rosters) {
-            List<RosterPersona> top3 = rosterPersonaRepository.findTop3ByRosterId(roster.getId());
-            roster.setPersona1(!top3.isEmpty() ? top3.get(0).getPersona().getId() : null);
-            roster.setPersona2(top3.size() > 1 ? top3.get(1).getPersona().getId() : null);
-            roster.setPersona3(top3.size() > 2 ? top3.get(2).getPersona().getId() : null);
+            List<Integer> top3 = rosterPersonaRepository.findTop3PersonaIdsByRosterId(roster.getId());
+            roster.setPersona1(!top3.isEmpty() ? top3.get(0) : null);
+            roster.setPersona2(top3.size() > 1 ? top3.get(1) : null);
+            roster.setPersona3(top3.size() > 2 ? top3.get(2) : null);
         }
 
         rosterService.updateAllRosters(rosters);
 
         Integer squadId = getSquadId();
-        Integer mvpId = rosterPersonaRepository.findMvp(squadId);
+        Integer mvpId = rosterPersonaRepository.findMvpGrouped(squadId);
         Game game = gameService.findGameById(gameId);
         game.setMvpId(mvpId);
         game.setVoted(true);

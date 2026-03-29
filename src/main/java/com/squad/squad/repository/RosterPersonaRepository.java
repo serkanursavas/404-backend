@@ -13,25 +13,25 @@ public interface RosterPersonaRepository extends JpaRepository<RosterPersona, In
 
     Optional<RosterPersona> findByRosterIdAndPersonaId(Integer rosterId, Integer personaId);
 
-    @Query(value = "SELECT * FROM roster_persona WHERE persona_id != 68 and roster_id = :rosterId ORDER BY count DESC LIMIT 3", nativeQuery = true)
+    @Query(value = "SELECT * FROM roster_persona WHERE persona_id != 68 AND roster_id = :rosterId ORDER BY count DESC LIMIT 3", nativeQuery = true)
     List<RosterPersona> findTop3ByRosterId(@Param("rosterId") Integer rosterId);
 
-    @Query(value = "SELECT r.player_id\n" +
-            "FROM roster_persona rp\n" +
-            "left join roster r on rp.roster_id = r.id\n" +
-            "left join game g on r.game_id = g.id\n" +
-            "WHERE persona_id = 68 AND g.squad_id = :squadId\n" +
-            "ORDER BY count DESC\n" +
-            "limit 1", nativeQuery = true)
+    @Query(value = "SELECT r.player_id " +
+            "FROM roster_persona rp " +
+            "LEFT JOIN roster r ON rp.roster_id = r.id " +
+            "LEFT JOIN game g ON r.game_id = g.id " +
+            "WHERE persona_id = 68 AND g.squad_id = :squadId " +
+            "ORDER BY rp.count DESC " +
+            "LIMIT 1", nativeQuery = true)
     Integer findMvp(@Param("squadId") Integer squadId);
 
     @Modifying
     @Query(value = "DELETE FROM roster_persona rp USING roster r, game g WHERE rp.roster_id = r.id AND r.game_id = g.id AND g.squad_id = :squadId", nativeQuery = true)
     void deleteAllBySquadId(@Param("squadId") Integer squadId);
 
-    @Query(value = "SELECT COUNT(*) > 0 FROM roster_persona rp JOIN roster r ON rp.roster_id = r.id WHERE r.game_id = :gameId AND rp.created_by_user_id = :userId", nativeQuery = true)
-    boolean existsByGameIdAndCreatedByUserId(@Param("gameId") Integer gameId, @Param("userId") Integer userId);
+    @Query(value = "SELECT persona_id FROM roster_persona WHERE persona_id != 68 AND roster_id = :rosterId GROUP BY persona_id ORDER BY SUM(count) DESC LIMIT 3", nativeQuery = true)
+    List<Integer> findTop3PersonaIdsByRosterId(@Param("rosterId") Integer rosterId);
 
-    @Query(value = "SELECT COUNT(DISTINCT rp.created_by_user_id) FROM roster_persona rp JOIN roster r ON rp.roster_id = r.id WHERE r.game_id = :gameId", nativeQuery = true)
-    Integer countDistinctSubmittersByGameId(@Param("gameId") Integer gameId);
+    @Query(value = "SELECT r.player_id FROM roster_persona rp LEFT JOIN roster r ON rp.roster_id = r.id LEFT JOIN game g ON r.game_id = g.id WHERE persona_id = 68 AND g.squad_id = :squadId GROUP BY r.player_id ORDER BY SUM(rp.count) DESC LIMIT 1", nativeQuery = true)
+    Integer findMvpGrouped(@Param("squadId") Integer squadId);
 }

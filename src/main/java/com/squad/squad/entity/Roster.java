@@ -32,6 +32,9 @@ public class Roster extends BaseEntity {
     @Column(name = "has_vote", nullable = true)
     private Boolean hasVote = false;
 
+    @Column(name = "has_persona_vote", nullable = false)
+    private Boolean hasPersonaVote = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
@@ -61,6 +64,14 @@ public class Roster extends BaseEntity {
 
     public void setHasVote(Boolean hasVote) {
         this.hasVote = hasVote;
+    }
+
+    public Boolean getHasPersonaVote() {
+        return hasPersonaVote;
+    }
+
+    public void setHasPersonaVote(Boolean hasPersonaVote) {
+        this.hasPersonaVote = hasPersonaVote;
     }
 
     public String getTeamColor() {

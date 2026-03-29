@@ -35,4 +35,8 @@ public interface RosterRepository extends JpaRepository<Roster, Integer> {
         @Param("playerId") Integer playerId,
         @Param("squadId") Integer squadId);
 
+    long countByGameId(Integer gameId);
+
+    long countByGameIdAndHasPersonaVoteTrue(Integer gameId);
+
 }
