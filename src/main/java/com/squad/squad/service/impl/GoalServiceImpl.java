@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.goal.AddGoalsRequestDTO;
 import com.squad.squad.dto.goal.GoalAddRequestDTO;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +18,13 @@ import com.squad.squad.entity.Player;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GoalRepository;
+import com.squad.squad.event.GoalScoredEvent;
 import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.GoalService;
+import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.PlayerService;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class GoalServiceImpl extends BaseSquadService implements GoalService {
@@ -29,17 +33,22 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
     private final PlayerService playerService;
     private final GameMapper gameMapper;
     private final PlayerMapper playerMapper;
+    private final ApplicationEventPublisher eventPublisher;
+    private final GroupAuthorizationService groupAuthorizationService;
 
     @Autowired
-    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService, GameMapper gameMapper, PlayerMapper playerMapper) {
+    public GoalServiceImpl(GoalRepository goalRepository, GameService gameService, PlayerService playerService, GameMapper gameMapper, PlayerMapper playerMapper, ApplicationEventPublisher eventPublisher, GroupAuthorizationService groupAuthorizationService) {
         this.goalRepository = goalRepository;
         this.gameService = gameService;
         this.playerService = playerService;
         this.gameMapper = gameMapper;
         this.playerMapper = playerMapper;
+        this.eventPublisher = eventPublisher;
+        this.groupAuthorizationService = groupAuthorizationService;
     }
 
     @Override
+    @Transactional
     public List<GoalDTO> getAllGoals() {
         Integer squadId = getSquadId();
         return goalRepository.findAllBySquadId(squadId).stream().map(
@@ -49,6 +58,7 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
     }
 
     @Override
+    @Transactional
     public List<GoalDTO> getGoalsByGameId(Integer gameId) {
         gameService.findGameById(gameId); // squad check — başka squad'ın maçı ise exception fırlatır
         return goalRepository.findGoalsByGameId(gameId).stream().map(
@@ -57,6 +67,7 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
     }
 
     @Override
+    @Transactional
     public void addGoals(AddGoalsRequestDTO requestDto) {
         Integer gameId = requestDto.getGameId();
         Game existingGame = gameService.findGameById(gameId);
@@ -74,6 +85,10 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
             goalRepository.save(goal);
             gameService.updateScoreWithGoal(goal);
         }
+
+        Integer squadId = getSquadId();
+        Integer actorUserId = groupAuthorizationService.getCurrentUserId();
+        eventPublisher.publishEvent(new GoalScoredEvent(gameId, squadId, goalDtos.size(), actorUserId));
     }
 
     public List<TopListsDTO> getTopScorers() {

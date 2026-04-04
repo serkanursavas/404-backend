@@ -15,7 +15,9 @@ import com.squad.squad.repository.GameRepository;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.SquadRepository;
+import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.impl.GameServiceImpl;
+import org.springframework.context.ApplicationEventPublisher;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +46,8 @@ class GameServiceTest {
     @Mock private GameLocationMapper gameLocationMapper;
     @Mock private PlayerMapper playerMapper;
     @Mock private SquadRepository squadRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private GroupAuthorizationService groupAuthorizationService;
 
     private GameServiceImpl gameService;
 
@@ -52,7 +56,7 @@ class GameServiceTest {
         gameService = new GameServiceImpl(
                 gameRepository, rosterService, playerService, rosterPersonaRepository,
                 gameLocationRepository, ratingRepository, goalMapper, gameMapper,
-                gameLocationMapper, playerMapper, squadRepository);
+                gameLocationMapper, playerMapper, squadRepository, eventPublisher, groupAuthorizationService);
     }
 
     @AfterEach

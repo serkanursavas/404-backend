@@ -24,6 +24,8 @@ public interface GameService {
 
     Game findGameById(Integer id);
 
+    Game findGameByIdWithLock(Integer id);
+
     void createGame(GameCreateRequestDTO gameDto);
 
     void updateGame(Integer id, GameUpdateRequestDTO updatedGame);

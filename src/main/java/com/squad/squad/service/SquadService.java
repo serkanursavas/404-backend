@@ -5,7 +5,13 @@ import com.squad.squad.dto.squad.*;
 import com.squad.squad.entity.*;
 import com.squad.squad.enums.GroupRole;
 import com.squad.squad.enums.RequestStatus;
+import com.squad.squad.event.JoinRequestApprovedEvent;
+import com.squad.squad.event.JoinRequestReceivedEvent;
+import com.squad.squad.event.JoinRequestRejectedEvent;
+import com.squad.squad.event.MemberRemovedEvent;
+import com.squad.squad.event.SquadApprovedEvent;
 import com.squad.squad.repository.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +30,12 @@ public class SquadService {
     private final UserRepository userRepository;
     private final PlayerRepository playerRepository;
     private final GroupAuthorizationService authService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SquadService(SquadRepository squadRepository, GroupMembershipRepository groupMembershipRepository,
                         SquadRequestRepository squadRequestRepository, JoinRequestRepository joinRequestRepository,
                         UserRepository userRepository, PlayerRepository playerRepository,
-                        GroupAuthorizationService authService) {
+                        GroupAuthorizationService authService, ApplicationEventPublisher eventPublisher) {
         this.squadRepository = squadRepository;
         this.groupMembershipRepository = groupMembershipRepository;
         this.squadRequestRepository = squadRequestRepository;
@@ -36,6 +43,7 @@ public class SquadService {
         this.userRepository = userRepository;
         this.playerRepository = playerRepository;
         this.authService = authService;
+        this.eventPublisher = eventPublisher;
     }
 
     // ==================== General (auth required, no group context) ====================
@@ -97,7 +105,10 @@ public class SquadService {
         request.setPlayerPosition(playerPosition);
         request.setPlayerFoot(playerFoot);
 
-        return joinRequestRepository.save(request);
+        JoinRequest saved = joinRequestRepository.save(request);
+        String requesterName = request.getPlayerName() + " " + request.getPlayerSurname();
+        eventPublisher.publishEvent(new JoinRequestReceivedEvent(squad.getId(), requesterName));
+        return saved;
     }
 
     @Transactional
@@ -250,6 +261,9 @@ public class SquadService {
         request.setReviewedAt(LocalDateTime.now());
         request.setReviewedByUser(reviewer);
         joinRequestRepository.save(request);
+
+        eventPublisher.publishEvent(new JoinRequestApprovedEvent(
+                request.getUser().getId(), request.getSquad().getId(), request.getSquad().getName()));
     }
 
     @Transactional
@@ -274,6 +288,9 @@ public class SquadService {
         request.setReviewedAt(LocalDateTime.now());
         request.setReviewedByUser(reviewer);
         joinRequestRepository.save(request);
+
+        eventPublisher.publishEvent(new JoinRequestRejectedEvent(
+                request.getUser().getId(), request.getSquad().getName()));
     }
 
     @Transactional
@@ -297,7 +314,10 @@ public class SquadService {
             }
         }
 
+        String squadName = membership.getSquad().getName();
         groupMembershipRepository.delete(membership);
+
+        eventPublisher.publishEvent(new MemberRemovedEvent(userId, squadName));
     }
 
     @Transactional
@@ -409,6 +429,9 @@ public class SquadService {
         request.setReviewedAt(LocalDateTime.now());
         request.setReviewedByUser(reviewer);
         squadRequestRepository.save(request);
+
+        eventPublisher.publishEvent(new SquadApprovedEvent(
+                request.getRequestedByUser().getId(), request.getName()));
     }
 
     @Transactional

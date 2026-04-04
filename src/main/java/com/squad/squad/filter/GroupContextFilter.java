@@ -29,7 +29,6 @@ public class GroupContextFilter extends OncePerRequestFilter {
             "/api/squads/request-join",
             "/api/squads/my-squads",
             "/api/squads/my-requests",
-            "/api/personas/savePersonas",
             "/api/notifications/device-token"
     );
 

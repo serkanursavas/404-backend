@@ -4,6 +4,7 @@ import com.squad.squad.entity.Roster;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -38,5 +39,9 @@ public interface RosterRepository extends JpaRepository<Roster, Integer> {
     long countByGameId(Integer gameId);
 
     long countByGameIdAndHasPersonaVoteTrue(Integer gameId);
+
+    @Modifying
+    @Query("UPDATE Roster r SET r.hasPersonaVote = true WHERE r.id = :rosterId")
+    void setHasPersonaVoteTrue(@Param("rosterId") Integer rosterId);
 
 }
