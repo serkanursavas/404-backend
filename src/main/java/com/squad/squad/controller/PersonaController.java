@@ -30,11 +30,15 @@ public class PersonaController {
         return personaRepository.findAll();
     }
 
-    @PostMapping("/savePersonas")
-    public ResponseEntity<?> savePersonas(@RequestBody List<AddPersonaRequestDTO> personas) {
+    @PostMapping("/savePersonas/{gameId}")
+    public ResponseEntity<?> savePersonas(
+            @PathVariable Integer gameId,
+            @RequestBody List<AddPersonaRequestDTO> personas) {
         try {
-            personaService.savePersonas(personas);
+            personaService.savePersonas(gameId, personas);
             return ResponseEntity.ok("Personas saved successfully.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }

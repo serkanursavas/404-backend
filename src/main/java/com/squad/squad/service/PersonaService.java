@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface PersonaService {
 
-    void savePersonas(List<AddPersonaRequestDTO> ratings);
+    void savePersonas(Integer gameId, List<AddPersonaRequestDTO> personas);
 
     void recalculatePersonasForGame(Integer gameId);
 
