@@ -24,4 +24,6 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
     long countBySquadIdAndRole(Integer squadId, GroupRole role);
 
     Optional<GroupMembership> findFirstBySquadIdAndRole(Integer squadId, GroupRole role);
+
+    List<GroupMembership> findBySquadIdAndRole(Integer squadId, GroupRole role);
 }
