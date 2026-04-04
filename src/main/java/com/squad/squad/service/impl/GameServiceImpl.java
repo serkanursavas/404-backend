@@ -25,10 +25,14 @@ import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.SquadRepository;
 import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
+import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RosterService;
+import com.squad.squad.event.GameCreatedEvent;
+import com.squad.squad.event.GameUpdatedEvent;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -54,13 +58,16 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
     private final PlayerMapper playerMapper;
     private final RosterPersonaRepository rosterPersonaRepository;
     private final SquadRepository squadRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final GroupAuthorizationService groupAuthorizationService;
 
     @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
             PlayerService playerService, RosterPersonaRepository rosterPersonaRepository,
             GameLocationRepository gameLocationRepository, RatingRepository ratingRepository,
             GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper,
-            PlayerMapper playerMapper, SquadRepository squadRepository) {
+            PlayerMapper playerMapper, SquadRepository squadRepository,
+            ApplicationEventPublisher eventPublisher, GroupAuthorizationService groupAuthorizationService) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
@@ -72,9 +79,12 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         this.playerMapper = playerMapper;
         this.rosterPersonaRepository = rosterPersonaRepository;
         this.squadRepository = squadRepository;
+        this.eventPublisher = eventPublisher;
+        this.groupAuthorizationService = groupAuthorizationService;
     }
 
     @Override
+    @Transactional
     public GameResponseDTO getLatestGame() {
         Integer squadId = getSquadId();
         checkAndUpdateUnplayedGame();
@@ -122,11 +132,18 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
     }
 
     @Override
+    public Game findGameByIdWithLock(Integer id) {
+        return gameRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
+    }
+
+    @Override
     public Page<LatestGamesDTO> getAllGames() {
         return null;
     }
 
     @Override
+    @Transactional
     public GameResponseDTO getGameById(Integer id) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + id));
@@ -219,6 +236,15 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         // Clear ratings and roster personas for this squad only
         ratingRepository.deleteAllBySquadId(squadId);
         rosterPersonaRepository.deleteAllBySquadId(squadId);
+
+        Integer actorUserId = groupAuthorizationService.getCurrentUserId();
+        eventPublisher.publishEvent(new GameCreatedEvent(
+                savedGame.getId(),
+                squadId,
+                savedGame.getDateTime(),
+                gameLocation.getLocation(),
+                actorUserId
+        ));
     }
 
     @Override
@@ -304,6 +330,15 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
                 rosterService.saveAllRosters(newRosters);
             }
         }
+
+        Integer actorUserId = groupAuthorizationService.getCurrentUserId();
+        eventPublisher.publishEvent(new GameUpdatedEvent(
+                id,
+                getSquadId(),
+                game.getDateTime(),
+                gameLocation.getLocation(),
+                actorUserId
+        ));
     }
 
     @Override

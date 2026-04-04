@@ -9,7 +9,9 @@ import com.squad.squad.exception.GameNotFoundException;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GoalRepository;
+import com.squad.squad.service.GroupAuthorizationService;
 import com.squad.squad.service.impl.GoalServiceImpl;
+import org.springframework.context.ApplicationEventPublisher;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +34,14 @@ class GoalServiceTest {
     @Mock private PlayerService playerService;
     @Mock private GameMapper gameMapper;
     @Mock private PlayerMapper playerMapper;
+    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private GroupAuthorizationService groupAuthorizationService;
 
     private GoalServiceImpl goalService;
 
     @BeforeEach
     void setUp() {
-        goalService = new GoalServiceImpl(goalRepository, gameService, playerService, gameMapper, playerMapper);
+        goalService = new GoalServiceImpl(goalRepository, gameService, playerService, gameMapper, playerMapper, eventPublisher, groupAuthorizationService);
     }
 
     @AfterEach

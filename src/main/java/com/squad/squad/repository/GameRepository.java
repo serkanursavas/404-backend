@@ -4,7 +4,9 @@ import com.squad.squad.dto.MvpDTO;
 import com.squad.squad.entity.Game;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,6 +21,10 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 
     @Query("SELECT g FROM Game g LEFT JOIN FETCH g.roster WHERE g.id = :id")
     Optional<Game> findByIdWithRoster(@Param("id") Integer id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT g FROM Game g WHERE g.id = :id")
+    Optional<Game> findByIdWithLock(@Param("id") Integer id);
 
     Game findTopBySquadIdOrderByDateTimeDesc(Integer squadId);
 

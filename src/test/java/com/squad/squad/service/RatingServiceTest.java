@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -28,6 +29,7 @@ class RatingServiceTest {
     @Mock private RosterRepository rosterRepository;
     @Mock private PlayerMapper playerMapper;
     @Mock private GroupAuthorizationService groupAuthorizationService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private RatingServiceImpl ratingService;
 
@@ -35,7 +37,7 @@ class RatingServiceTest {
     void setUp() {
         ratingService = new RatingServiceImpl(
                 ratingRepository, playerService, rosterService, gameService,
-                rosterPersonaRepository, rosterRepository, playerMapper, groupAuthorizationService);
+                rosterPersonaRepository, rosterRepository, playerMapper, groupAuthorizationService, eventPublisher);
         ratingService.setRosterService(rosterService);
     }
 

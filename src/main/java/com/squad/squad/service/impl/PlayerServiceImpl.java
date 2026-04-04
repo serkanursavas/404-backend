@@ -42,6 +42,7 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
     }
 
     @Override
+    @Transactional
     public List<PlayerDTO> getAllPlayers() {
         Integer squadId = getSquadId();
         List<Player> players = playerRepository.findBySquadId(squadId);
@@ -79,6 +80,7 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
     }
 
     @Override
+    @Transactional
     public PlayerDTO getPlayerById(Integer id) {
         Player player = playerRepository.findByIdAndSquadId(id, getSquadId())
                 .orElseThrow(() -> new PlayerNotFoundException("Player not found with id: " + id));

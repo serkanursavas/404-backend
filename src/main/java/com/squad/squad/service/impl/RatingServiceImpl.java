@@ -2,6 +2,7 @@ package com.squad.squad.service.impl;
 
 import com.squad.squad.dto.rating.AddRatingRequestDTO;
 import com.squad.squad.entity.*;
+import com.squad.squad.event.MVPAnnouncedEvent;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
@@ -13,6 +14,7 @@ import com.squad.squad.service.PlayerService;
 import com.squad.squad.service.RatingService;
 import com.squad.squad.service.RosterService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -35,12 +39,18 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
     private final RosterPersonaRepository rosterPersonaRepository;
     private final PlayerMapper playerMapper;
     private final GroupAuthorizationService groupAuthorizationService;
+    private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    @Lazy
+    private RatingService selfProxy;
 
     @Autowired
     public RatingServiceImpl(RatingRepository ratingRepository, PlayerService playerService,
                              RosterService rosterService, GameService gameService,
                              RosterPersonaRepository rosterPersonaRepository, RosterRepository rosterRepository,
-                             PlayerMapper playerMapper, GroupAuthorizationService groupAuthorizationService) {
+                             PlayerMapper playerMapper, GroupAuthorizationService groupAuthorizationService,
+                             ApplicationEventPublisher eventPublisher) {
         this.ratingRepository = ratingRepository;
         this.playerService = playerService;
         this.gameService = gameService;
@@ -48,6 +58,7 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
         this.rosterRepository = rosterRepository;
         this.playerMapper = playerMapper;
         this.groupAuthorizationService = groupAuthorizationService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Autowired
@@ -77,16 +88,19 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
             if (gameId == null && voterTeamColor == null) {
                 gameId = existingRoster.getGame().getId();
 
-                Roster voterRoster = rosterService.getRosterByPlayerIdAndGameId(gameId, currentPlayerId);
+                // Pessimistic write lock prevents concurrent duplicate votes from same player
+                Roster voterRoster = rosterService.getRosterByPlayerIdAndGameIdWithLock(gameId, currentPlayerId);
 
                 if (voterRoster == null) {
                     throw new IllegalStateException("Voter player is not in the roster for this game.");
                 }
 
-                if (!voterRoster.getHasVote()) {
-                    voterRoster.setHasVote(true);
-                    rosterRepository.save(voterRoster);
+                if (voterRoster.getHasVote()) {
+                    throw new IllegalArgumentException("You have already voted in this game.");
                 }
+
+                voterRoster.setHasVote(true);
+                rosterRepository.save(voterRoster);
 
                 voterTeamColor = voterRoster.getTeamColor();
 
@@ -121,7 +135,14 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
             ratingRepository.save(rating);
         }
 
-        checkIfVotingIsComplete(gameId, voterTeamColor);
+        final Integer finalGameId = gameId;
+        final String finalTeamColor = voterTeamColor;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                selfProxy.checkIfVotingIsComplete(finalGameId, finalTeamColor);
+            }
+        });
     }
 
     @Override
@@ -146,9 +167,13 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkIfVotingIsComplete(Integer gameId, String teamColor) {
-        Integer totalVotesByTeam = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
-        Game game = gameService.findGameById(gameId);
+        // Pessimistic lock — concurrent cascade'i engelle
+        Game game = gameService.findGameByIdWithLock(gameId);
+        if (game.isVoted()) return;  // idempotency guard
+
         int expectedVotes = (game.getRoster().size() / 2) * ((game.getRoster().size() / 2) - 1);
+
+        Integer totalVotesByTeam = ratingRepository.countByRosterGameIdAndTeamColor(gameId, teamColor);
 
         if (totalVotesByTeam.equals(expectedVotes)) {
             updateRatingsForGame(gameId, teamColor);
@@ -178,6 +203,15 @@ public class RatingServiceImpl extends BaseSquadService implements RatingService
             game.setMvpId(mvpId);
 
             gameService.updateVote(game);
+
+            if (mvpId != null) {
+                try {
+                    String mvpName = playerService.getPlayerById(mvpId).getName();
+                    eventPublisher.publishEvent(new MVPAnnouncedEvent(gameId, squadId, mvpName));
+                } catch (Exception e) {
+                    // MVP bildirimi kritik değil, loglayıp devam et
+                }
+            }
         }
     }
 
