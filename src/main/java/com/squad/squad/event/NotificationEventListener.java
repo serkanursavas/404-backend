@@ -117,7 +117,7 @@ public class NotificationEventListener {
                     event.getUserId(),
                     "❌ Katılım reddedildi",
                     event.getSquadName() + " üyelik talebiniz reddedildi.",
-                    Map.of("type", "JOIN_REQUEST_REJECTED")
+                    Map.of("squadId", event.getSquadId(), "type", "JOIN_REQUEST_REJECTED")
             );
         } catch (Exception e) {
             log.error("Failed to send push notification for JoinRequestRejectedEvent: userId={}", event.getUserId(), e);
@@ -132,7 +132,7 @@ public class NotificationEventListener {
                     event.getUserId(),
                     "✅ Squad onaylandı!",
                     event.getSquadName() + " onaylandı! Davet kodu hazır.",
-                    Map.of("type", "SQUAD_APPROVED")
+                    Map.of("squadId", event.getSquadId(), "type", "SQUAD_APPROVED")
             );
         } catch (Exception e) {
             log.error("Failed to send push notification for SquadApprovedEvent: userId={}", event.getUserId(), e);
@@ -147,7 +147,7 @@ public class NotificationEventListener {
                     event.getUserId(),
                     "❌ Squad'dan çıkarıldın",
                     event.getSquadName() + " kadrosundan çıkarıldın.",
-                    Map.of("type", "MEMBER_REMOVED")
+                    Map.of("squadId", event.getSquadId(), "type", "MEMBER_REMOVED")
             );
         } catch (Exception e) {
             log.error("Failed to send push notification for MemberRemovedEvent: userId={}", event.getUserId(), e);

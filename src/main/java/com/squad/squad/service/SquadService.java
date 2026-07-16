@@ -290,7 +290,7 @@ public class SquadService {
         joinRequestRepository.save(request);
 
         eventPublisher.publishEvent(new JoinRequestRejectedEvent(
-                request.getUser().getId(), request.getSquad().getName()));
+                request.getUser().getId(), request.getSquad().getId(), request.getSquad().getName()));
     }
 
     @Transactional
@@ -317,7 +317,7 @@ public class SquadService {
         String squadName = membership.getSquad().getName();
         groupMembershipRepository.delete(membership);
 
-        eventPublisher.publishEvent(new MemberRemovedEvent(userId, squadName));
+        eventPublisher.publishEvent(new MemberRemovedEvent(userId, groupId, squadName));
     }
 
     @Transactional
@@ -431,7 +431,7 @@ public class SquadService {
         squadRequestRepository.save(request);
 
         eventPublisher.publishEvent(new SquadApprovedEvent(
-                request.getRequestedByUser().getId(), request.getName()));
+                request.getRequestedByUser().getId(), squad.getId(), request.getName()));
     }
 
     @Transactional

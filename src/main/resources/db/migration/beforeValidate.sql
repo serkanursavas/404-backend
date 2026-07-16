@@ -35,5 +35,8 @@ BEGIN
     DELETE FROM flyway_schema_history WHERE version = '20260322120000';
 
     -- [2026-04-04] device-tokens migration artık committed — bu satır kaldırıldı
+
+    -- [2026-04-07] notifications migration log_table eksik çalıştı → sıfırla
+    DELETE FROM flyway_schema_history WHERE version = '20260406.10.00.00';
   END IF;
 END $$;
