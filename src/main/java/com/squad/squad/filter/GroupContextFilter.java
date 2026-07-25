@@ -37,7 +37,8 @@ public class GroupContextFilter extends OncePerRequestFilter {
             "/api/users/updateProfile/",
             "/v3/api-docs",
             "/swagger-ui",
-            "/error"
+            "/error",
+            "/api/shortcut"
     );
 
     public GroupContextFilter(GroupMembershipRepository groupMembershipRepository, SquadRepository squadRepository) {

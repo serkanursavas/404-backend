@@ -8,11 +8,15 @@ import org.springframework.stereotype.Repository;
 import com.squad.squad.entity.Goal;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GoalRepository extends JpaRepository<Goal, Integer> {
 
     List<Goal> findGoalsByGameId(Integer game_id);
+
+    // Shortcut "geri al" akışı: aktif maçın en son eklenen (aktif) golü
+    Optional<Goal> findTopByGame_IdAndActiveTrueOrderByIdDesc(Integer gameId);
 
     @Query("SELECT g FROM Goal g WHERE g.game.squad.id = :squadId")
     List<Goal> findAllBySquadId(@Param("squadId") Integer squadId);

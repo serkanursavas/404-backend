@@ -4,6 +4,7 @@ import com.squad.squad.exception.CustomAccessDeniedHandler;
 import com.squad.squad.exception.CustomAuthenticationEntryPoint;
 import com.squad.squad.filter.GroupContextFilter;
 import com.squad.squad.filter.JwtAuthenticationFilter;
+import com.squad.squad.security.ApiKeyAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,9 @@ public class SecurityConfig {
 
     @Autowired
     private GroupContextFilter groupContextFilter;
+
+    @Autowired
+    private ApiKeyAuthFilter apiKeyAuthFilter;
 
     @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
@@ -82,6 +86,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiKeyAuthFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(groupContextFilter, JwtAuthenticationFilter.class);
 
         return http.build();
