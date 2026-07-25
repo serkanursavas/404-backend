@@ -6,12 +6,18 @@ import com.squad.squad.dto.TopListProjection;
 import com.squad.squad.dto.TopListsDTO;
 import com.squad.squad.dto.player.GetAllActivePlayersDTO;
 import com.squad.squad.dto.player.PlayerUpdateRequestDTO;
+import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Player;
+import com.squad.squad.entity.Roster;
+import com.squad.squad.enums.TeamColor;
 import com.squad.squad.exception.PlayerNotFoundException;
 import com.squad.squad.mapper.PlayerMapper;
+import com.squad.squad.repository.GameRepository;
+import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.repository.PersonaRepository;
 import com.squad.squad.repository.PlayerPersonaRepository;
 import com.squad.squad.repository.PlayerRepository;
+import com.squad.squad.repository.RosterRepository;
 import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.PlayerService;
 import jakarta.transaction.Transactional;
@@ -31,14 +37,21 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
     private final PlayerPersonaRepository playerPersonaRepository;
     private final PersonaRepository personaRepository;
     private final PlayerMapper playerMapper;
+    private final GoalRepository goalRepository;
+    private final RosterRepository rosterRepository;
+    private final GameRepository gameRepository;
 
     @Autowired
     public PlayerServiceImpl(PlayerRepository playerRepository, PlayerPersonaRepository playerPersonaRepository,
-                             PersonaRepository personaRepository, PlayerMapper playerMapper) {
+                             PersonaRepository personaRepository, PlayerMapper playerMapper,
+                             GoalRepository goalRepository, RosterRepository rosterRepository, GameRepository gameRepository) {
         this.playerRepository = playerRepository;
         this.playerPersonaRepository = playerPersonaRepository;
         this.personaRepository = personaRepository;
         this.playerMapper = playerMapper;
+        this.goalRepository = goalRepository;
+        this.rosterRepository = rosterRepository;
+        this.gameRepository = gameRepository;
     }
 
     @Override
@@ -107,6 +120,34 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
         if (squadId != null) {
             List<Double> last5GameRating = playerRepository.getLast5MatchRatingByPlayerId(player.getId(), squadId);
             playerDTO.setLast5GameRating(last5GameRating);
+
+            playerDTO.setTotalGoals((int) goalRepository.countByPlayer_IdAndGame_Squad_IdAndActiveTrue(player.getId(), squadId));
+            playerDTO.setMvpCount((int) gameRepository.countByMvpIdAndSquad_Id(player.getId(), squadId));
+
+            List<Roster> playedRosters = rosterRepository.findPlayedRostersWithGameForPlayer(player.getId(), squadId);
+            int wins = 0;
+            int draws = 0;
+            int losses = 0;
+            for (Roster roster : playedRosters) {
+                Game game = roster.getGame();
+                int homeScore = game.getHomeTeamScore() == null ? 0 : game.getHomeTeamScore();
+                int awayScore = game.getAwayTeamScore() == null ? 0 : game.getAwayTeamScore();
+                boolean isHomeTeam = TeamColor.fromString(roster.getTeamColor()) == TeamColor.BLACK;
+                int myScore = isHomeTeam ? homeScore : awayScore;
+                int opponentScore = isHomeTeam ? awayScore : homeScore;
+
+                if (myScore > opponentScore) {
+                    wins++;
+                } else if (myScore == opponentScore) {
+                    draws++;
+                } else {
+                    losses++;
+                }
+            }
+            playerDTO.setGamesPlayed(playedRosters.size());
+            playerDTO.setWins(wins);
+            playerDTO.setDraws(draws);
+            playerDTO.setLosses(losses);
         }
 
         return playerDTO;

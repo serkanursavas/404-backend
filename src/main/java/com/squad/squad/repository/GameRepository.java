@@ -41,6 +41,10 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 
     boolean existsBySquadIdAndIsPlayedFalseOrSquadIdAndIsVotedFalse(Integer squadId1, Integer squadId2);
 
+    // Oyuncu profili: kaç kez MVP seçildiği. mvpId sadece oylama tamamlanınca set edildiği
+    // için ayrıca isVoted filtresine gerek yok.
+    long countByMvpIdAndSquad_Id(Integer mvpId, Integer squadId);
+
     Page<Game> findAllBySquadIdOrderByDateTimeDesc(Integer squadId, Pageable pageable);
 
     @Query(value = """

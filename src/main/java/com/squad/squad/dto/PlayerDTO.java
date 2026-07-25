@@ -16,6 +16,12 @@ public class PlayerDTO {
     private boolean active = true;
     private List<PlayerPersonaDTO> personas;
     private List<Double> last5GameRating;
+    private Integer totalGoals;
+    private Integer gamesPlayed;
+    private Integer wins;
+    private Integer draws;
+    private Integer losses;
+    private Integer mvpCount;
 
     public Double getRating() {
         return rating != null ? Math.round(rating * 100.0) / 100.0 : null;
@@ -95,6 +101,54 @@ public class PlayerDTO {
 
     public void setLast5GameRating(List<Double> last5GameRating) {
         this.last5GameRating = last5GameRating;
+    }
+
+    public Integer getTotalGoals() {
+        return totalGoals;
+    }
+
+    public void setTotalGoals(Integer totalGoals) {
+        this.totalGoals = totalGoals;
+    }
+
+    public Integer getGamesPlayed() {
+        return gamesPlayed;
+    }
+
+    public void setGamesPlayed(Integer gamesPlayed) {
+        this.gamesPlayed = gamesPlayed;
+    }
+
+    public Integer getWins() {
+        return wins;
+    }
+
+    public void setWins(Integer wins) {
+        this.wins = wins;
+    }
+
+    public Integer getDraws() {
+        return draws;
+    }
+
+    public void setDraws(Integer draws) {
+        this.draws = draws;
+    }
+
+    public Integer getLosses() {
+        return losses;
+    }
+
+    public void setLosses(Integer losses) {
+        this.losses = losses;
+    }
+
+    public Integer getMvpCount() {
+        return mvpCount;
+    }
+
+    public void setMvpCount(Integer mvpCount) {
+        this.mvpCount = mvpCount;
     }
 
 }
