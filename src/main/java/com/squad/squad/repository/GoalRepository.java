@@ -13,12 +13,16 @@ import java.util.Optional;
 @Repository
 public interface GoalRepository extends JpaRepository<Goal, Integer> {
 
-    List<Goal> findGoalsByGameId(Integer game_id);
+    // Not: active=false (soft-delete) golleri bilerek dışarıda bırakıyor — undo/düzenleme
+    // sonrası bu goller maç detayında, krallık listesinde vb. hayalet olarak görünmemeli.
+    List<Goal> findGoalsByGameIdAndActiveTrue(Integer game_id);
+
+    List<Goal> findByGameIdAndActiveTrue(Integer gameId);
 
     // Shortcut "geri al" akışı: aktif maçın en son eklenen (aktif) golü
     Optional<Goal> findTopByGame_IdAndActiveTrueOrderByIdDesc(Integer gameId);
 
-    @Query("SELECT g FROM Goal g WHERE g.game.squad.id = :squadId")
+    @Query("SELECT g FROM Goal g WHERE g.game.squad.id = :squadId AND g.active = true")
     List<Goal> findAllBySquadId(@Param("squadId") Integer squadId);
 
     @Query(value = "WITH TopScorers AS (\n" +
@@ -33,7 +37,7 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "        player p ON gl.player_id = p.id\n" +
             "    JOIN \n" +
             "        game g ON gl.game_id = g.id\n" +
-            "    WHERE g.squad_id = :squadId\n" +
+            "    WHERE g.squad_id = :squadId AND gl.active = true\n" +
             "    GROUP BY \n" +
             "        gl.player_id, p.name, p.surname\n" +
             "    ORDER BY \n" +

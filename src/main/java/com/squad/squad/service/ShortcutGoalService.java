@@ -11,6 +11,4 @@ public interface ShortcutGoalService {
     String undoLastGoal();
 
     String getScoreText();
-
-    String finishMatch();
 }
