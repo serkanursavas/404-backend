@@ -12,6 +12,7 @@ import com.squad.squad.mapper.GoalMapper;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GameLocationRepository;
 import com.squad.squad.repository.GameRepository;
+import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.SquadRepository;
@@ -48,6 +49,7 @@ class GameServiceTest {
     @Mock private SquadRepository squadRepository;
     @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private GroupAuthorizationService groupAuthorizationService;
+    @Mock private GoalRepository goalRepository;
 
     private GameServiceImpl gameService;
 
@@ -56,7 +58,8 @@ class GameServiceTest {
         gameService = new GameServiceImpl(
                 gameRepository, rosterService, playerService, rosterPersonaRepository,
                 gameLocationRepository, ratingRepository, goalMapper, gameMapper,
-                gameLocationMapper, playerMapper, squadRepository, eventPublisher, groupAuthorizationService);
+                gameLocationMapper, playerMapper, squadRepository, eventPublisher, groupAuthorizationService,
+                goalRepository);
     }
 
     @AfterEach

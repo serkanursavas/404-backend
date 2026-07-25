@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,14 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
     Game findTopBySquadIdOrderByDateTimeDesc(Integer squadId);
 
     Game findBySquadIdAndIsPlayedFalse(Integer squadId);
+
+    // Shortcut canlı gol girişi: "isPlayed" aslında "başlama saati geçti" demek, "maç bitti"
+    // değil (bkz. checkAndUpdateUnplayedGame). Canlı maç, oylanmamış + kick-off zaman
+    // penceresi içinde olan maçtır. dateTime DESC ile en güncel önce gelir.
+    @Query("SELECT g FROM Game g WHERE g.squad.id = :squadId AND g.isVoted = false "
+            + "AND g.dateTime BETWEEN :windowStart AND :now ORDER BY g.dateTime DESC")
+    List<Game> findLiveCandidates(@Param("squadId") Integer squadId, @Param("windowStart") LocalDateTime windowStart,
+            @Param("now") LocalDateTime now);
 
     boolean existsBySquadIdAndIsPlayedFalseOrSquadIdAndIsVotedFalse(Integer squadId1, Integer squadId2);
 
