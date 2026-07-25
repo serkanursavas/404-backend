@@ -25,6 +25,10 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
     @Query("SELECT g FROM Goal g WHERE g.game.squad.id = :squadId AND g.active = true")
     List<Goal> findAllBySquadId(@Param("squadId") Integer squadId);
 
+    // Oyuncu profili: toplam gol sayısı (krallık listesiyle aynı kural — maç oylanmış olsun
+    // olmasın, aktif her gol sayılır).
+    long countByPlayer_IdAndGame_Squad_IdAndActiveTrue(Integer playerId, Integer squadId);
+
     @Query(value = "WITH TopScorers AS (\n" +
             "    SELECT \n" +
             "        gl.player_id AS playerId, \n" +
