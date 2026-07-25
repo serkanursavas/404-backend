@@ -38,9 +38,4 @@ public class ShortcutGoalController {
     public ResponseEntity<String> score() {
         return ResponseEntity.ok(shortcutGoalService.getScoreText());
     }
-
-    @PostMapping(value = "/match/finish", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> finishMatch() {
-        return ResponseEntity.ok(shortcutGoalService.finishMatch());
-    }
 }

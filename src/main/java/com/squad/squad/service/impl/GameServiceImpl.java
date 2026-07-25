@@ -20,6 +20,7 @@ import com.squad.squad.mapper.GoalMapper;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GameLocationRepository;
 import com.squad.squad.repository.GameRepository;
+import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.repository.RatingRepository;
 import com.squad.squad.repository.RosterPersonaRepository;
 import com.squad.squad.repository.SquadRepository;
@@ -60,6 +61,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
     private final SquadRepository squadRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final GroupAuthorizationService groupAuthorizationService;
+    private final GoalRepository goalRepository;
 
     @Autowired
     public GameServiceImpl(GameRepository gameRepository, RosterService rosterService,
@@ -67,7 +69,8 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
             GameLocationRepository gameLocationRepository, RatingRepository ratingRepository,
             GoalMapper goalMapper, GameMapper gameMapper, GameLocationMapper gameLocationMapper,
             PlayerMapper playerMapper, SquadRepository squadRepository,
-            ApplicationEventPublisher eventPublisher, GroupAuthorizationService groupAuthorizationService) {
+            ApplicationEventPublisher eventPublisher, GroupAuthorizationService groupAuthorizationService,
+            GoalRepository goalRepository) {
         this.gameRepository = gameRepository;
         this.rosterService = rosterService;
         this.playerService = playerService;
@@ -81,6 +84,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         this.squadRepository = squadRepository;
         this.eventPublisher = eventPublisher;
         this.groupAuthorizationService = groupAuthorizationService;
+        this.goalRepository = goalRepository;
     }
 
     @Override
@@ -94,7 +98,8 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         GameResponseDTO dto = gameMapper.gameToGameResponseDTO(game);
 
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(game.getId());
-        List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
+        List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(
+                goalRepository.findGoalsByGameIdAndActiveTrue(game.getId()));
 
         Set<Integer> playerIds = new HashSet<>();
         rosters.forEach(r -> playerIds.add(r.getPlayerId()));
@@ -154,12 +159,16 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
             throw new SecurityException("Game does not belong to your squad");
         }
 
-        GameLocation gameLocation = gameLocationRepository.findById(game.getGameLocation().getId())
-                .orElseThrow(() -> new NotFoundException(
-                        "Game location not found with id: " + game.getGameLocation().getId()));
+        GameLocation gameLocation = null;
+        if (game.getGameLocation() != null) {
+            gameLocation = gameLocationRepository.findById(game.getGameLocation().getId())
+                    .orElseThrow(() -> new NotFoundException(
+                            "Game location not found with id: " + game.getGameLocation().getId()));
+        }
 
         List<RosterResponseDTO> rosters = rosterService.findRosterByGameId(id);
-        List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(game.getGoal());
+        List<GoalResponseDTO> goals = goalMapper.goalsToGoalResponseDTOs(
+                goalRepository.findGoalsByGameIdAndActiveTrue(id));
 
         Set<Integer> playerIds = new HashSet<>();
         rosters.forEach(roster -> playerIds.add(roster.getPlayerId()));
@@ -181,7 +190,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         BeanUtils.copyProperties(game, gameDTO);
         gameDTO.setRosters(rosters);
         gameDTO.setGoals(goals);
-        gameDTO.setGameLocation(gameLocationMapper.gameLocationToGameLocationDTO(gameLocation));
+        gameDTO.setGameLocation(gameLocation == null ? null : gameLocationMapper.gameLocationToGameLocationDTO(gameLocation));
         return gameDTO;
     }
 
@@ -344,19 +353,34 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
     @Override
     @Transactional
     public void updateScoreWithGoal(Goal goal) {
-        Game existingGame = gameRepository.findById(goal.getGame().getId())
-                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + goal.getGame().getId()));
-
-        TeamColor teamColor = TeamColor.fromString(goal.getTeamColor());
-
-        if (teamColor == TeamColor.BLACK) {
-            existingGame.setHomeTeamScore(existingGame.getHomeTeamScore() + 1);
-        } else {
-            existingGame.setAwayTeamScore(existingGame.getAwayTeamScore() + 1);
-        }
-
+        // Skor artık goal tablosundan yeniden hesaplanıyor (bkz. recalculateScore), delta ile
+        // artırılmıyor — çünkü gol silinebilir/düzenlenebilir hale geldi. isPlayed=true yan
+        // etkisi bilerek korunuyor: toplu gol girişi (addGoals) maçı oynanmış olarak işaretler.
+        Game existingGame = recalculateScore(goal.getGame().getId());
         existingGame.setPlayed(true);
         gameRepository.save(existingGame);
+    }
+
+    @Override
+    @Transactional
+    public Game recalculateScore(Integer gameId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new GameNotFoundException("Game not found with id: " + gameId));
+
+        List<Goal> activeGoals = goalRepository.findByGameIdAndActiveTrue(gameId);
+        int homeTeamScore = 0;
+        int awayTeamScore = 0;
+        for (Goal activeGoal : activeGoals) {
+            if (TeamColor.fromString(activeGoal.getTeamColor()) == TeamColor.BLACK) {
+                homeTeamScore++;
+            } else {
+                awayTeamScore++;
+            }
+        }
+
+        game.setHomeTeamScore(homeTeamScore);
+        game.setAwayTeamScore(awayTeamScore);
+        return gameRepository.save(game);
     }
 
     @Override

@@ -13,6 +13,7 @@ import com.squad.squad.service.GoalService;
 
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -50,6 +51,24 @@ public class GoalController {
 
         goalService.addGoals(requestDto);
         return ResponseEntity.ok("Goals created successfully");
+    }
+
+    @PutMapping("/admin/game/{gameId}")
+    public ResponseEntity<?> updateGoals(@PathVariable Integer gameId, @RequestBody(required = false) List<GoalAddRequestDTO> goals) {
+        authService.requireAdmin();
+
+        List<GoalAddRequestDTO> desiredGoals = goals == null ? new ArrayList<>() : goals;
+
+        if (!desiredGoals.isEmpty()) {
+            List<Roster> gameRosters = gameService.getRostersByGameId(gameId);
+            List<String> errors = goalDTOValidator.validate(desiredGoals, gameRosters);
+            if (!errors.isEmpty()) {
+                return ResponseEntity.badRequest().body(errors);
+            }
+        }
+
+        goalService.updateGoalsForGame(gameId, desiredGoals);
+        return ResponseEntity.ok("Goals updated successfully");
     }
 
     @GetMapping("/topScorers")

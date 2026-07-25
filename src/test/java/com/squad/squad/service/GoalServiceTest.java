@@ -96,7 +96,7 @@ class GoalServiceTest {
                 .thenThrow(new GameNotFoundException("Game not found with id: 99"));
 
         assertThrows(GameNotFoundException.class, () -> goalService.getGoalsByGameId(99));
-        verify(goalRepository, never()).findGoalsByGameId(99);
+        verify(goalRepository, never()).findGoalsByGameIdAndActiveTrue(99);
     }
 
     @Test
@@ -113,13 +113,13 @@ class GoalServiceTest {
         when(goal.getPlayer()).thenReturn(player);
         when(goal.getTeamColor()).thenReturn("BLACK");
 
-        when(goalRepository.findGoalsByGameId(1)).thenReturn(List.of(goal));
+        when(goalRepository.findGoalsByGameIdAndActiveTrue(1)).thenReturn(List.of(goal));
 
         List<GoalDTO> result = goalService.getGoalsByGameId(1);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getPlayerId()).isEqualTo(5);
         verify(gameService).findGameById(1);
-        verify(goalRepository).findGoalsByGameId(1);
+        verify(goalRepository).findGoalsByGameIdAndActiveTrue(1);
     }
 }

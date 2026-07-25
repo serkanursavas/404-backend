@@ -9,33 +9,42 @@ import com.squad.squad.repository.GameRepository;
 import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.repository.RosterRepository;
 import com.squad.squad.service.BaseSquadService;
+import com.squad.squad.service.GameService;
 import com.squad.squad.service.ShortcutGoalService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Apple Shortcuts ile canlı gol girişi iş mantığı. Bilerek GoalServiceImpl/GameServiceImpl'in
- * mevcut addGoals/updateScoreWithGoal akışını kullanmaz: o akış ilk golde maçı isPlayed=true
- * yapıyor, bu da ikinci golde "aktif maç" aramasını kırar. Burada isPlayed'a sadece
- * finishMatch() dokunur — maçın yaşam döngüsünü Shortcut ("maçı bitir") kontrol eder.
+ * mevcut addGoals/updateScoreWithGoal akışını kullanmaz: o akış golde maçı isPlayed=true yapar,
+ * ama burada "isPlayed" hiç kullanılmıyor — mevcut sistemde isPlayed gerçekte "başlama saati
+ * geçti" anlamına geliyor (bkz. GameServiceImpl.checkAndUpdateUnplayedGame), "maç bitti" değil.
+ * Canlı maç burada isVoted=false + kick-off'tan itibaren bir zaman penceresi ile çözülür.
  */
 @Service
 public class ShortcutGoalServiceImpl extends BaseSquadService implements ShortcutGoalService {
+
+    /** Gol girişinin kick-off'tan itibaren açık kaldığı süre. */
+    private static final Duration LIVE_WINDOW = Duration.ofMinutes(90);
 
     private final GameRepository gameRepository;
     private final GoalRepository goalRepository;
     private final RosterRepository rosterRepository;
     private final PlayerNameMatcher playerNameMatcher;
+    private final GameService gameService;
 
     public ShortcutGoalServiceImpl(GameRepository gameRepository, GoalRepository goalRepository,
-            RosterRepository rosterRepository, PlayerNameMatcher playerNameMatcher) {
+            RosterRepository rosterRepository, PlayerNameMatcher playerNameMatcher, GameService gameService) {
         this.gameRepository = gameRepository;
         this.goalRepository = goalRepository;
         this.rosterRepository = rosterRepository;
         this.playerNameMatcher = playerNameMatcher;
+        this.gameService = gameService;
     }
 
     @Override
@@ -66,11 +75,10 @@ public class ShortcutGoalServiceImpl extends BaseSquadService implements Shortcu
         goal.setTeamColor(teamColor.name());
         goalRepository.save(goal);
 
-        applyScoreDelta(game, teamColor, 1);
-        gameRepository.save(game);
+        Game updatedGame = gameService.recalculateScore(game.getId());
 
         return String.format("Gol! %s — %s. Skor %d-%d.",
-                fullName(player), turkishColor(teamColor), game.getHomeTeamScore(), game.getAwayTeamScore());
+                fullName(player), turkishColor(teamColor), updatedGame.getHomeTeamScore(), updatedGame.getAwayTeamScore());
     }
 
     @Override
@@ -90,12 +98,10 @@ public class ShortcutGoalServiceImpl extends BaseSquadService implements Shortcu
         goal.setActive(false);
         goalRepository.save(goal);
 
-        TeamColor teamColor = TeamColor.fromString(goal.getTeamColor());
-        applyScoreDelta(game, teamColor, -1);
-        gameRepository.save(game);
+        Game updatedGame = gameService.recalculateScore(game.getId());
 
         return String.format("Son gol geri alındı: %s. Skor %d-%d.",
-                fullName(goal.getPlayer()), game.getHomeTeamScore(), game.getAwayTeamScore());
+                fullName(goal.getPlayer()), updatedGame.getHomeTeamScore(), updatedGame.getAwayTeamScore());
     }
 
     @Override
@@ -107,29 +113,12 @@ public class ShortcutGoalServiceImpl extends BaseSquadService implements Shortcu
         return String.format("Skor %d-%d.", game.getHomeTeamScore(), game.getAwayTeamScore());
     }
 
-    @Override
-    @Transactional
-    public String finishMatch() {
-        Game game = resolveActiveGame();
-        if (game == null) {
-            return "Aktif maç yok.";
-        }
-        game.setPlayed(true);
-        gameRepository.save(game);
-        return String.format("Maç kapatıldı. Final skor %d-%d.", game.getHomeTeamScore(), game.getAwayTeamScore());
-    }
-
     private Game resolveActiveGame() {
         Integer squadId = getSquadId();
-        return gameRepository.findBySquadIdAndIsPlayedFalse(squadId);
-    }
-
-    private void applyScoreDelta(Game game, TeamColor teamColor, int delta) {
-        if (teamColor == TeamColor.BLACK) {
-            game.setHomeTeamScore(Math.max(0, game.getHomeTeamScore() + delta));
-        } else {
-            game.setAwayTeamScore(Math.max(0, game.getAwayTeamScore() + delta));
-        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime windowStart = now.minus(LIVE_WINDOW);
+        List<Game> candidates = gameRepository.findLiveCandidates(squadId, windowStart, now);
+        return candidates.isEmpty() ? null : candidates.get(0);
     }
 
     private String fullName(Player player) {
