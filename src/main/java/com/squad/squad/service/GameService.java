@@ -32,6 +32,11 @@ public interface GameService {
 
     void updateScoreWithGoal(Goal goal);
 
+    // Skoru aktif (active=true) goal satırlarından yeniden hesaplar ve kaydeder. isPlayed'a
+    // dokunmaz. Skorun tek gerçek kaynağı goal tablosu — bu metod delta aritmetiği yerine
+    // her zaman baştan sayar, böylece ekleme/silme/düzenleme sırasında tutarsızlık oluşmaz.
+    Game recalculateScore(Integer gameId);
+
     void deleteGame(Integer id);
 
     Game findById(Integer id);
