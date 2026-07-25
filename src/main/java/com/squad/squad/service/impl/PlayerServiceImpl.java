@@ -283,6 +283,7 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
                     playerDTO.setId(player.getId());
                     playerDTO.setName(player.getName());
                     playerDTO.setSurname(player.getSurname());
+                    playerDTO.setPosition(player.getPosition());
                     return playerDTO;
                 }));
     }

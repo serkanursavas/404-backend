@@ -108,7 +108,10 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
 
         rosters.forEach(r -> {
             PlayerDTO p = playerMap.get(r.getPlayerId());
-            if (p != null) r.setPlayerName(p.getName() + " " + p.getSurname());
+            if (p != null) {
+                r.setPlayerName(p.getName() + " " + p.getSurname());
+                r.setPosition(p.getPosition());
+            }
         });
         goals.forEach(g -> {
             PlayerDTO p = playerMap.get(g.getPlayerId());
@@ -179,6 +182,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         rosters.forEach(roster -> {
             PlayerDTO playerDto = playerMap.get(roster.getPlayerId());
             roster.setPlayerName(playerDto.getName() + " " + playerDto.getSurname());
+            roster.setPosition(playerDto.getPosition());
         });
 
         goals.forEach(goal -> {
