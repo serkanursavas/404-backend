@@ -4,6 +4,7 @@ public class TopListsDTO {
     private Integer playerId;
     private String name;
     private String surname;
+    private String position;
     private Long goalCount;  // Goal sayısı isteğe bağlı, bu yüzden Long
     private Long gameCount;  // Game sayısı isteğe bağlı, bu yüzden Long
     private Double rating;   // Rating isteğe bağlı, bu yüzden Double
@@ -51,6 +52,14 @@ public class TopListsDTO {
 
     public void setSurname(String surname) {
         this.surname = surname;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     public Long getGoalCount() {

@@ -34,6 +34,7 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "        gl.player_id AS playerId, \n" +
             "        p.name AS name, \n" +
             "        p.surname AS surname, \n" +
+            "        p.position AS position, \n" +
             "        COUNT(gl.id) AS goalCount\n" +
             "    FROM \n" +
             "        goal gl\n" +
@@ -43,7 +44,7 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "        game g ON gl.game_id = g.id\n" +
             "    WHERE g.squad_id = :squadId AND gl.active = true\n" +
             "    GROUP BY \n" +
-            "        gl.player_id, p.name, p.surname\n" +
+            "        gl.player_id, p.name, p.surname, p.position\n" +
             "    ORDER BY \n" +
             "        goalCount DESC\n" +
             "    LIMIT 10\n" +
@@ -63,6 +64,7 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "    ts.playerId, \n" +
             "    ts.name, \n" +
             "    ts.surname, \n" +
+            "    ts.position, \n" +
             "    ts.goalCount, \n" +
             "    COALESCE(prc.rosterCount, 0) AS rosterCount\n" +
             "FROM \n" +

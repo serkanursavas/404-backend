@@ -4,6 +4,7 @@ public interface TopListProjection {
     Integer getPlayerId();
     String getName();
     String getSurname();
+    String getPosition();
     Double getFormScore(); // Form skoru (Ağırlıklı Ortalama + Mutlak Değişim)
     Double getRating();
     Double getAvgRatingChange();
