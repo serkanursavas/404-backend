@@ -10,6 +10,7 @@ public class RosterResponseDTO {
     private double rating;
     private Integer playerId;
     private String playerName;
+    private String position;
     private Integer persona1;
     private Integer persona2;
     private Integer persona3;
@@ -60,6 +61,14 @@ public class RosterResponseDTO {
 
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     public Integer getPersona1() {

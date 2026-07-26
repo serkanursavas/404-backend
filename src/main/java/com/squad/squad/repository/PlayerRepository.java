@@ -26,7 +26,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
     Optional<Player> findByIdAndActive(Integer id, boolean active);
 
-    @Query(value = "with TopRated as (SELECT p.id AS playerId, p.name, p.surname, p.rating\n" +
+    @Query(value = "with TopRated as (SELECT p.id AS playerId, p.name, p.surname, p.position, p.rating\n" +
             "                  FROM player p\n" +
             "                  WHERE p.rating IS NOT NULL AND p.squad_id = :squadId\n" +
             "                  ORDER BY p.rating DESC),\n" +
@@ -39,6 +39,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "SELECT ts.playerId,\n" +
             "       ts.name,\n" +
             "       ts.surname,\n" +
+            "       ts.position,\n" +
             "       ts.rating,\n" +
             "       COALESCE(prc.rosterCount, 0) AS rosterCount\n" +
             "FROM TopRated ts\n" +
@@ -114,6 +115,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "      SELECT fc.player_id,\n" +
             "             p.name,\n" +
             "             p.surname,\n" +
+            "             p.position,\n" +
             "             p.rating,\n" +
             "             fc.last_match_rating,\n" +
             "             fc.last3_avg_rating,\n" +
@@ -152,7 +154,8 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "           ) AS rn2\n" +
             "    FROM ranked_pairs\n" +
             ")\n" +
-            "SELECT player1 as player1Id, player2 as player2Id, pp1.name as player1Name,  pp2.name as player2Name, games_together\n" +
+            "SELECT player1 as player1Id, player2 as player2Id, CONCAT(pp1.name, ' ', pp1.surname) as player1Name, " +
+            "CONCAT(pp2.name, ' ', pp2.surname) as player2Name, games_together\n" +
             "FROM filtered_pairs\n" +
             "join player pp1 on pp1.id = player1\n" +
             "join player pp2 on pp2.id = player2", nativeQuery = true)
@@ -184,8 +187,8 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             ")\n" +
             "SELECT r.player1 AS player1Id,\n" +
             "       r.player2 AS player2Id,\n" +
-            "       p1.name AS player1Name,\n" +
-            "       p2.name AS player2Name,\n" +
+            "       CONCAT(p1.name, ' ', p1.surname) AS player1Name,\n" +
+            "       CONCAT(p2.name, ' ', p2.surname) AS player2Name,\n" +
             "       r.games_against as games_against\n" +
             "FROM filtered_rivals r\n" +
             "JOIN player p1 ON p1.id = r.player1\n" +

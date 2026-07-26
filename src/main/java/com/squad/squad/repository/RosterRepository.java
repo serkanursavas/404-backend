@@ -36,6 +36,13 @@ public interface RosterRepository extends JpaRepository<Roster, Integer> {
         @Param("playerId") Integer playerId,
         @Param("squadId") Integer squadId);
 
+    // Oyuncu profili istatistikleri (galibiyet/beraberlik/mağlubiyet + oynanan maç sayısı):
+    // sadece oynanmış (isPlayed=true) maçlar, skoru okuyabilmek için Game join-fetch edilir
+    // (N+1 önlemek için).
+    @Query("SELECT r FROM Roster r JOIN FETCH r.game g WHERE r.player.id = :playerId "
+            + "AND g.squad.id = :squadId AND g.isPlayed = true AND r.active = true")
+    List<Roster> findPlayedRostersWithGameForPlayer(@Param("playerId") Integer playerId, @Param("squadId") Integer squadId);
+
     long countByGameId(Integer gameId);
 
     long countByGameIdAndHasPersonaVoteTrue(Integer gameId);
