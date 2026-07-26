@@ -159,10 +159,12 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
             Integer playerId = (Integer) result[0];
             String name = (String) result[1];
             String surname = (String) result[2];
-            Long goalCount = ((Number) result[3]).longValue();
-            Long gameCount = ((Number) result[4]).longValue();
+            String position = (String) result[3];
+            Long goalCount = ((Number) result[4]).longValue();
+            Long gameCount = ((Number) result[5]).longValue();
 
             TopListsDTO dto = new TopListsDTO(playerId, name, surname, goalCount, gameCount);
+            dto.setPosition(position);
             topScorers.add(dto);
         }
 

@@ -191,13 +191,17 @@ public class PlayerServiceImpl extends BaseSquadService implements PlayerService
         Integer squadId = getSquadId();
         List<Object[]> topRatedPlayers = playerRepository.findTopRatedPlayers(squadId);
         List<TopListsDTO> topRatedList = topRatedPlayers.stream()
-                .map(record -> new TopListsDTO(
-                        (Integer) record[0],
-                        (String) record[1],
-                        (String) record[2],
-                        (Double) record[3],
-                        (Long) record[4]
-                ))
+                .map(record -> {
+                    TopListsDTO dto = new TopListsDTO(
+                            (Integer) record[0],
+                            (String) record[1],
+                            (String) record[2],
+                            (Double) record[4],
+                            (Long) record[5]
+                    );
+                    dto.setPosition((String) record[3]);
+                    return dto;
+                })
                 .toList();
 
         List<Integer> recentGamePlayerIds = playerRepository.findPlayersInRecentGames(squadId);
