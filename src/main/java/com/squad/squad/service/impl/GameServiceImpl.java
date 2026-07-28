@@ -453,7 +453,10 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
                 (String) row[2],
                 (String) row[3],
                 (String) row[4],
-                ((Number) row[5]).doubleValue());
+                ((Number) row[5]).doubleValue(),
+                row[6] != null ? ((Number) row[6]).intValue() : null,
+                row[7] != null ? ((Number) row[7]).intValue() : null,
+                row[8] != null ? ((Number) row[8]).intValue() : null);
 
         return Optional.of(dto);
     }
