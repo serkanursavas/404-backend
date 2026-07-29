@@ -38,5 +38,11 @@ BEGIN
 
     -- [2026-07-30] player-add-column-is-guest: player_log_table sütunu unutulmuş, dosya düzeltildi
     DELETE FROM flyway_schema_history WHERE version = '20260730.02.15.00';
+
+    -- [2026-07-30] Yanlışlıkla develop'tan staging'e sızan notification migration'ı
+    -- (force-push ile geri alındı, dosya artık staging'de yok) — DB'de kalan kaydı temizle.
+    -- NOT: notifications/notifications_log_table tabloları DB'de hâlâ duruyor (107 satır veri
+    -- oluşmuş, brief canlı deploy penceresinde), kullanıcı onayı olmadan silinmedi.
+    DELETE FROM flyway_schema_history WHERE version = '20260406.10.00.00';
   END IF;
 END $$;
