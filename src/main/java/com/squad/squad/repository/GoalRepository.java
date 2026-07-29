@@ -42,7 +42,7 @@ public interface GoalRepository extends JpaRepository<Goal, Integer> {
             "        player p ON gl.player_id = p.id\n" +
             "    JOIN \n" +
             "        game g ON gl.game_id = g.id\n" +
-            "    WHERE g.squad_id = :squadId AND gl.active = true\n" +
+            "    WHERE g.squad_id = :squadId AND gl.active = true AND p.is_guest = false\n" +
             "    GROUP BY \n" +
             "        gl.player_id, p.name, p.surname, p.position\n" +
             "    ORDER BY \n" +

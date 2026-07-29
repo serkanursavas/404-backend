@@ -32,6 +32,9 @@ public class Player extends BaseEntity {
     @Column(nullable = true)
     private String position;
 
+    @Column(name = "is_guest", nullable = false)
+    private boolean guest = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "squad_id")
     private Squad squad;
@@ -99,6 +102,14 @@ public class Player extends BaseEntity {
 
     public void setPosition(String position) {
         this.position = position;
+    }
+
+    public boolean isGuest() {
+        return guest;
+    }
+
+    public void setGuest(boolean guest) {
+        this.guest = guest;
     }
 
     public Squad getSquad() {

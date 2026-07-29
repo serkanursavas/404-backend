@@ -1,6 +1,7 @@
 package com.squad.squad.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class PlayerDTO {
     private Double rating;
     private String position;
     private boolean active = true;
+    private boolean guest = false;
     private List<PlayerPersonaDTO> personas;
     private List<Double> last5GameRating;
     private Integer totalGoals;
@@ -85,6 +87,15 @@ public class PlayerDTO {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    @JsonProperty("isGuest")
+    public boolean isGuest() {
+        return guest;
+    }
+
+    public void setGuest(boolean guest) {
+        this.guest = guest;
     }
 
     public List<PlayerPersonaDTO> getPersonas() {
