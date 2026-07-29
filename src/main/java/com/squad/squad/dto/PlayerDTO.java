@@ -24,7 +24,7 @@ public class PlayerDTO {
     private Integer mvpCount;
 
     public Double getRating() {
-        return rating != null ? Math.round(rating * 100.0) / 100.0 : null;
+        return rating != null ? Math.round(rating * 10.0) / 10.0 : null;
     }
 
     public void setRating(Double rating) {
@@ -96,7 +96,12 @@ public class PlayerDTO {
     }
 
     public List<Double> getLast5GameRating() {
-        return last5GameRating;
+        if (last5GameRating == null) {
+            return null;
+        }
+        return last5GameRating.stream()
+                .map(rating -> rating != null ? Math.round(rating * 10.0) / 10.0 : null)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public void setLast5GameRating(List<Double> last5GameRating) {
