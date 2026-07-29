@@ -59,7 +59,7 @@ public class GetAllPlayersDTO {
     }
 
     public Double getRating() {
-        return rating != null ? Math.round(rating * 100.0) / 100.0 : null;
+        return rating != null ? Math.round(rating * 10.0) / 10.0 : null;
     }
 
     public void setRating(Double rating) {

@@ -35,7 +35,7 @@ public class RosterDTO {
     }
 
     public double getRating() {
-        return Math.round(rating * 100.0) / 100.0;
+        return Math.round(rating * 10.0) / 10.0;
     }
 
     public void setRating(double rating) {

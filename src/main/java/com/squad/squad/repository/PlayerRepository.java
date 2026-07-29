@@ -116,7 +116,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "             p.name,\n" +
             "             p.surname,\n" +
             "             p.position,\n" +
-            "             p.rating,\n" +
+            "             ROUND(p.rating::numeric, 1) AS rating,\n" +
             "             fc.last_match_rating,\n" +
             "             fc.last3_avg_rating,\n" +
             "             fc.rating_change as avgRatingChange\n" +
