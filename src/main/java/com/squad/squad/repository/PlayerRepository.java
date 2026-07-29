@@ -28,7 +28,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
     @Query(value = "with TopRated as (SELECT p.id AS playerId, p.name, p.surname, p.position, p.rating\n" +
             "                  FROM player p\n" +
-            "                  WHERE p.rating IS NOT NULL AND p.squad_id = :squadId\n" +
+            "                  WHERE p.rating IS NOT NULL AND p.squad_id = :squadId AND p.is_guest = false\n" +
             "                  ORDER BY p.rating DESC),\n" +
             "     PlayerRosterCount AS (SELECT r.player_id AS playerId,\n" +
             "                                  COUNT(r.id) AS rosterCount\n" +
@@ -124,7 +124,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "               JOIN EligiblePlayers ep ON fc.player_id = ep.player_id\n" +
             "               JOIN ActivePlayers ap ON fc.player_id = ap.player_id\n" +
             "               JOIN player p ON p.id = fc.player_id\n" +
-            "      WHERE fc.rating_change IS NOT NULL\n" +
+            "      WHERE fc.rating_change IS NOT NULL AND p.is_guest = false\n" +
             "      ORDER BY fc.rating_change DESC\n" +
             "      LIMIT 5) aa\n" +
             "order by aa.rating desc", nativeQuery = true)
@@ -141,6 +141,8 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "        AND r1.player_id < r2.player_id\n" +
             "    JOIN game g ON r1.game_id = g.id\n" +
             "    WHERE g.squad_id = :squadId\n" +
+            "      AND r1.player_id NOT IN (SELECT id FROM player WHERE is_guest = true)\n" +
+            "      AND r2.player_id NOT IN (SELECT id FROM player WHERE is_guest = true)\n" +
             "    GROUP BY player1, player2\n" +
             "    ORDER BY games_together DESC\n" +
             "),\n" +
@@ -172,6 +174,8 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "        AND r1.player_id < r2.player_id\n" +
             "    JOIN game g ON r1.game_id = g.id\n" +
             "    WHERE g.squad_id = :squadId\n" +
+            "      AND r1.player_id NOT IN (SELECT id FROM player WHERE is_guest = true)\n" +
+            "      AND r2.player_id NOT IN (SELECT id FROM player WHERE is_guest = true)\n" +
             "    GROUP BY player1, player2\n" +
             "    ORDER BY games_against DESC\n" +
             "),\n" +

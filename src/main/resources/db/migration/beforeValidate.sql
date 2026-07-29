@@ -35,5 +35,8 @@ BEGIN
     DELETE FROM flyway_schema_history WHERE version = '20260322120000';
 
     -- [2026-04-04] device-tokens migration artık committed — bu satır kaldırıldı
+
+    -- [2026-07-30] player-add-column-is-guest: player_log_table sütunu unutulmuş, dosya düzeltildi
+    DELETE FROM flyway_schema_history WHERE version = '20260730.02.15.00';
   END IF;
 END $$;

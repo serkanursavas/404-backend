@@ -60,7 +60,7 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
     FROM game g
     INNER JOIN player p ON g.mvp_id = p.id
     LEFT JOIN roster r ON r.game_id = g.id AND r.player_id = p.id AND r.active = true
-    WHERE g.is_played = true AND g.is_voted = true AND g.squad_id = :squadId
+    WHERE g.is_played = true AND g.is_voted = true AND g.squad_id = :squadId AND p.is_guest = false
     AND g.date_time = (SELECT MAX(g2.date_time) FROM Game g2 WHERE g2.is_played = true AND g2.is_voted = true AND g2.squad_id = :squadId)
     ORDER BY g.date_time DESC
     LIMIT 1
