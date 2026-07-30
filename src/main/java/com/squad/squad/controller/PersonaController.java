@@ -1,6 +1,8 @@
 package com.squad.squad.controller;
 
 import com.squad.squad.dto.AddPersonaRequestDTO;
+import com.squad.squad.dto.PersonaCategoryChampionDTO;
+import com.squad.squad.dto.PersonaLeaderboardEntryDTO;
 import com.squad.squad.entity.Persona;
 import com.squad.squad.repository.PersonaRepository;
 import com.squad.squad.service.GroupAuthorizationService;
@@ -28,6 +30,16 @@ public class PersonaController {
     @GetMapping("/all")
     public List<Persona> getAllPersonas() {
         return personaRepository.findAll();
+    }
+
+    @GetMapping("/category-champions")
+    public List<PersonaCategoryChampionDTO> getCategoryChampions() {
+        return personaService.getCategoryChampions();
+    }
+
+    @GetMapping("/leaderboard/{personaId}")
+    public List<PersonaLeaderboardEntryDTO> getLeaderboardForPersona(@PathVariable Integer personaId) {
+        return personaService.getLeaderboardForPersona(personaId);
     }
 
     @PostMapping("/savePersonas/{gameId}")
