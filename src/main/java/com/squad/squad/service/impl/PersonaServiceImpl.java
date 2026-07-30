@@ -1,6 +1,8 @@
 package com.squad.squad.service.impl;
 
 import com.squad.squad.dto.AddPersonaRequestDTO;
+import com.squad.squad.dto.PersonaCategoryChampionDTO;
+import com.squad.squad.dto.PersonaLeaderboardEntryDTO;
 import com.squad.squad.entity.Game;
 import com.squad.squad.entity.Persona;
 import com.squad.squad.entity.PlayerPersona;
@@ -197,5 +199,36 @@ public class PersonaServiceImpl extends BaseSquadService implements PersonaServi
         game.setMvpId(mvpId);
         game.setVoted(true);
         gameService.updateVote(game);
+    }
+
+    @Override
+    public List<PersonaCategoryChampionDTO> getCategoryChampions() {
+        Integer squadId = getSquadId();
+        List<Object[]> rows = playerPersonaRepository.findCategoryChampions(squadId);
+
+        return rows.stream()
+                .map(row -> new PersonaCategoryChampionDTO(
+                        (String) row[0],
+                        (Integer) row[1],
+                        (String) row[2],
+                        (String) row[3],
+                        (String) row[4],
+                        ((Number) row[5]).intValue()))
+                .toList();
+    }
+
+    @Override
+    public List<PersonaLeaderboardEntryDTO> getLeaderboardForPersona(Integer personaId) {
+        Integer squadId = getSquadId();
+        List<Object[]> rows = playerPersonaRepository.findLeaderboardForPersona(personaId, squadId);
+
+        return rows.stream()
+                .map(row -> new PersonaLeaderboardEntryDTO(
+                        (Integer) row[0],
+                        (String) row[1],
+                        (String) row[2],
+                        (String) row[3],
+                        ((Number) row[4]).intValue()))
+                .toList();
     }
 }
