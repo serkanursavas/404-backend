@@ -6,6 +6,7 @@ import com.squad.squad.dto.ExpoPushMessage;
 import com.squad.squad.repository.DeviceTokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -29,6 +30,7 @@ public class ExpoPushClient {
     private final DeviceTokenRepository deviceTokenRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Autowired
     public ExpoPushClient(DeviceTokenRepository deviceTokenRepository) {
         this(deviceTokenRepository, new RestTemplate());
     }
