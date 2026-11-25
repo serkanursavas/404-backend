@@ -25,6 +25,7 @@ public class GroupContextFilter extends OncePerRequestFilter {
     private static final Set<String> EXEMPT_PATHS = Set.of(
             "/api/users/login",
             "/api/users/createUser",
+            "/api/users/refresh-token",
             "/api/squads/request-create",
             "/api/squads/request-join",
             "/api/squads/my-squads",

@@ -13,6 +13,9 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.squad.squad.security.CustomUserDetails;
+import com.squad.squad.security.JwtUtils;
 
 @RestController
 @RequestMapping("/api/users")
@@ -21,11 +24,26 @@ public class UserController {
     private final UserService userService;
     private final UserDTOValidator userDTOValidator;
     private final GroupAuthorizationService authService;
+    private final JwtUtils jwtUtils;
 
-    public UserController(UserService userService, UserDTOValidator userDTOValidator, GroupAuthorizationService authService) {
+    public UserController(UserService userService, UserDTOValidator userDTOValidator, GroupAuthorizationService authService, JwtUtils jwtUtils) {
         this.userService = userService;
         this.userDTOValidator = userDTOValidator;
         this.authService = authService;
+        this.jwtUtils = jwtUtils;
+    }
+
+    /**
+     * Geçerli jetonla çağrılır, aynı kullanıcı için yeni (30 günlük) jeton döner. Mobil uygulama açılışta ve uzun
+     * aradan sonra öne gelince çağırır — düzenli kullanan biri oturumdan düşmez. Süresi dolmuş jetonla çağrılamaz
+     * (JwtAuthenticationFilter kimlik kurmaz → 401), o durumda yeniden giriş gerekir.
+     */
+    @PostMapping("/refresh-token")
+    public ResponseEntity<Map<String, String>> refreshToken(@AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(Map.of("token", jwtUtils.generateToken(user.getId(), user.getUsername())));
     }
 
     @PostMapping("/createUser")

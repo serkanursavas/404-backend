@@ -13,7 +13,8 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
-    private static final long JWT_EXPIRATION_MS = 259200000; // 3 days
+    // 30 gün; mobil uygulama açıldıkça /api/users/refresh-token ile yenilenir (düzenli kullanan oturumdan düşmez).
+    private static final long JWT_EXPIRATION_MS = 30L * 24 * 60 * 60 * 1000;
 
     private static final String SECRET_KEY_STRING = System.getenv("JWT_SECRET_KEY");
     private static final SecretKey SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(SECRET_KEY_STRING), "HmacSHA256");
