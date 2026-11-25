@@ -141,6 +141,23 @@ public class SquadController {
         }
     }
 
+    /**
+     * Admin: üyenin oyuncu kaydını misafir yapar / geri alır. Misafir oyuncu sıralamalarda (gol kralı, puan,
+     * persona, ikililer, form) ve ekip listelerinde görünmez; oynadığı maçların kaydında kalır.
+     */
+    @PutMapping("/admin/update-guest/{userId}")
+    public ResponseEntity<?> updateMemberGuest(@PathVariable Integer userId, @RequestBody UpdateGuestRequestDTO dto) {
+        if (dto.getGuest() == null) {
+            return ResponseEntity.badRequest().body("guest is required");
+        }
+        try {
+            squadService.updateMemberGuest(userId, dto.getGuest());
+            return ResponseEntity.ok("Guest updated");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @PutMapping("/admin/update")
     public ResponseEntity<?> updateSquadName(@RequestBody UpdateSquadNameDTO dto) {
         squadService.updateSquadName(dto.getName());

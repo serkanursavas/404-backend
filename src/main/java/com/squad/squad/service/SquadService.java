@@ -344,6 +344,21 @@ public class SquadService {
         groupMembershipRepository.save(membership);
     }
 
+    /** Admin: bu ekipteki üyenin oyuncu kaydının misafir işaretini değiştirir (yalnız aktif ekip — GroupContext). */
+    @Transactional
+    public void updateMemberGuest(Integer userId, boolean guest) {
+        authService.requireAdmin();
+        Integer groupId = GroupContext.getCurrentGroupId();
+        GroupMembership membership = groupMembershipRepository.findBySquadIdAndUserId(groupId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+        Player player = membership.getPlayer();
+        if (player == null) {
+            throw new IllegalArgumentException("Member has no player record");
+        }
+        player.setGuest(guest);
+        playerRepository.save(player);
+    }
+
     @Transactional
     public void updateSquadName(String name) {
         authService.requireAdmin();
