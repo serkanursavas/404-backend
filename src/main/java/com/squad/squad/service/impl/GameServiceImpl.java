@@ -120,8 +120,16 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
 
         dto.setRosters(rosters);
         dto.setGoals(goals);
+        setMvpVotes(dto, game);
 
         return dto;
+    }
+
+    /** Oylama kapanmış ve MVP'si belli maçta MVP oy sayılarını doldurur (diğer maçlarda alanlar null kalır). */
+    private void setMvpVotes(GameResponseDTO dto, Game game) {
+        if (!game.isVoted() || game.getMvpId() == null) return;
+        dto.setMvpVoterCount(rosterPersonaRepository.sumMvpVotesByGameId(game.getId()));
+        dto.setMvpVoteCount(rosterPersonaRepository.sumMvpVotesByGameIdAndPlayerId(game.getId(), game.getMvpId()));
     }
 
     @Override
@@ -195,6 +203,7 @@ public class GameServiceImpl extends BaseSquadService implements GameService {
         gameDTO.setRosters(rosters);
         gameDTO.setGoals(goals);
         gameDTO.setGameLocation(gameLocation == null ? null : gameLocationMapper.gameLocationToGameLocationDTO(gameLocation));
+        setMvpVotes(gameDTO, game);
         return gameDTO;
     }
 

@@ -20,6 +20,9 @@ public class GameResponseDTO {
     private boolean isVoted;
     private GameLocationDTO gameLocation;
     private Integer mvpId;
+    /** Oylama kapanmış maçta: toplam MVP oyu (MVP seçen kişi sayısı) ve maçın adamının aldığı MVP oyu. */
+    private Integer mvpVoterCount;
+    private Integer mvpVoteCount;
 
     // Getters and Setters
     public Integer getId() {
@@ -117,5 +120,21 @@ public class GameResponseDTO {
 
     public void setMvpId(Integer mvpId) {
         this.mvpId = mvpId;
+    }
+
+    public Integer getMvpVoterCount() {
+        return mvpVoterCount;
+    }
+
+    public void setMvpVoterCount(Integer mvpVoterCount) {
+        this.mvpVoterCount = mvpVoterCount;
+    }
+
+    public Integer getMvpVoteCount() {
+        return mvpVoteCount;
+    }
+
+    public void setMvpVoteCount(Integer mvpVoteCount) {
+        this.mvpVoteCount = mvpVoteCount;
     }
 }

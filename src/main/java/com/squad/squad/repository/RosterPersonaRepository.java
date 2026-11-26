@@ -34,4 +34,14 @@ public interface RosterPersonaRepository extends JpaRepository<RosterPersona, In
 
     @Query(value = "SELECT r.player_id FROM roster_persona rp LEFT JOIN roster r ON rp.roster_id = r.id LEFT JOIN game g ON r.game_id = g.id WHERE persona_id = 68 AND g.squad_id = :squadId GROUP BY r.player_id ORDER BY SUM(rp.count) DESC LIMIT 1", nativeQuery = true)
     Integer findMvpGrouped(@Param("squadId") Integer squadId);
+
+    /** Maçta verilen toplam MVP oyu (her oy veren en fazla bir MVP seçer → MVP seçen kişi sayısı). */
+    @Query(value = "SELECT COALESCE(SUM(rp.count), 0) FROM roster_persona rp JOIN roster r ON rp.roster_id = r.id " +
+            "WHERE rp.persona_id = 68 AND r.game_id = :gameId", nativeQuery = true)
+    Integer sumMvpVotesByGameId(@Param("gameId") Integer gameId);
+
+    /** Oyuncunun o maçta aldığı MVP oyu. */
+    @Query(value = "SELECT COALESCE(SUM(rp.count), 0) FROM roster_persona rp JOIN roster r ON rp.roster_id = r.id " +
+            "WHERE rp.persona_id = 68 AND r.game_id = :gameId AND r.player_id = :playerId", nativeQuery = true)
+    Integer sumMvpVotesByGameIdAndPlayerId(@Param("gameId") Integer gameId, @Param("playerId") Integer playerId);
 }
