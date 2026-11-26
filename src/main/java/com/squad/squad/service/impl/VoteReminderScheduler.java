@@ -28,22 +28,23 @@ import java.util.stream.Collectors;
 
 /**
  * Maç sonrası bildirim takvimi (kullanıcı kararı 26 Kas 2026). Backend'de maç bitişi ve oylama son tarihi yok;
- * takvim başlangıç saatinden (B) sayılır, maç 60 dk varsayılır. Oylama kapanınca (herkes oy verince) durur.
+ * takvim başlangıç saatinden (B) sayılır, maç 60 dk varsayılır (MatchTiming). Oylama kapanınca (herkes oy verince) durur.
  *
- *   adım 0  B+1,5 sa  (maç bitişi + 30 dk) "Maç bitti: Siyah 5–4 Beyaz · oylama açıldı" → maçta oynayan herkes
- *   adım 1  B+3 sa    (maç bitişi + 2 sa)  → oy vermeyenler
- *   adım 2  B+12 sa                         → oy vermeyenler
- *   adım 3–6 B+16 / 19 / 21 / 22 sa (aralık 4, 3, 2, 1 sa daralır; 21:00 maçında ertesi gün 19:00'da biter)
+ *   adım 0  B+1 sa    (maç bitti)          "Maç bitti: Siyah 5–4 Beyaz" → ekibin tamamı
+ *   adım 1  B+1,5 sa  (bitiş + 30 dk)      "Oylama açıldı" → oy vermeyenler
+ *   adım 2  B+3 sa    (bitiş + 2 sa)       → oy vermeyenler
+ *   adım 3  B+12 sa                         → oy vermeyenler
+ *   adım 4–7 B+16 / 19 / 21 / 22 sa (aralık 4, 3, 2, 1 sa daralır; 21:00 maçında ertesi gün 19:00'da biter)
  *
  * Hatırlatmalar (adım ≥1) 00:00–08:00 arasına düşerse atlanır (ertelenmez). Sunucu kapalı kalıp bir adım
- * 1 saatten fazla gecikirse o adım da atlanır. Maç başına gönderilen son adım game_notification_state'te.
+ * 1 saatten fazla gecikirse o adım da atlanır (maç bitti dahil). Maç başına gönderilen son adım game_notification_state'te.
  */
 @Component
 public class VoteReminderScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(VoteReminderScheduler.class);
 
-    private static final int[] STEP_MINUTES = {90, 180, 720, 960, 1140, 1260, 1320};
+    private static final int[] STEP_MINUTES = {60, 90, 180, 720, 960, 1140, 1260, 1320};
     private static final int QUIET_UNTIL_HOUR = 8;
     private static final Duration MAX_DELAY = Duration.ofHours(1);
     private static final Locale TR = Locale.forLanguageTag("tr");
@@ -106,7 +107,8 @@ public class VoteReminderScheduler {
         stateRepository.save(state);
 
         LocalDateTime due = kickoff.plusMinutes(STEP_MINUTES[step]);
-        if (step > 0 && (isQuiet(due) || isQuiet(now) || now.isAfter(due.plus(MAX_DELAY)))) return null;
+        if (now.isAfter(due.plus(MAX_DELAY))) return null;
+        if (step > 0 && (isQuiet(due) || isQuiet(now))) return null;
 
         Integer squadId = game.getSquad().getId();
         Map<Integer, Integer> userByPlayer = groupMembershipRepository.findBySquadId(squadId).stream()
@@ -115,9 +117,10 @@ public class VoteReminderScheduler {
         List<Roster> rosters = rosterRepository.findAllByGameId(gameId).stream()
                 .filter(r -> userByPlayer.containsKey(r.getPlayer().getId()))
                 .toList();
-        List<Roster> recipients = step == 0 ? rosters
-                : rosters.stream().filter(r -> !Boolean.TRUE.equals(r.getHasVote())).toList();
-        Set<Integer> userIds = recipients.stream().map(r -> userByPlayer.get(r.getPlayer().getId())).collect(Collectors.toSet());
+        List<Roster> recipients = rosters.stream().filter(r -> !Boolean.TRUE.equals(r.getHasVote())).toList();
+        Set<Integer> userIds = step == 0
+                ? Set.copyOf(userByPlayer.values())
+                : recipients.stream().map(r -> userByPlayer.get(r.getPlayer().getId())).collect(Collectors.toSet());
 
         Map<String, Object> data = new HashMap<>();
         data.put("gameId", gameId);
@@ -125,7 +128,7 @@ public class VoteReminderScheduler {
         if (step == 0) {
             data.put("type", "GAME_ENDED");
             String title = "Maç bitti: Siyah " + score(game.getHomeTeamScore()) + "–" + score(game.getAwayTeamScore()) + " Beyaz";
-            return new Push(userIds, title, "Oylama açıldı, takım arkadaşlarını puanla.", data);
+            return new Push(userIds, title, "Skor ve goller maç detayında.", data);
         }
         data.put("type", "VOTE_REMINDER");
         String day = kickoff.getDayOfWeek().getDisplayName(TextStyle.FULL, TR);
@@ -135,11 +138,12 @@ public class VoteReminderScheduler {
 
     private static String[] reminderText(int step, String day, int nonVoters) {
         return switch (step) {
-            case 1 -> new String[]{"Oyunu bekliyoruz", "Takım arkadaşların puanını bekliyor."};
-            case 2 -> new String[]{"Oylama sürüyor", day + " maçının oylamasında senin oyun eksik."};
-            case 3 -> new String[]{"Hâlâ oy vermedin", "Takım arkadaşlarını puanla, 1 dakikanı alır."};
-            case 4 -> new String[]{"MVP seni bekliyor", "Senin oyun olmadan MVP belli olmuyor."};
-            case 5 -> nonVoters <= 1
+            case 1 -> new String[]{"Oylama açıldı", "Takım arkadaşlarını puanla, MVP'yi seç."};
+            case 2 -> new String[]{"Oyunu bekliyoruz", "Takım arkadaşların puanını bekliyor."};
+            case 3 -> new String[]{"Oylama sürüyor", day + " maçının oylamasında senin oyun eksik."};
+            case 4 -> new String[]{"Hâlâ oy vermedin", "Takım arkadaşlarını puanla, 1 dakikanı alır."};
+            case 5 -> new String[]{"MVP seni bekliyor", "Senin oyun olmadan MVP belli olmuyor."};
+            case 6 -> nonVoters <= 1
                     ? new String[]{"Bir tek sen kaldın", "Senin oyunla oylama tamamlanıyor."}
                     : new String[]{"Oy vermeyen " + nonVoters + " kişi kaldı", "Biri sensin. Oylama bu akşam bitsin."};
             default -> new String[]{"Son hatırlatma", day + " maçı için oyun hâlâ eksik."};

@@ -6,14 +6,14 @@ import java.time.LocalDateTime;
 /** Maç saatleri: backend'de maç süresi/bitiş anı tutulmuyor, başlangıç saatinden sayılıyor. */
 public final class MatchTiming {
 
-    /** Canlı pencere: başlangıçtan itibaren gol girişinin "maç esnası" sayıldığı süre (60 dk maç + 30 dk). */
-    public static final Duration LIVE_WINDOW = Duration.ofMinutes(90);
+    /** Maç süresi: başlangıç + 60 dk = maç bitti. Bitişe kadar girilen goller bildirim üretmez. */
+    public static final Duration MATCH_DURATION = Duration.ofMinutes(60);
 
     private MatchTiming() {
     }
 
-    /** Maç (ve son gol girişleri) bitti mi: bundan sonraki gol girişi/düzeltmesi bildirim üretir. */
-    public static boolean isAfterLiveWindow(LocalDateTime kickoff, LocalDateTime now) {
-        return kickoff != null && now.isAfter(kickoff.plus(LIVE_WINDOW));
+    /** Maç bitti mi: bundan sonraki gol girişi/düzeltmesi bildirim üretir. */
+    public static boolean isMatchOver(LocalDateTime kickoff, LocalDateTime now) {
+        return kickoff != null && now.isAfter(kickoff.plus(MATCH_DURATION));
     }
 }

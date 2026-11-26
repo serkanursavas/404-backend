@@ -103,14 +103,14 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
     }
 
     /**
-     * Maç esnasında (canlı pencere) tek tek girilen goller bildirim üretmez; skor "Maç bitti" bildirimiyle
+     * Maç esnasında (başlangıç + 60 dk) tek tek girilen goller bildirim üretmez; skor "Maç bitti" bildirimiyle
      * duyurulur (VoteReminderScheduler). Maçtan sonra gol girişi/düzeltmesi skoru değiştirirse ekibe bir kez gider.
      */
     private void publishIfScoreChangedAfterMatch(Game game, int oldHome, int oldAway) {
         int home = scoreOf(game.getHomeTeamScore());
         int away = scoreOf(game.getAwayTeamScore());
         if (home == oldHome && away == oldAway) return;
-        if (!MatchTiming.isAfterLiveWindow(game.getDateTime(), LocalDateTime.now())) return;
+        if (!MatchTiming.isMatchOver(game.getDateTime(), LocalDateTime.now())) return;
         eventPublisher.publishEvent(new ScoreUpdatedEvent(game.getId(), getSquadId(), home, away,
                 groupAuthorizationService.getCurrentUserId()));
     }
