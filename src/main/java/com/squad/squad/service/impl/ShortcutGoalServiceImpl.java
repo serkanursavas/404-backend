@@ -10,6 +10,7 @@ import com.squad.squad.repository.GoalRepository;
 import com.squad.squad.repository.RosterRepository;
 import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
+import com.squad.squad.service.MatchTiming;
 import com.squad.squad.service.ShortcutGoalService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ import java.util.Optional;
 public class ShortcutGoalServiceImpl extends BaseSquadService implements ShortcutGoalService {
 
     /** Gol girişinin kick-off'tan itibaren açık kaldığı süre. */
-    private static final Duration LIVE_WINDOW = Duration.ofMinutes(90);
+    private static final Duration LIVE_WINDOW = MatchTiming.LIVE_WINDOW;
 
     private final GameRepository gameRepository;
     private final GoalRepository goalRepository;

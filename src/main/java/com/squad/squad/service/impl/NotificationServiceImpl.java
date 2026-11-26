@@ -125,4 +125,18 @@ public class NotificationServiceImpl implements NotificationService {
                 .collect(Collectors.toList());
         expoPushClient.sendPushNotifications(messages);
     }
+
+    @Override
+    public void sendPushToUsers(java.util.Collection<Integer> userIds, String title, String body, Map<String, Object> data) {
+        if (userIds.isEmpty()) return;
+        List<DeviceToken> tokens = deviceTokenRepository.findByUserIdInAndActiveTrue(List.copyOf(userIds));
+        if (tokens.isEmpty()) {
+            log.debug("No active device tokens for users {}", userIds);
+            return;
+        }
+        List<ExpoPushMessage> messages = tokens.stream()
+                .map(dt -> new ExpoPushMessage(dt.getToken(), title, body, data))
+                .collect(Collectors.toList());
+        expoPushClient.sendPushNotifications(messages);
+    }
 }

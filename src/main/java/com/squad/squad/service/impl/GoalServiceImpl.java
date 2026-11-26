@@ -1,5 +1,6 @@
 package com.squad.squad.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -22,7 +23,8 @@ import com.squad.squad.entity.Player;
 import com.squad.squad.mapper.GameMapper;
 import com.squad.squad.mapper.PlayerMapper;
 import com.squad.squad.repository.GoalRepository;
-import com.squad.squad.event.GoalScoredEvent;
+import com.squad.squad.event.ScoreUpdatedEvent;
+import com.squad.squad.service.MatchTiming;
 import com.squad.squad.service.BaseSquadService;
 import com.squad.squad.service.GameService;
 import com.squad.squad.service.GoalService;
@@ -93,18 +95,36 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
         // Skor artık tüm aktif gollerden tek seferde yeniden hesaplanıyor (delta artırımı yok,
         // bkz. GameServiceImpl.recalculateScore). isPlayed=true yan etkisi korunuyor.
         if (lastSavedGoal != null) {
+            int oldHome = scoreOf(existingGame.getHomeTeamScore());
+            int oldAway = scoreOf(existingGame.getAwayTeamScore());
             gameService.updateScoreWithGoal(lastSavedGoal);
+            publishIfScoreChangedAfterMatch(gameService.findGameById(gameId), oldHome, oldAway);
         }
+    }
 
-        Integer squadId = getSquadId();
-        Integer actorUserId = groupAuthorizationService.getCurrentUserId();
-        eventPublisher.publishEvent(new GoalScoredEvent(gameId, squadId, goalDtos.size(), actorUserId));
+    /**
+     * Maç esnasında (canlı pencere) tek tek girilen goller bildirim üretmez; skor "Maç bitti" bildirimiyle
+     * duyurulur (VoteReminderScheduler). Maçtan sonra gol girişi/düzeltmesi skoru değiştirirse ekibe bir kez gider.
+     */
+    private void publishIfScoreChangedAfterMatch(Game game, int oldHome, int oldAway) {
+        int home = scoreOf(game.getHomeTeamScore());
+        int away = scoreOf(game.getAwayTeamScore());
+        if (home == oldHome && away == oldAway) return;
+        if (!MatchTiming.isAfterLiveWindow(game.getDateTime(), LocalDateTime.now())) return;
+        eventPublisher.publishEvent(new ScoreUpdatedEvent(game.getId(), getSquadId(), home, away,
+                groupAuthorizationService.getCurrentUserId()));
+    }
+
+    private static int scoreOf(Integer score) {
+        return score == null ? 0 : score;
     }
 
     @Override
     @Transactional
     public void updateGoalsForGame(Integer gameId, List<GoalAddRequestDTO> desiredGoals) {
         Game game = gameService.findGameById(gameId); // squad check — başka squad'ın maçı ise exception fırlatır
+        int oldHome = scoreOf(game.getHomeTeamScore());
+        int oldAway = scoreOf(game.getAwayTeamScore());
 
         List<Goal> currentActiveGoals = goalRepository.findByGameIdAndActiveTrue(gameId);
         Map<Integer, List<Goal>> currentByPlayer = currentActiveGoals.stream()
@@ -147,7 +167,7 @@ public class GoalServiceImpl extends BaseSquadService implements GoalService {
         }
 
         // isPlayed'a dokunulmuyor — eski bir maçı düzenlemek durumunu değiştirmemeli.
-        gameService.recalculateScore(gameId);
+        publishIfScoreChangedAfterMatch(gameService.recalculateScore(gameId), oldHome, oldAway);
     }
 
     public List<TopListsDTO> getTopScorers() {

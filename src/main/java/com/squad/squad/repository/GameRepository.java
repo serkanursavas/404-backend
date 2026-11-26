@@ -30,6 +30,10 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 
     Game findBySquadIdAndIsPlayedFalse(Integer squadId);
 
+    // VoteReminderScheduler: oylaması kapanmamış, başlangıcı verilen aralıkta olan maçlar (tüm ekipler).
+    @Query("SELECT g FROM Game g WHERE g.isVoted = false AND g.dateTime BETWEEN :from AND :to")
+    List<Game> findUnvotedStartedBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
     // Shortcut canlı gol girişi: "isPlayed" aslında "başlama saati geçti" demek, "maç bitti"
     // değil (bkz. checkAndUpdateUnplayedGame). Canlı maç, oylanmamış + kick-off zaman
     // penceresi içinde olan maçtır. dateTime DESC ile en güncel önce gelir.

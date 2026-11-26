@@ -25,17 +25,17 @@ public class NotificationEventListener {
 
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleGoalScored(GoalScoredEvent event) {
+    public void handleScoreUpdated(ScoreUpdatedEvent event) {
         try {
             notificationService.sendPushToSquad(
                     event.getSquadId(),
-                    "⚽ Gol!",
-                    "Maçın skoru belli oldu!",
-                    Map.of("gameId", event.getGameId(), "squadId", event.getSquadId(), "type", "GOAL_SCORED"),
+                    "Skor güncellendi: Siyah " + event.getHomeTeamScore() + "–" + event.getAwayTeamScore() + " Beyaz",
+                    "Maçın sonucu güncellendi.",
+                    Map.of("gameId", event.getGameId(), "squadId", event.getSquadId(), "type", "SCORE_UPDATED"),
                     event.getActorUserId()
             );
         } catch (Exception e) {
-            log.error("Failed to send push notification for GoalScoredEvent: gameId={}", event.getGameId(), e);
+            log.error("Failed to send push notification for ScoreUpdatedEvent: gameId={}", event.getGameId(), e);
         }
     }
 

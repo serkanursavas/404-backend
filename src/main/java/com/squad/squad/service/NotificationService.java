@@ -11,4 +11,6 @@ public interface NotificationService {
     void sendPushToSquadAdmins(Integer squadId, String title, String body, Map<String, Object> data);
 
     void sendPushToUser(Integer userId, String title, String body, Map<String, Object> data);
+
+    void sendPushToUsers(java.util.Collection<Integer> userIds, String title, String body, Map<String, Object> data);
 }
