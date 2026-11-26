@@ -47,7 +47,8 @@ public class NotificationEventListener {
                     ? event.getGameDateTime().format(FORMATTER)
                     : "";
             String body = event.getLocationName() + " • " + dateStr;
-            notificationService.sendPushToSquad(
+            notificationService.sendPushToGamePlayers(
+                    event.getGameId(),
                     event.getSquadId(),
                     "📅 Yeni maç oluşturuldu!",
                     body,
@@ -67,7 +68,8 @@ public class NotificationEventListener {
                     ? event.getGameDateTime().format(FORMATTER)
                     : "";
             String body = event.getLocationName() + " • " + dateStr;
-            notificationService.sendPushToSquad(
+            notificationService.sendPushToGamePlayers(
+                    event.getGameId(),
                     event.getSquadId(),
                     "🔄 Maç güncellendi",
                     body,
@@ -83,11 +85,13 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleMVPAnnounced(MVPAnnouncedEvent event) {
         try {
-            notificationService.sendPushToSquad(
+            notificationService.sendPushToGamePlayers(
+                    event.getGameId(),
                     event.getSquadId(),
                     "🏆 Oylamalar tamamlandı!",
                     "Puanları ve MVP'yi görüntüle!",
-                    Map.of("gameId", event.getGameId(), "squadId", event.getSquadId(), "type", "MVP_ANNOUNCED")
+                    Map.of("gameId", event.getGameId(), "squadId", event.getSquadId(), "type", "MVP_ANNOUNCED"),
+                    null
             );
         } catch (Exception e) {
             log.error("Failed to send push notification for MVPAnnouncedEvent: gameId={}", event.getGameId(), e);

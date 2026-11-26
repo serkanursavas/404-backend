@@ -12,5 +12,8 @@ public interface NotificationService {
 
     void sendPushToUser(Integer userId, String title, String body, Map<String, Object> data);
 
+    /** Yalnız o maçın kadrosundaki (hesabı olan) oyunculara; excludeUserId null olabilir. */
+    void sendPushToGamePlayers(Integer gameId, Integer squadId, String title, String body, Map<String, Object> data, Integer excludeUserId);
+
     void sendPushToUsers(java.util.Collection<Integer> userIds, String title, String body, Map<String, Object> data);
 }

@@ -5,6 +5,7 @@ import com.squad.squad.entity.DeviceToken;
 import com.squad.squad.enums.GroupRole;
 import com.squad.squad.repository.DeviceTokenRepository;
 import com.squad.squad.repository.GroupMembershipRepository;
+import com.squad.squad.repository.RosterRepository;
 import com.squad.squad.service.ExpoPushClient;
 import com.squad.squad.service.NotificationService;
 import org.slf4j.Logger;
@@ -24,10 +25,13 @@ public class NotificationServiceImpl implements NotificationService {
     private final GroupMembershipRepository groupMembershipRepository;
     private final DeviceTokenRepository deviceTokenRepository;
     private final ExpoPushClient expoPushClient;
+    private final RosterRepository rosterRepository;
 
     public NotificationServiceImpl(GroupMembershipRepository groupMembershipRepository,
                                    DeviceTokenRepository deviceTokenRepository,
-                                   ExpoPushClient expoPushClient) {
+                                   ExpoPushClient expoPushClient,
+                                   RosterRepository rosterRepository) {
+        this.rosterRepository = rosterRepository;
         this.groupMembershipRepository = groupMembershipRepository;
         this.deviceTokenRepository = deviceTokenRepository;
         this.expoPushClient = expoPushClient;
@@ -138,5 +142,18 @@ public class NotificationServiceImpl implements NotificationService {
                 .map(dt -> new ExpoPushMessage(dt.getToken(), title, body, data))
                 .collect(Collectors.toList());
         expoPushClient.sendPushNotifications(messages);
+    }
+
+    @Override
+    @Transactional
+    public void sendPushToGamePlayers(Integer gameId, Integer squadId, String title, String body, Map<String, Object> data, Integer excludeUserId) {
+        Map<Integer, Integer> userByPlayer = groupMembershipRepository.findBySquadId(squadId).stream()
+                .filter(gm -> gm.isActive())
+                .collect(Collectors.toMap(gm -> gm.getPlayer().getId(), gm -> gm.getUser().getId(), (a, b) -> a));
+        java.util.Set<Integer> userIds = rosterRepository.findAllByGameId(gameId).stream()
+                .map(r -> userByPlayer.get(r.getPlayer().getId()))
+                .filter(id -> id != null && !id.equals(excludeUserId))
+                .collect(Collectors.toSet());
+        sendPushToUsers(userIds, title, body, data);
     }
 }
